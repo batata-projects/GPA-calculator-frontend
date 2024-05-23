@@ -39,3 +39,4 @@ npm start
 
 ## Contributors
 - [Jad Shaker](https://github.com/jadshaker)
+- [Karim Abboud](https://github.com/Kaa75)
