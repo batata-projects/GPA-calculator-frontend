@@ -38,3 +38,4 @@ npm start
 ```
 
 ## Contributors
+- [Jad Shaker](https://github.com/jadshaker)
