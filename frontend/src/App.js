@@ -5,6 +5,8 @@ import Welcome from './pages/welcome/welcome.js';
 import Signup from "./pages/signup/signup.js";
 
 
+const DEMO_ACCOUNTS = [{ email : "xyz01@mail.aub.edu", password: 123}];
+
 function App() {
 	return (
 		<BrowserRouter>
