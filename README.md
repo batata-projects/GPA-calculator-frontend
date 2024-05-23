@@ -21,7 +21,7 @@ source .venv/bin/activate # For macos
 4. Navigate to the backend directory
 
 ```bash
-cd gpa-calculator-backend
+cd backend
 ```
 
 5. Install the required packages
@@ -30,12 +30,21 @@ cd gpa-calculator-backend
 pip install -r requirements.txt
 ```
 
-<!-- 6. Setup the database
-
-7. Run the server
+### Some Commands
+- You should run these commands from the backend directory
 ```bash
-flask run
-``` -->
+cd backend
+```
+
+#### Run the backend server
+```bash
+python cli.py run-backend
+```
+
+#### Clean the code (necessary before pushing)
+```bash
+python cli.py clean
+```
 
 ## Setup the environment (frontend)
 
@@ -43,7 +52,7 @@ flask run
 2. Navigate to the frontend directory
 
 ```bash
-cd gpa-calculator-frontend
+cd frontend
 ```
 
 3. Install the required packages
