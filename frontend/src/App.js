@@ -1,6 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
 
+const DEMO_ACCOUNTS = [{ email : "xyz01@mail.aub.edu", password: 123}];
+
 function App() {
   return (
     <div className="App">
