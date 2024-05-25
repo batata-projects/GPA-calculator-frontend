@@ -1,7 +1,7 @@
 import argparse
 import subprocess
 
-FILES_TO_CLEAN = ["."]
+FILES_TO_CLEAN = ["backend"]
 
 
 def clean():
@@ -22,7 +22,7 @@ def clean():
 
 
 def run_backend():
-    subprocess.run(["uvicorn", "src.main:app", "--reload"])
+    subprocess.run(["uvicorn", "backend.src.main:app", "--reload"])
 
 
 def main():

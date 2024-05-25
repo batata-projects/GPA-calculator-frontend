@@ -18,32 +18,10 @@ source .venv/bin/activate # For macos
 .venv\Scripts\activate # For windows
 ```
 
-4. Navigate to the backend directory
+4. Install the required packages
 
 ```bash
-cd backend
-```
-
-5. Install the required packages
-
-```bash
-pip install -r requirements.txt
-```
-
-### Some Commands
-- You should run these commands from the backend directory
-```bash
-cd backend
-```
-
-#### Run the backend server
-```bash
-python cli.py run-backend
-```
-
-#### Clean the code (necessary before pushing)
-```bash
-python cli.py clean
+pip install -r backend/requirements.txt
 ```
 
 ## Setup the environment (frontend)
@@ -64,6 +42,27 @@ npm install
 4. Run the server
 
 ```bash
+npm start
+```
+
+## Some Commands
+
+### Run the backend server
+
+```bash
+python cli.py run-backend
+```
+
+### Clean the code (necessary before backend pushing)
+
+```bash
+python cli.py clean
+```
+
+### Run the frontend server
+
+```bash
+cd frontend
 npm start
 ```
 
