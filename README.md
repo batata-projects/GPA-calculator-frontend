@@ -71,3 +71,4 @@ npm start
 
 - [Jad Shaker](https://github.com/jadshaker)
 - [Karim Abboud](https://github.com/Kaa75)
+- [Rayan Fakhreddine](https://github.com/Rayan28461)
