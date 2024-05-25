@@ -5,7 +5,6 @@ import Welcome from './pages/welcome/welcome.js';
 import Signup from "./pages/signup/signup.js";
 
 
-
 function App() {
 	return (
 		<BrowserRouter>
