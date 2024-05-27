@@ -1,28 +1,6 @@
-# GPA Calculator
+# GPA Calculator Frontend
 
 A simple GPA calculator that allows students to calculate their GPA based on their grades and credit hours.
-
-## Setup the environment (backend)
-
-1. Install Python 3.12 or higher
-2. Create a virtual environment
-
-```bash
-python -m venv .venv
-```
-
-3. Activate the virtual environment
-
-```bash
-source .venv/bin/activate # For macos
-.venv\Scripts\activate # For windows
-```
-
-4. Install the required packages
-
-```bash
-pip install -r backend/requirements.txt
-```
 
 ## Setup the environment (frontend)
 
@@ -39,7 +17,7 @@ cd frontend
 npm install
 ```
 
-4. Run the server
+4. Run the web application
 
 ```bash
 npm start
@@ -47,19 +25,7 @@ npm start
 
 ## Some Commands
 
-### Run the backend server
-
-```bash
-python cli.py run-backend
-```
-
-### Clean the code (necessary before backend pushing)
-
-```bash
-python cli.py clean
-```
-
-### Run the frontend server
+### Run the frontend
 
 ```bash
 cd frontend
