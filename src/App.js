@@ -1,20 +1,21 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import './App.css';
-import Signin from './pages/signin/signin.js';
-import Welcome from './pages/welcome/welcome.js';
-import Signup from "./pages/signup/signup.js";
+import { useContext } from 'react';
+import Login from './components/Login/Login';
+import Home from './components/Home/Home';
+import MainHeader from './components/MainHeader/MainHeader';
+import AuthContext from './store/auth-context';
 
+const App = () => {
+  const ctx = useContext(AuthContext);
 
-function App() {
-	return (
-		<BrowserRouter>
-			<Routes>
-				<Route path="/" element={<Welcome />} />
-				<Route path="/signin" element={<Signin />} />
-				<Route path="/signup" element={<Signup />} />
-			</Routes>
-		</BrowserRouter>
-	);
-}
+  return (
+    <>
+      <MainHeader />
+      <main>
+        {!ctx.isLoggedIn && <Login />}
+        {ctx.isLoggedIn && <Home />}
+      </main>
+    </>
+  );
+};
 
 export default App;
