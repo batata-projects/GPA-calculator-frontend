@@ -4,6 +4,7 @@ const AuthContext = createContext({
   isLoggedIn: false,
   onLogout: () => {},
   onLogin: (email, password) => {},
+  onSignup: (email, username, password) => {},  // Add the onSignup function
 });
 
 export const AuthContextProvider = props => {
@@ -20,9 +21,14 @@ export const AuthContextProvider = props => {
     setIsLoggedIn(false);
   };
 
-  const loginHandler = () => {
+  const loginHandler = (email, password) => {
     localStorage.setItem('isLoggedIn', '1');
     setIsLoggedIn(true);
+  };
+
+  const signupHandler = (email, username, password) => {
+    console.log(`Signed up with Email: ${email}, Username: ${username}, Password: ${password}`);
+    // Implement your signup logic here
   };
 
   return (
@@ -31,6 +37,7 @@ export const AuthContextProvider = props => {
         isLoggedIn: isLoggedIn,
         onLogout: logoutHandler,
         onLogin: loginHandler,
+        onSignup: signupHandler,  // Provide the onSignup function
       }}
     >
       {props.children}

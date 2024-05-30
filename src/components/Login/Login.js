@@ -4,6 +4,7 @@ import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 import AuthContext from '../../store/auth-context';
 import Input from '../UI/Input/Input';
+import { Helmet } from 'react-helmet';
 
 const emailReducer = (state, action) => {
   if (action.type === 'USER_INPUT')
@@ -88,35 +89,41 @@ const Login = () => {
   };
 
   return (
-    <Card className={classes.login}>
-      <form onSubmit={submitHandler}>
-        <Input
-          ref={emailInputRef}
-          isValid={emailState.isValid}
-          label="E-MAIL"
-          type="email"
-          id="email"
-          value={emailState.value}
-          onChange={emailChangeHandler}
-          onBlur={validateEmailHandler}
-        />
-        <Input
-          ref={passwordInputRef}
-          isValid={passwordState.isValid}
-          label="Password"
-          type="password"
-          id="password"
-          value={passwordState.value}
-          onChange={passwordChangeHandler}
-          onBlur={validatePasswordHandler}
-        />
-        <div className={classes.actions}>
-          <Button type="submit" className={classes.btn}>
-            Login
-          </Button>
-        </div>
-      </form>
-    </Card>
+    <>
+      <Helmet>
+        <title>Login Page</title>
+      </Helmet>
+      <Card className={classes.login}>
+        <h2 className='title'>Login</h2>
+        <form onSubmit={submitHandler}>
+          <Input
+            ref={emailInputRef}
+            isValid={emailState.isValid}
+            label="Email"
+            type="Email"
+            id="Email"
+            value={emailState.value}
+            onChange={emailChangeHandler}
+            onBlur={validateEmailHandler}
+          />
+          <Input
+            ref={passwordInputRef}
+            isValid={passwordState.isValid}
+            label="Password"
+            type="password"
+            id="password"
+            value={passwordState.value}
+            onChange={passwordChangeHandler}
+            onBlur={validatePasswordHandler}
+          />
+          <div className={classes.actions}>
+            <Button type="submit" className={classes.btn}>
+              Login
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </>
   );
 };
 

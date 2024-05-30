@@ -4,7 +4,7 @@ import classes from './MainHeader.module.css';
 const MainHeader = props => {
   return (
     <header className={classes['main-header']}>
-      <h1>A Typical Page</h1>
+      <h1>GPA Calculator</h1>
       <Navigation />
     </header>
   );
