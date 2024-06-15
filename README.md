@@ -1,5 +1,3 @@
-<!-- @format -->
-
 # GPA Calculator Frontend
 
 A simple GPA calculator that allows students to calculate their GPA based on their grades and credit hours.
