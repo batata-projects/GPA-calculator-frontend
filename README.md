@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # GPA Calculator Frontend
 
 A simple GPA calculator that allows students to calculate their GPA based on their grades and credit hours.
@@ -77,3 +79,4 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 - [Karim Abboud](https://github.com/Kaa75)
 - [Rayan Fakhreddine](https://github.com/Rayan28461)
 - [Hadi Mchawrab](https://github.com/hadimchawrab)
+- [Fadi Baghdadi](https://github.com/fadibagh)
