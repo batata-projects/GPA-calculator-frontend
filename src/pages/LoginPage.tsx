@@ -1,30 +1,25 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import httpClient from '../httpClient';
+import httpClient from '../httpClient.tsx';
 
-function RegisterPage() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+function LoginPage() {
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const registerUser = async (event) => {
+  const logInUser = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.log(email, password);
     try {
-      const response = await httpClient.post('/auth/register', {
-        first_name: firstName,
-        last_name: lastName,
+      const resp = await httpClient.post('/auth/login', {
         email,
-        username,
         password,
       });
-      console.log(response.data);
+      console.log(resp.data);
       setError(null);
-      navigate('/login'); // Redirect to the login page after successful registration
-    } catch (error) {
+      navigate('/dashboard');
+    } catch (error: any) {
       console.log(error);
       if (error.response) {
         // The request was made and the server responded with a status code
@@ -48,61 +43,20 @@ function RegisterPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-        <form onSubmit={registerUser}>
-          <div className="mb-4">
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-              First Name
-            </label>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              id="firstName"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-              Last Name
-            </label>
-            <input
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              id="lastName"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
+        <h2 className="text-2xl font-bold mb-6 text-center">Log In</h2>
+        <form onSubmit={logInUser}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               id="email"
-              required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-
-          <div className="mb-4">
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              id="username"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
           <div className="mb-4">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
@@ -112,25 +66,21 @@ function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               id="password"
-              required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-
           <button
             type="submit"
-            className="w-full bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300 ease-in-out"
+            className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition duration-300 ease-in-out"
           >
-            Register
+            Login
           </button>
         </form>
-
         <div className="mt-6 text-center">
-          <Link to="/">
+          <Link to="/register">
             <button className="bg-gray-500 text-white font-bold py-2 px-4 rounded hover:bg-gray-700 transition duration-300 ease-in-out">
-              Home
+              Register
             </button>
           </Link>
         </div>
@@ -139,4 +89,4 @@ function RegisterPage() {
   );
 }
 
-export default RegisterPage;
+export default LoginPage;
