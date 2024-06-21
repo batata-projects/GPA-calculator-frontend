@@ -17,12 +17,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
   return (
     <div className=" flex flex-col w-full items-center max-w-md p-8">
       <div className=" flex-shrink flex-grow">
-        <div className=" font-popppins text-[26px] text-[#333] font-bold">
-          Hello Again!
-        </div>
-        <div className=" font-poppins text-lg text-[#333] mb-[60px]">
-          Welcome Back
-        </div>
+        <div className=" text-[26px] text-[#333] font-bold">Hello Again!</div>
+        <div className=" text-lg text-[#333] mb-[40px]">Welcome Back</div>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
