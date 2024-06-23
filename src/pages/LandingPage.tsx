@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import LoginForm from "../components/LoginForm.tsx";
-import RegisterForm from "../components/RegisterForm.tsx";
+import LoginForm from "../components/landing-page/LoginForm.tsx";
+import RegisterForm from "../components/landing-page/RegisterForm.tsx";
 import httpClient from "../httpClient.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 

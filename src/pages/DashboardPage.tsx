@@ -1,5 +1,9 @@
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Navbar from "../components/navbar/Navbar.tsx";
+import Overall from "../components/Overall.tsx";
+import Terms from "../components/Terms.tsx";
+import Query from "../components/Query.tsx";
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -8,12 +12,13 @@ const DashboardPage: React.FC = () => {
 
   const isAuthenticated = () => {
     const access_token = localStorage.getItem("access_token");
+    console.log(!!access_token);
     return !!access_token;
   };
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate("/login");
+      navigate("/");
     }
   }, [navigate]);
 
@@ -21,15 +26,24 @@ const DashboardPage: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  // const fetchUserData = () => {
-  //   try {
-  //     const access_token = localStorage.getItem('access_token')
-  //     const response = httpClient.get('/')
+  const logout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/");
+  };
 
-  //   } catch
-  // };
-
-  return <div>{user.username}</div>;
+  return (
+    <div>
+      <Navbar />
+      {user.username}
+      <button onClick={logout}>Logout</button>
+      <div className=" flex flex-col justify-center items-center">
+        <Overall />
+        <Terms />
+        <Query />
+      </div>
+    </div>
+  );
 };
 
 export default DashboardPage;
