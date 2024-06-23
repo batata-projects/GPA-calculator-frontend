@@ -108,13 +108,13 @@ const LandingPage = () => {
             className="absolute bottom-0 left-0 w-64 h-64 text-blue-400 opacity-50"
           >
             <path
-              d="M0 20 Q142 -2 211 234"
+              d="M 50,50 A 100,100 0 0 1 50,250 A 100,100 0 0 1 50,50 Z"
               fill="none"
               stroke="currentColor"
               strokeWidth="1"
             />
             <path
-              d="M0 55 Q170 -2 400 700"
+              d="M 0 40 A 100 100 0 0 1 68 222 A 100 100 0 0 1 0 40 Z"
               fill="none"
               stroke="currentColor"
               strokeWidth="1"
