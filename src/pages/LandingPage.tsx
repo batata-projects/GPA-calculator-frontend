@@ -52,7 +52,6 @@ const LandingPage = () => {
     firstName: string;
     lastName: string;
     email: string;
-    username: string;
     password: string;
   }) => {
     try {
@@ -138,7 +137,10 @@ const LandingPage = () => {
               >
                 <LoginForm onSubmit={handleLogin} error={error} />
                 {error && <p className="text-red-500 text-sm">{error}</p>}
-                <div className="text-center mt-4">
+                <div className="text-center mt-2">
+                  <div className=" mb-2 cursor-pointer underline">
+                    Forget Password?
+                  </div>
                   <div className="text-sm text-gray-400 mb-1">
                     Don't have an account?
                   </div>
@@ -161,8 +163,12 @@ const LandingPage = () => {
               >
                 <div>
                   <RegisterForm onSubmit={handleRegister} error={error} />
-                  {error && <p className="text-red-500 text-sm">{error}</p>}
-                  <div className="text-center mt-4">
+                  {error && <p className="text-red-500 text-xs">{error}</p>}
+                  <div className="text-center mt-2">
+                    <div className="text-sm mb-2">
+                      Please verify your account after registering to be able to
+                      login.
+                    </div>
                     <div className="text-sm text-gray-400 mb-1">
                       Have an Account?
                     </div>

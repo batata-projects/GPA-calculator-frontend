@@ -25,7 +25,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
           onChange={(e) => setEmail(e.target.value)}
           id="email"
           placeholder="Email Address"
-          className=" mb-4 block border border-gray-300 rounded-[30px] w-full h-[40px] py-8 pl-6 pr-2"
+          className=" mb-4 block border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2"
         />
 
         <input
@@ -34,17 +34,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
           onChange={(e) => setPassword(e.target.value)}
           id="password"
           placeholder="Password"
-          className=" mb-4 block border border-gray-300 rounded-[30px] w-full h-[40px] py-8 pl-6 pr-2"
+          className=" mb-4 block border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2"
         />
         <button
           type="submit"
-          className=" bg-[#0575E6] text-white text-center w-full rounded-[30px] py-3 mb-3 hover:bg-[#35649b] transition duration-300"
+          className=" bg-[#0575E6] text-white text-center w-full rounded-[30px] py-4 mb-1 hover:bg-[#35649b] transition duration-300"
         >
           Login
         </button>
-        {/* <a href="" className=" underline ml-[150px]">
-            Forgot Password!
-          </a> */}
       </form>
     </div>
   );
