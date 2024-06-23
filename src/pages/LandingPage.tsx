@@ -87,7 +87,7 @@ const LandingPage = () => {
   return (
     <div className="flex flex-col lg:flex-row w-full min-h-screen font-poppins">
       {/* Left side of the landing page */}
-      <div className="w-full lg:w-1/2 bg-gradient-to-b from-[#0575E6] to-[#021B79] flex-shrink relative">
+      <div className=" w-full lg:w-7/12 container bg-gradient-to-b from-[#0575E6] to-[#021B79] flex-1 relative">
         <div className="w-full h-full flex flex-col items-center justify-center py-8 lg:py-0 relative z-10">
           <div className="w-4/5 max-w-2xl">
             <div className="text-white font-poppins text-4xl lg:text-5xl font-bold text-shadow-lg mb-4">
@@ -124,8 +124,8 @@ const LandingPage = () => {
       </div>
 
       {/* Right side of the landing page */}
-      <div className=" w-full lg:w-1/2 flex justify-center pt-[100px]">
-        <div className=" w-full max-w-md relative">
+      <div className=" w-full lg:w-5/12 container flex justify-center pt-[100px]">
+        <div className=" w-[70%] max-w-md relative">
           <AnimatePresence>
             {isLogin ? (
               <motion.div
@@ -137,7 +137,7 @@ const LandingPage = () => {
                 className="absolute inset-0"
               >
                 <LoginForm onSubmit={handleLogin} error={error} />
-                {error && <p className="text-red-500 text-sm ml-10">{error}</p>}
+                {error && <p className="text-red-500 text-sm">{error}</p>}
                 <div className="text-center mt-4">
                   <div className="text-sm text-gray-400 mb-1">
                     Don't have an account?
@@ -159,18 +159,20 @@ const LandingPage = () => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0"
               >
-                <RegisterForm onSubmit={handleRegister} error={error} />
-                {error && <p className="text-red-500 text-sm ml-10">{error}</p>}
-                <div className="text-center mt-4">
-                  <div className="text-sm text-gray-400 mb-1">
-                    Have an Account?
+                <div>
+                  <RegisterForm onSubmit={handleRegister} error={error} />
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+                  <div className="text-center mt-4">
+                    <div className="text-sm text-gray-400 mb-1">
+                      Have an Account?
+                    </div>
+                    <button
+                      onClick={handleToggleForm}
+                      className="text-blue-400 hover:cursor-pointer underline transition duration-300 mb-3"
+                    >
+                      Login
+                    </button>
                   </div>
-                  <button
-                    onClick={handleToggleForm}
-                    className="text-blue-400 hover:cursor-pointer underline transition duration-300 mb-3"
-                  >
-                    Login
-                  </button>
                 </div>
               </motion.div>
             )}

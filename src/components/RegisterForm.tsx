@@ -24,13 +24,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
   };
 
   return (
-    <div className=" flex flex-col w-full items-center max-w-md p-8">
+    <div className=" flex flex-col w-full justify-center items-center max-w-md">
       <div className="flex-shrink flex-grow">
         <div className=" text-[26px] text-[#333] font-bold">Hello!</div>
         <div className=" text-lg text-[#333] mb-[40px]">
           Sign Up To Get Started
         </div>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className=" text-md">
           <div className="flex space-x-7">
             <input
               type="text"
@@ -39,7 +39,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
               id="firstName"
               placeholder="First Name"
               required
-              className="mb-4 block border border-gray-300 rounded-[30px] w-[200px] h-[10px] py-8 px-6 text-lg"
+              className="mb-4 block border border-gray-300 rounded-[30px] w-full h-[10px] py-8 pl-6 pr-1"
             />
 
             <input
@@ -49,7 +49,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
               id="lastName"
               placeholder="Last Name"
               required
-              className="mb-4 block border border-gray-300 rounded-[30px] w-[200px] h-[30px] py-8 px-6 text-lg"
+              className="mb-4 block border border-gray-300 rounded-[30px] w-full h-[30px] py-8 pl-6 pr-1"
             />
           </div>
 
@@ -60,7 +60,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
             id="email"
             placeholder="Email"
             required
-            className="mb-4 block border border-gray-300 rounded-[30px] w-[432px] h-[30px] py-8 px-6 text-lg"
+            className="mb-4 block border border-gray-300 rounded-[30px] w-full h-[30px] py-8 pl-6 pr-1"
           />
 
           <input
@@ -70,7 +70,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
             id="username"
             placeholder="Username"
             required
-            className="mb-4 block border border-gray-300 rounded-[30px] w-[432px] h-[30px] py-8 px-6 text-lg"
+            className="mb-4 block border border-gray-300 rounded-[30px] w-full h-[30px] py-8 pl-6 pr-1"
           />
 
           <input
@@ -80,12 +80,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
             id="password"
             placeholder="Password"
             required
-            className="mb-4 block border border-gray-300 rounded-[30px] w-[432px] h-[30px] py-8 px-6 text-lg"
+            className="mb-4 block border border-gray-300 rounded-[30px] w-full h-[30px] py-8 pl-6 pr-1"
           />
 
           <button
             type="submit"
-            className="bg-[#0575E6] text-white text-center w-[432px] rounded-[30px] py-3 mb-1 hover:bg-[#35649b] transition duration-300"
+            className="bg-[#0575E6] text-white text-center w-full rounded-[30px] py-3 mb-1 hover:bg-[#35649b] transition duration-300"
           >
             Register
           </button>

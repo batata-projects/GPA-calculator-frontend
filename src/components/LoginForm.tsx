@@ -15,39 +15,37 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div className=" flex flex-col w-full items-center max-w-md p-8">
-      <div className=" flex-shrink flex-grow">
-        <div className=" text-[26px] text-[#333] font-bold">Hello Again!</div>
-        <div className=" text-lg text-[#333] mb-[40px]">Welcome Back</div>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            id="email"
-            placeholder="Email Address"
-            className=" mb-4 block border border-gray-300 rounded-[30px] w-[432px] h-[40px] py-8 px-6 text-lg"
-          />
+    <div className=" flex flex-col justify-center flex-1">
+      <div className=" text-[26px] text-[#333] font-bold">Hello Again!</div>
+      <div className=" text-lg text-[#333] mb-[40px]">Welcome Back</div>
+      <form onSubmit={handleSubmit} className=" text-md">
+        <input
+          type="text"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          id="email"
+          placeholder="Email Address"
+          className=" mb-4 block border border-gray-300 rounded-[30px] w-full h-[40px] py-8 pl-6 pr-2"
+        />
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            id="password"
-            placeholder="Password"
-            className=" mb-4 block border border-gray-300 rounded-[30px] w-[432px] h-[40px] py-8 px-6 text-lg"
-          />
-          <button
-            type="submit"
-            className=" bg-[#0575E6] text-white text-center w-[432px] rounded-[30px] py-3 mb-3 hover:bg-[#35649b] transition duration-300"
-          >
-            Login
-          </button>
-          <a href="" className=" underline ml-[150px]">
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          id="password"
+          placeholder="Password"
+          className=" mb-4 block border border-gray-300 rounded-[30px] w-full h-[40px] py-8 pl-6 pr-2"
+        />
+        <button
+          type="submit"
+          className=" bg-[#0575E6] text-white text-center w-full rounded-[30px] py-3 mb-3 hover:bg-[#35649b] transition duration-300"
+        >
+          Login
+        </button>
+        {/* <a href="" className=" underline ml-[150px]">
             Forgot Password!
-          </a>
-        </form>
-      </div>
+          </a> */}
+      </form>
     </div>
   );
 };
