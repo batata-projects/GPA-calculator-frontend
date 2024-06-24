@@ -84,9 +84,9 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full min-h-screen font-poppins">
+    <div className="flex flex-col lg:flex-row font-poppins">
       {/* Left side of the landing page */}
-      <div className=" w-full lg:w-7/12 container bg-gradient-to-b from-[#0575E6] to-[#021B79] flex-1 relative">
+      <div className="lg:w-7/12 w-full min-h-screen bg-gradient-to-b from-[#0575E6] to-[#021B79] relative">
         <div className="w-full h-full flex flex-col items-center justify-center py-8 lg:py-0 relative z-10">
           <div className="w-4/5 max-w-2xl">
             <div className="text-white font-poppins text-4xl lg:text-5xl font-bold text-shadow-lg mb-4">
@@ -123,10 +123,11 @@ const LandingPage = () => {
       </div>
 
       {/* Right side of the landing page */}
-      <div className=" w-full lg:w-5/12 container flex justify-center pt-[100px]">
-        <div className=" w-[70%] max-w-md relative">
+      <div className="lg:w-5/12 w-full flex min-h-screen justify-center">
+        <div className="w-[70%] max-w-md relative mt-[140px]">
           <AnimatePresence>
             {isLogin ? (
+              // login
               <motion.div
                 key="login"
                 initial={{ opacity: 0, x: 100 }}
@@ -138,7 +139,7 @@ const LandingPage = () => {
                 <LoginForm onSubmit={handleLogin} error={error} />
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <div className="text-center mt-2">
-                  <div className=" mb-2 cursor-pointer underline">
+                  <div className="mb-2 cursor-pointer underline">
                     Forget Password?
                   </div>
                   <div className="text-sm text-gray-400 mb-1">
@@ -153,6 +154,7 @@ const LandingPage = () => {
                 </div>
               </motion.div>
             ) : (
+              // register
               <motion.div
                 key="register"
                 initial={{ opacity: 0, x: 100 }}
@@ -161,7 +163,7 @@ const LandingPage = () => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0"
               >
-                <div>
+                <div className=" flex flex-shrink flex-col">
                   <RegisterForm onSubmit={handleRegister} error={error} />
                   {error && <p className="text-red-500 text-xs">{error}</p>}
                   <div className="text-center mt-2">
