@@ -1,7 +1,7 @@
 import React from "react";
 
-function Overall() {
+function OverallSection() {
   return <div>Overall</div>;
 }
 
-export default Overall;
+export default OverallSection;

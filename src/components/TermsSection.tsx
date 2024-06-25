@@ -1,7 +1,7 @@
 import React from "react";
 
-function Terms() {
+function TermsSection() {
   return <div>Terms</div>;
 }
 
-export default Terms;
+export default TermsSection;

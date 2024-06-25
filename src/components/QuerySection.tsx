@@ -1,7 +1,7 @@
 import React from "react";
 
-function Query() {
+function QuerySection() {
   return <div>Query</div>;
 }
 
-export default Query;
+export default QuerySection;
