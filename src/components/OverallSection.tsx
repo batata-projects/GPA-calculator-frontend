@@ -1,7 +1,7 @@
 import React from "react";
 
-function OverallSection() {
-  return <div>Overall</div>;
-}
+const OverallSection = () => {
+  return <div id="overall">Overall</div>;
+};
 
 export default OverallSection;

@@ -5,6 +5,7 @@ module.exports = {
     extend: {
       fontFamily: {
         poppins: ["Poppins", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
       },
       textShadow: {
         default: "0 2px 5px rgba(0, 0, 0, 0.5)",
