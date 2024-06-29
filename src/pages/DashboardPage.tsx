@@ -41,7 +41,6 @@ const DashboardPage: React.FC = () => {
 
   const isAuthenticated = () => {
     const access_token = localStorage.getItem("access_token");
-    console.log(!!access_token);
     return !!access_token;
   };
 
@@ -99,18 +98,24 @@ const DashboardPage: React.FC = () => {
     }
   }, [user_id, navigate, getUserInfo]);
 
-  if (!user) {
-    return <div className="">Loading...</div>;
-  }
-
   return (
     <div>
       <Navbar />
-      {user.first_name}
-      <div className=" flex flex-col justify-center items-center flex-shrink flex-grow">
-        <OverallSection />
-        <TermsSection />
-        <QuerySection />
+      <div className="flex flex-col items-center">
+        {user ? (
+          <>
+            <div className="font-inter text-[25px]">
+              Hello, {user.first_name}
+            </div>
+            <div className="flex flex-col">
+              <OverallSection user={user} />
+              <TermsSection terms={terms} />
+              <QuerySection />
+            </div>
+          </>
+        ) : (
+          <div className="">Loading...</div>
+        )}
       </div>
     </div>
   );

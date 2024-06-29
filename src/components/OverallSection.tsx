@@ -1,7 +1,27 @@
+// OverallSection.tsx
 import React from "react";
+import GPAKnob from "./OverallSectionComponents/GPAKnob.tsx";
 
-const OverallSection = () => {
-  return <div id="overall">Overall</div>;
+interface User {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  credits: number;
+  grade: number;
+  gpa: number;
+}
+
+interface OverallSectionProps {
+  user: User;
+}
+
+const OverallSection: React.FC<OverallSectionProps> = ({ user }) => {
+  return (
+    <div className="flex flex-col items-center justify-center mt-[80px]">
+      <GPAKnob value={user.gpa} />
+    </div>
+  );
 };
 
 export default OverallSection;
