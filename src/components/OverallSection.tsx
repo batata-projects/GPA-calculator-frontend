@@ -18,7 +18,7 @@ interface OverallSectionProps {
 
 const OverallSection: React.FC<OverallSectionProps> = ({ user }) => {
   return (
-    <div className="flex flex-col items-center justify-center mt-[80px]">
+    <div className="flex flex-col items-center justify-center mt-[60px]">
       <GPAKnob value={user.gpa} />
     </div>
   );

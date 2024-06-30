@@ -17,11 +17,21 @@ interface User {
 }
 
 interface Terms {
-  [key: string]: Course[];
-}
-
-interface Course {
-  name: string;
+  [key: string]: {
+    name: string;
+    gpa: number;
+    credits: number;
+    courses: {
+      [key: string]: {
+        subject: string;
+        course_code: string;
+        term: number;
+        credits: number;
+        grade: number;
+        graded: boolean;
+      };
+    };
+  };
 }
 
 interface ApiResponse {
@@ -99,7 +109,7 @@ const DashboardPage: React.FC = () => {
   }, [user_id, navigate, getUserInfo]);
 
   return (
-    <div>
+    <div className=" font-inter">
       <Navbar />
       <div className="flex flex-col items-center">
         {user ? (

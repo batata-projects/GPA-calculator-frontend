@@ -18,7 +18,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="sticky">
-      <div className="mx-auto px-4 py-2 grid grid-cols-3 items-center font-inter">
+      <div className="mx-auto px-4 py-2 grid grid-cols-3 items-center">
         <div className="flex items-center">
           <Link
             to="overall"
@@ -31,7 +31,7 @@ const Navbar: React.FC = () => {
             Home
           </Link>
         </div>
-        <div className="text-[45px] font-in text-center">GPA Calculator</div>
+        <div className="text-[45px] text-center">GPA Calculator</div>
         <div className="flex items-center justify-end">
           <button onClick={handleSettings} className="mr-4">
             Settings
