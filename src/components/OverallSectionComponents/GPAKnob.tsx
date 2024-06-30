@@ -27,7 +27,7 @@ const GPAKnob = ({ value }) => {
           }}
         />
         <div className="absolute bottom-[-20%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-          <div className="text-[37px] font-bold">GPA</div>
+          <div className="text-[37px] font-semibold">GPA</div>
           <div className="mb-3 bg-orange-500 text-white px-7 py-1 rounded-3xl text-[40px]">
             {value.toFixed(1)}
           </div>
