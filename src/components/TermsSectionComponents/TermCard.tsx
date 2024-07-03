@@ -25,10 +25,13 @@ interface TermCardProps {
 
 const TermCard: React.FC<TermCardProps> = ({ termData }) => {
   return (
-    <div className="flex flex-col bg-[#055AC5] my-4 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700">
+    <div className="flex flex-col bg-[#055AC5] my-4 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-8 lg:pr-0 element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700">
       <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
+        {/* course side */}
         <div className="w-full md:w-3/4 flex flex-col py-3">
-          <div className="text-[25px] mb-6">{termData.name}</div>
+          <div className="text-[25px] mb-6 text-center lg:text-start md:text-start sm:text-center">
+            {termData.name}
+          </div>
           <div className="flex flex-col md:flex-row flex-wrap gap-4 md:gap-6">
             {Object.values(termData.courses).map((course, index) => (
               <div
@@ -54,8 +57,14 @@ const TermCard: React.FC<TermCardProps> = ({ termData }) => {
             </button>
           </div>
         </div>
-        <div className="w-full md:w-1/4 flex flex-col p-4 md:p-8 relative text-center border-t md:border-t-0 md:border-l">
-          <div className="mb-4 text-[36px] md:text-[48px] font-bold">GPA</div>
+        {/* gpa side */}
+        <div className="w-full md:w-1/4 flex flex-col p-4 md:p-8 relative items-center border-t md:border-t-0 md:border-l">
+          <div className="my-2 text-[36px] md:text-[48px] lg:my-4  font-bold">
+            GPA
+          </div>
+          <div className="flex justify-center items-center bg-orange-500 rounded-[40px] h-[60px] sm:h-[70px] md:h-[80px] w-[120px] sm:w-[130px] md:w-[140px] text-[24px] sm:text-[28px] md:text-[32px] px-4 overflow-hidden">
+            {termData.gpa}
+          </div>
         </div>
       </div>
     </div>
