@@ -25,45 +25,37 @@ interface TermCardProps {
 
 const TermCard: React.FC<TermCardProps> = ({ termData }) => {
   return (
-    <div className="bg-[#055AC5] rounded-2xl shadow-md p-8 mb-4 w-full max-w-screen-xl mx-auto flex-grow flex-shrink">
-      <div className="mb-6">
-        <h3 className="text-2xl font-bold text-white">{termData.name}</h3>
-      </div>
-      {/* course and gpa container */}
-      <div className="flex flex-col md:flex-row md:items-stretch">
-        {/* course side */}
-        <div className="w-full md:w-4/5 md:pr-6 flex flex-col">
-          <div className="flex-grow">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Object.values(termData.courses).map((course, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-2xl p-4 flex justify-between items-center text-[14px]"
-                >
-                  <p className="text-gray-800 font-bold">
-                    {course.subject} {course.course_code}
+    <div className="flex flex-col bg-[#055AC5] my-4 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700">
+      <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
+        <div className="w-full md:w-3/4 flex flex-col py-3">
+          <div className="text-[25px] mb-6">{termData.name}</div>
+          <div className="flex flex-col md:flex-row flex-wrap gap-4 md:gap-6">
+            {Object.values(termData.courses).map((course, index) => (
+              <div
+                key={index}
+                className="flex flex-row md:flex-row items-center space-x-2 md:space-y-0 md:space-x-2"
+              >
+                {/* course name */}
+                <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px]">
+                  <p>
+                    {course.subject}-{course.course_code}
                   </p>
-                  <p className="text-gray-800 font-bold">{course.grade}</p>
                 </div>
-              ))}
-            </div>
+                {/* course grade */}
+                <div className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px]">
+                  {course.grade}
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="flex justify-end mt-6">
-            <button className="bg-white text-[#2a4193] font-bold py-3 px-6 rounded-lg text-lg">
+          <div className="mt-auto mr-2 self-end">
+            <button className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5">
               Add Course
             </button>
           </div>
         </div>
-        {/* vertical span */}
-        <div className="hidden md:block w-px bg-white mx-8"></div>
-        {/* horizontal span */}
-        <div className="md:hidden h-px bg-white my-8"></div>
-        {/* gpa side */}
-        <div className="w-full md:w-1/5 mt-6 md:mt-0">
-          <div className="bg-[#FF9500] text-white rounded-lg p-6">
-            <p className="text-3xl font-bold mb-4 text-center">GPA</p>
-            <p className="text-5xl font-bold text-center">{termData.gpa}</p>
-          </div>
+        <div className="w-full md:w-1/4 flex flex-col p-4 md:p-8 relative text-center border-t md:border-t-0 md:border-l">
+          <div className="mb-4 text-[36px] md:text-[48px] font-bold">GPA</div>
         </div>
       </div>
     </div>
