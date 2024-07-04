@@ -29,14 +29,16 @@ const TermCard: React.FC<TermCardProps> = ({ termData }) => {
       <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
         {/* course side */}
         <div className="w-full md:w-3/4 flex flex-col py-3">
+          {/* term name */}
           <div className="text-[25px] mb-6 text-center lg:text-start md:text-start sm:text-center">
             {termData.name}
           </div>
-          <div className="flex flex-col md:flex-row flex-wrap gap-4 md:gap-6">
+          {/* courses */}
+          <div className="flex flex-col items-center md:flex-row md:flex-wrap gap-4 md:gap-6">
             {Object.values(termData.courses).map((course, index) => (
               <div
                 key={index}
-                className="flex flex-row md:flex-row items-center space-x-2 md:space-y-0 md:space-x-2"
+                className="flex flex-row items-center md:items-center space-x-2"
               >
                 {/* course name */}
                 <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px]">
@@ -51,7 +53,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData }) => {
               </div>
             ))}
           </div>
-          <div className="mt-auto mr-2 self-end">
+          <div className="mt-auto mr-2 md:self-end self-center">
             <button className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5">
               Add Course
             </button>
