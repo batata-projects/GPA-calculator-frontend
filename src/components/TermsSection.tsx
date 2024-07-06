@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import TermCard from "./TermsSectionComponents/TermCard.tsx";
+import TermForm from "./TermsSectionComponents/TermForm.tsx";
 
 interface Terms {
   [key: string]: {
@@ -21,13 +22,27 @@ interface Terms {
 
 interface TermsSectionProps {
   terms: Terms;
+  userId: string | null;
 }
 
-const TermsSection: React.FC<TermsSectionProps> = ({ terms }) => {
+const TermsSection: React.FC<TermsSectionProps> = ({ terms, userId }) => {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const handleOpenForm = () => {
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+  };
+
   return (
     <div className="flex flex-col items-center mt-7">
       <h2 className="text-2xl font-bold mb-4">Terms</h2>
-      <button className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 mb-4">
+      <button
+        onClick={handleOpenForm}
+        className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 mb-4"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="72"
@@ -52,6 +67,7 @@ const TermsSection: React.FC<TermsSectionProps> = ({ terms }) => {
         .map(([term, termData]) => (
           <TermCard key={term} term={term} termData={termData} />
         ))}
+      {isFormOpen && <TermForm onClose={handleCloseForm} userId={userId} />}
     </div>
   );
 };
