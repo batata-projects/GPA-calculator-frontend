@@ -48,9 +48,10 @@ const DashboardPage: React.FC = () => {
   const [terms, setTerms] = useState<Terms>({});
   const [user, setUser] = useState<User | null>(null);
   const user_id = localStorage.getItem("user_id");
+  const access_token = localStorage.getItem("access_token");
+  const refresh_token = localStorage.getItem("refresh_token");
 
   const isAuthenticated = () => {
-    const access_token = localStorage.getItem("access_token");
     return !!access_token;
   };
 
@@ -63,9 +64,6 @@ const DashboardPage: React.FC = () => {
   const getUserInfo = useCallback(
     async (user_id: string) => {
       try {
-        const access_token = localStorage.getItem("access_token");
-        const refresh_token = localStorage.getItem("refresh_token");
-
         if (!access_token || !refresh_token) {
           // Handle the case when tokens are missing
           console.error("Access token or refresh token is missing");
@@ -97,7 +95,7 @@ const DashboardPage: React.FC = () => {
         navigate("/");
       }
     },
-    [navigate]
+    [navigate, access_token, refresh_token]
   );
 
   useEffect(() => {
@@ -109,7 +107,7 @@ const DashboardPage: React.FC = () => {
   }, [user_id, navigate, getUserInfo]);
 
   return (
-    <div className=" font-inter">
+    <div className="font-inter">
       <Navbar />
       <div className="flex flex-col items-center">
         {user ? (
@@ -119,7 +117,12 @@ const DashboardPage: React.FC = () => {
             </div>
             <div className="flex flex-col">
               <OverallSection user={user} />
-              <TermsSection terms={terms} />
+              <TermsSection
+                terms={terms}
+                userId={user_id}
+                accessToken={access_token || ""}
+                refreshToken={refresh_token || ""}
+              />
               <QuerySection />
             </div>
           </>

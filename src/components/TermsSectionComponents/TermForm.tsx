@@ -5,22 +5,30 @@ interface Course {
   subject: string;
   course_code: string;
   credits: string;
-  grade: string;
+  grade: number;
   graded: string;
 }
 
 interface TermFormProps {
   onClose: () => void;
   userId: string | null;
+  accessToken: string | null;
+  refreshToken: string | number | boolean;
 }
 
-const TermForm: React.FC<TermFormProps> = ({ onClose, userId }) => {
-  const [term, setTerm] = useState("");
+const TermForm: React.FC<TermFormProps> = ({
+  onClose,
+  userId,
+  accessToken,
+  refreshToken,
+}) => {
+  const [term, setTerm] = useState<number>(0);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [error, setError] = useState("");
   const formContainerRef = useRef<HTMLDivElement>(null);
 
   const handleTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTerm(e.target.value);
+    setTerm(parseInt(e.target.value, 10));
   };
 
   const handleCourseChange = (
@@ -31,7 +39,11 @@ const TermForm: React.FC<TermFormProps> = ({ onClose, userId }) => {
     field: keyof Course
   ) => {
     const updatedCourses = [...courses];
-    updatedCourses[index][field] = e.target.value;
+    if (field === "grade") {
+      updatedCourses[index][field] = parseFloat(e.target.value);
+    } else {
+      updatedCourses[index][field] = e.target.value;
+    }
     setCourses(updatedCourses);
   };
 
@@ -42,7 +54,7 @@ const TermForm: React.FC<TermFormProps> = ({ onClose, userId }) => {
         subject: "",
         course_code: "",
         credits: "",
-        grade: "",
+        grade: 0,
         graded: "",
       },
     ]);
@@ -69,10 +81,22 @@ const TermForm: React.FC<TermFormProps> = ({ onClose, userId }) => {
         grade: course.grade,
         graded: course.graded,
       }));
-      await httpClient.post("/api/terms", payload);
-      onClose();
+      const response = await httpClient.post("/courses/many", payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "refresh-token": refreshToken,
+        },
+      });
+      console.log(response);
+
+      if (response.data.status === 201) {
+        window.location.reload();
+        onClose();
+      } else if (response.data.status === 500) {
+        setError(response.data.message);
+      }
     } catch (error) {
-      console.error("Error submitting form:", error);
+      setError(`${error.response.data.detail}, Please sign in again.`);
     }
   };
 
@@ -80,7 +104,7 @@ const TermForm: React.FC<TermFormProps> = ({ onClose, userId }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div
         ref={formContainerRef}
-        className="bg-white p-8 rounded shadow-lg max-h-[80vh] overflow-y-auto"
+        className="bg-white p-8 rounded shadow-lg max-h-[80vh] min-w-[50%] overflow-y-auto"
       >
         <h2 className="text-2xl font-bold mb-4">Add Term</h2>
         <form onSubmit={handleSubmit}>
@@ -176,6 +200,13 @@ const TermForm: React.FC<TermFormProps> = ({ onClose, userId }) => {
               </div>
             </div>
           ))}
+          {/* <div className="flex flex-wrap max-w-full">
+            {error && (
+              <div className="px-4 py-2 mb-4 text-red-500 bg-red-100 border border-red-400 rounded  ">
+                {error}
+              </div>
+            )}
+          </div> */}
           <button
             type="button"
             onClick={handleAddCourse}

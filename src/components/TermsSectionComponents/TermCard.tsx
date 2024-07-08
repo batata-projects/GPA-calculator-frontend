@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import AddCourseForm from "./AddCourseForm.tsx";
 
 interface Course {
   subject: string;
@@ -21,14 +22,33 @@ interface TermData {
 interface TermCardProps {
   term: string;
   termData: TermData;
+  user_id: string | null;
+  accessToken: string | null;
+  refreshToken: string | number | boolean;
 }
 
-const TermCard: React.FC<TermCardProps> = ({ termData }) => {
+const TermCard: React.FC<TermCardProps> = ({
+  termData,
+  user_id,
+  accessToken,
+  refreshToken,
+  term,
+}) => {
+  const [showForm, setShowForm] = useState(false);
+
+  const handleAddCourse = () => {
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+  };
+
   return (
-    <div className="flex flex-col bg-[#055AC5] my-4 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-8 lg:pr-0 element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700">
+    <div className="flex flex-col bg-[#055AC5] my-8 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-0  element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700 mb-3">
       <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
         {/* course side */}
-        <div className="w-full md:w-3/4 flex flex-col py-3">
+        <div className="w-full md:w-3/4 flex flex-col py-3 pl-5">
           {/* term name */}
           <div className="text-[25px] mb-6 text-center lg:text-start md:text-start sm:text-center">
             {termData.name}
@@ -54,7 +74,10 @@ const TermCard: React.FC<TermCardProps> = ({ termData }) => {
             ))}
           </div>
           <div className="mt-auto mr-2 md:self-end self-center">
-            <button className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5">
+            <button
+              onClick={handleAddCourse}
+              className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
+            >
               Add Course
             </button>
           </div>
@@ -65,10 +88,19 @@ const TermCard: React.FC<TermCardProps> = ({ termData }) => {
             GPA
           </div>
           <div className="flex justify-center items-center bg-orange-500 rounded-[40px] h-[60px] sm:h-[70px] md:h-[80px] w-[120px] sm:w-[130px] md:w-[140px] text-[24px] sm:text-[28px] md:text-[32px] px-4 overflow-hidden">
-            {termData.gpa}
+            {termData.gpa.toFixed(2)}
           </div>
         </div>
       </div>
+      {showForm && (
+        <AddCourseForm
+          user_id={user_id}
+          onClose={handleCloseForm}
+          term={term}
+          accessToken={accessToken}
+          refreshToken={refreshToken}
+        />
+      )}
     </div>
   );
 };

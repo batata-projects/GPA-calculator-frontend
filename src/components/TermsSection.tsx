@@ -23,9 +23,16 @@ interface Terms {
 interface TermsSectionProps {
   terms: Terms;
   userId: string | null;
+  accessToken: string | null;
+  refreshToken: string | number | boolean;
 }
 
-const TermsSection: React.FC<TermsSectionProps> = ({ terms, userId }) => {
+const TermsSection: React.FC<TermsSectionProps> = ({
+  terms,
+  userId,
+  accessToken,
+  refreshToken,
+}) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleOpenForm = () => {
@@ -65,9 +72,23 @@ const TermsSection: React.FC<TermsSectionProps> = ({ terms, userId }) => {
       {Object.entries(terms)
         .sort(([termA], [termB]) => termB.localeCompare(termA))
         .map(([term, termData]) => (
-          <TermCard key={term} term={term} termData={termData} />
+          <TermCard
+            key={term}
+            term={term}
+            termData={termData}
+            user_id={userId}
+            accessToken={accessToken}
+            refreshToken={refreshToken}
+          />
         ))}
-      {isFormOpen && <TermForm onClose={handleCloseForm} userId={userId} />}
+      {isFormOpen && (
+        <TermForm
+          onClose={handleCloseForm}
+          userId={userId}
+          accessToken={accessToken}
+          refreshToken={refreshToken}
+        />
+      )}
     </div>
   );
 };
