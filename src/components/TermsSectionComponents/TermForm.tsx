@@ -22,25 +22,83 @@ const TermForm: React.FC<TermFormProps> = ({
   accessToken,
   refreshToken,
 }) => {
-  const [term, setTerm] = useState<number>(0);
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [year, setYear] = useState<number>();
+  const [semester, setSemester] = useState<string>("");
+  const [courses, setCourses] = useState<Course[]>([
+    {
+      subject: "",
+      course_code: "",
+      credits: "",
+      grade: 0,
+      graded: "",
+    },
+  ]);
   const [error, setError] = useState("");
-  const formContainerRef = useRef<HTMLDivElement>(null);
+  const letterGrades = [
+    "A+",
+    "A",
+    "A-",
+    "B+",
+    "B",
+    "B-",
+    "C+",
+    "C",
+    "C-",
+    "D+",
+    "D",
+    "F",
+  ];
 
-  const handleTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTerm(parseInt(e.target.value, 10));
+  const gradeValues: { [key: string]: number } = {
+    "A+": 4.3,
+    A: 4.0,
+    "A-": 3.7,
+    "B+": 3.3,
+    B: 3.0,
+    "B-": 2.7,
+    "C+": 2.3,
+    C: 2.0,
+    "C-": 1.7,
+    "D+": 1.3,
+    D: 1.0,
+    F: 0.0,
+  };
+  const formContainerRef = useRef<HTMLDivElement>(null);
+  const semesters = ["Fall", "Winter", "Spring", "Summer"];
+
+  const handleTermChange = (
+    e:
+      | React.ChangeEvent<HTMLSelectElement>
+      | React.ChangeEvent<HTMLInputElement>,
+    field: "year" | "semester"
+  ) => {
+    if (field === "year") {
+      setYear(parseInt(e.target.value));
+    } else {
+      setSemester(e.target.value);
+    }
+  };
+
+  const handleRemoveCourse = (index: number) => {
+    if (courses.length === 1) {
+      setError(
+        "Course cannot be removed. A term needs to have at least 1 course."
+      );
+      return; // Prevent removal if there is only one course
+    }
+    const updatedCourses = [...courses];
+    updatedCourses.splice(index, 1);
+    setCourses(updatedCourses);
   };
 
   const handleCourseChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     index: number,
     field: keyof Course
   ) => {
     const updatedCourses = [...courses];
     if (field === "grade") {
-      updatedCourses[index][field] = parseFloat(e.target.value);
+      updatedCourses[index][field] = gradeValues[e.target.value];
     } else {
       updatedCourses[index][field] = e.target.value;
     }
@@ -71,6 +129,14 @@ const TermForm: React.FC<TermFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const semesterCode = {
+      Fall: "10",
+      Winter: "15",
+      Spring: "20",
+      Summer: "25",
+    }[semester];
+    const term = parseInt(`${year}${semesterCode}`);
+
     try {
       const payload = courses.map((course) => ({
         user_id: userId,
@@ -104,109 +170,161 @@ const TermForm: React.FC<TermFormProps> = ({
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div
         ref={formContainerRef}
-        className="bg-white p-8 rounded shadow-lg max-h-[80vh] min-w-[50%] overflow-y-auto"
+        className="bg-white p-8 rounded shadow-lg max-h-[80vh] min-w-[50%] max-w-[50%] overflow-y-auto"
       >
-        <h2 className="text-2xl font-bold mb-4">Add Term</h2>
+        <h2 className="text-2xl font-bold mb-6">Add Term</h2>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="term" className="block mb-1">
-              Term Name
-            </label>
-            <input
-              type="text"
-              id="term"
-              name="term"
-              value={term}
-              onChange={handleTermChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded"
-              required
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="mb-4">
+              <label htmlFor="semester" className="block mb-1">
+                Semester
+              </label>
+              <select
+                id="semester"
+                name="semester"
+                value={semester}
+                onChange={(e) => handleTermChange(e, "semester")}
+                className="w-full px-3 py-2 border border-gray-300 rounded"
+                required
+              >
+                <option value="">Select a semester</option>
+                {semesters.map((semester) => (
+                  <option key={semester} value={semester}>
+                    {semester}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
+              <label htmlFor="year" className="block mb-1">
+                Year
+              </label>
+              <input
+                type="number"
+                id="year"
+                name="year"
+                value={year}
+                placeholder="yyyy"
+                onChange={(e) => handleTermChange(e, "year")}
+                className="w-full px-3 py-2 border border-gray-300 rounded"
+                required
+              />
+            </div>
           </div>
+
           {courses.map((course, index) => (
-            <div key={index} className="mb-6">
-              <h3 className="text-lg font-bold mb-2">Course {index + 1}</h3>
-              <div className="mb-2">
-                <label htmlFor={`subject-${index}`} className="block mb-1">
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  id={`subject-${index}`}
-                  name={`subject-${index}`}
-                  value={course.subject}
-                  onChange={(e) => handleCourseChange(e, index, "subject")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded"
-                  required
-                />
+            <div key={index} className="mb-6 pt-6 border-t">
+              <div className=" flex flex-row">
+                <h3 className="text-lg font-bold mb-2">Course {index + 1}</h3>
               </div>
-              <div className="mb-2">
-                <label htmlFor={`course_code-${index}`} className="block mb-1">
-                  Course Code
-                </label>
-                <input
-                  type="text"
-                  id={`course_code-${index}`}
-                  name={`course_code-${index}`}
-                  value={course.course_code}
-                  onChange={(e) => handleCourseChange(e, index, "course_code")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded"
-                  required
-                />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    id={`subject-${index}`}
+                    name={`subject-${index}`}
+                    value={course.subject}
+                    placeholder="Subject"
+                    onChange={(e) => handleCourseChange(e, index, "subject")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                    required
+                  />
+                </div>
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    id={`course_code-${index}`}
+                    name={`course_code-${index}`}
+                    value={course.course_code}
+                    placeholder="Course Code"
+                    onChange={(e) =>
+                      handleCourseChange(e, index, "course_code")
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                    required
+                  />
+                </div>
+                <div className="mb-2">
+                  <input
+                    type="number"
+                    id={`credits-${index}`}
+                    name={`credits-${index}`}
+                    value={course.credits}
+                    placeholder="Credits"
+                    onChange={(e) => handleCourseChange(e, index, "credits")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                    required
+                  />
+                </div>
+                <div className="mb-2">
+                  <label htmlFor={`grade-${index}`} className="block mb-1">
+                    Grade
+                  </label>
+                  <select
+                    id={`grade-${index}`}
+                    name={`grade-${index}`}
+                    value={letterGrades.find(
+                      (grade) => gradeValues[grade] === course.grade
+                    )}
+                    onChange={(e) => handleCourseChange(e, index, "grade")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                    required
+                  >
+                    <option value="">Select a grade</option>
+                    {letterGrades.map((grade) => (
+                      <option key={grade} value={grade}>
+                        {grade}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-2">
+                  <label className="block mb-1">Graded</label>
+                  <div className="flex items-center">
+                    <label className="inline-flex items-center mr-4">
+                      <input
+                        type="radio"
+                        name={`graded-${index}`}
+                        value="true"
+                        checked={course.graded === "true"}
+                        onChange={(e) => handleCourseChange(e, index, "graded")}
+                        className="mr-2"
+                        required
+                      />
+                      <span>Yes</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name={`graded-${index}`}
+                        value="false"
+                        checked={course.graded === "false"}
+                        onChange={(e) => handleCourseChange(e, index, "graded")}
+                        className="mr-2"
+                        required
+                      />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </div>
               </div>
-              <div className="mb-2">
-                <label htmlFor={`credits-${index}`} className="block mb-1">
-                  Credits
-                </label>
-                <input
-                  type="number"
-                  id={`credits-${index}`}
-                  name={`credits-${index}`}
-                  value={course.credits}
-                  onChange={(e) => handleCourseChange(e, index, "credits")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-2">
-                <label htmlFor={`grade-${index}`} className="block mb-1">
-                  Grade
-                </label>
-                <input
-                  type="text"
-                  id={`grade-${index}`}
-                  name={`grade-${index}`}
-                  value={course.grade}
-                  onChange={(e) => handleCourseChange(e, index, "grade")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-2">
-                <label htmlFor={`graded-${index}`} className="block mb-1">
-                  Graded
-                </label>
-                <select
-                  id={`graded-${index}`}
-                  name={`graded-${index}`}
-                  value={course.graded}
-                  onChange={(e) => handleCourseChange(e, index, "graded")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded"
-                  required
-                >
-                  <option value="">Select</option>
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
-              </div>
+
+              <button
+                type="button"
+                onClick={() => handleRemoveCourse(index)}
+                className="px-2 py-1 text-white bg-red-500 rounded"
+              >
+                Remove
+              </button>
             </div>
           ))}
-          {/* <div className="flex flex-wrap max-w-full">
-            {error && (
-              <div className="px-4 py-2 mb-4 text-red-500 bg-red-100 border border-red-400 rounded  ">
-                {error}
-              </div>
-            )}
-          </div> */}
+          {error && (
+            <div className="px-4 py-2 mb-4 text-red-500 bg-red-100 border w-[60%] border-red-400 rounded overflow-y-auto  ">
+              {error}
+            </div>
+          )}
           <button
             type="button"
             onClick={handleAddCourse}

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import httpClient from "../../httpClient.tsx";
 
 interface AddCourseFormProps {
@@ -9,6 +8,36 @@ interface AddCourseFormProps {
   term: string | null;
   onClose: () => void;
 }
+
+const letterGrades = [
+  "A+",
+  "A",
+  "A-",
+  "B+",
+  "B",
+  "B-",
+  "C+",
+  "C",
+  "C-",
+  "D+",
+  "D",
+  "F",
+];
+
+const gradeValues: { [key: string]: number } = {
+  "A+": 4.3,
+  A: 4.0,
+  "A-": 3.7,
+  "B+": 3.3,
+  B: 3.0,
+  "B-": 2.7,
+  "C+": 2.3,
+  C: 2.0,
+  "C-": 1.7,
+  "D+": 1.3,
+  D: 1.0,
+  F: 0.0,
+};
 
 const AddCourseForm: React.FC<AddCourseFormProps> = ({
   user_id,
@@ -20,7 +49,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   const [subject, setSubject] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [credits, setCredits] = useState("");
-  const [grade, setGrade] = useState<number>(0);
+  const [grade, setGrade] = useState<string>("");
   const [graded, setGraded] = useState("");
   const [error, setError] = useState("");
 
@@ -28,7 +57,16 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     e.preventDefault();
     try {
       const termNumber = term !== null ? parseInt(term, 10) : null;
-      console.log(user_id, subject, courseCode, term, credits, grade, graded);
+      const numericGrade = gradeValues[grade];
+      console.log(
+        user_id,
+        subject,
+        courseCode,
+        term,
+        credits,
+        numericGrade,
+        graded
+      );
       const response = await httpClient.post(
         "/courses/",
         {
@@ -37,7 +75,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           course_code: courseCode,
           term: termNumber,
           credits,
-          grade,
+          grade: numericGrade,
           graded,
         },
         {
@@ -61,87 +99,103 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   };
 
   return (
-    <div className="flex flex-col border-t p-4 mt-4">
-      <div className="text-xl mb-3">Add Course</div>
-      <form onSubmit={handleSubmit} className=" space-y-2 text-black">
-        <div>
+    <div className="py-3 border-t px-3 mt-4">
+      <div className="mb-3 text-[20px]">Add A Course</div>
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-2 gap-y-4 gap-x-[8%] text-black"
+      >
+        <div className="col-span-1">
           <input
+            id="subject"
             type="text"
             placeholder="Subject"
             onChange={(e) => setSubject(e.target.value)}
             required
-            className=" rounded-xl p-2"
+            className="w-full px-3 py-2 border border-gray-300 rounded"
           />
         </div>
-        <div>
+        <div className="col-span-1">
           <input
+            id="course code"
             type="text"
             placeholder="Course Code"
             onChange={(e) => setCourseCode(e.target.value)}
             required
-            className=" rounded-xl p-2"
+            className="w-full px-3 py-2 border border-gray-300 rounded"
           />
         </div>
-        <div>
+        <div className="col-span-1">
           <input
+            id="credits"
             type="text"
             placeholder="Credits"
             onChange={(e) => setCredits(e.target.value)}
             required
-            className=" rounded-xl p-2"
+            className="w-full px-3 py-2 border border-gray-300 rounded"
           />
         </div>
-        <div>
-          <input
-            type="number"
-            placeholder="Grade"
-            onChange={(e) => setGrade(parseFloat(e.target.value))}
+        <div className="col-span-1 space-y-2">
+          <select
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
             required
-            className=" rounded-xl p-2"
-          />
-        </div>
-        <div className="flex flex-row space-x-2 text-white">
-          <div>Graded:</div>
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="graded-yes"
-              value="True"
-              checked={graded === "True"}
-              onChange={() => setGraded("True")}
-              className="mr-2"
-            />
-            <label htmlFor="graded-yes">Yes</label>
+            className="w-full px-3 py-2 border border-gray-300 rounded"
+          >
+            <option value="">Select a grade</option>
+            {letterGrades.map((grade) => (
+              <option key={grade} value={grade}>
+                {grade}
+              </option>
+            ))}
+          </select>
+          <div className=" flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">
+            <label className="text-gray-800">Graded:</label>
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="graded-yes"
+                value="true"
+                checked={graded === "true"}
+                onChange={() => setGraded("true")}
+                className="mr-2"
+              />
+              <label htmlFor="graded-yes" className="text-gray-800">
+                Yes
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="graded-no"
+                value="false"
+                checked={graded === "false"}
+                onChange={() => setGraded("false")}
+                className="mr-2"
+              />
+              <label htmlFor="graded-no" className="text-gray-800">
+                No
+              </label>
+            </div>
           </div>
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="graded-no"
-              value="False"
-              checked={graded === "False"}
-              onChange={() => setGraded("False")}
-              className="mr-2"
-            />
-            <label htmlFor="graded-no">No</label>
-          </div>
         </div>
-        {error && (
-          <p className="text-red-500 text-md bg-white rounded-xl p-2 w-[25%] flex">
-            {error}
-          </p>
-        )}
 
-        <div className="flex justify-start">
+        {error && (
+          <div className="col-span-2 px-4 py-2 text-red-500 bg-red-100 border border-red-400 rounded">
+            {error}
+          </div>
+        )}
+        <div className="col-span-2 flex justify-end mt-4">
           <button
             type="submit"
-            className="bg-orange-500 hover:bg-orange-700 text-white py-2 px-4 rounded-md mr-2"
+            className="px-4 py-2 mr-2 text-white bg-blue-500 rounded"
           >
             Submit
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-md"
+            className="px-4 py-2 text-gray-700 border border-gray-300 rounded"
           >
             Cancel
           </button>
