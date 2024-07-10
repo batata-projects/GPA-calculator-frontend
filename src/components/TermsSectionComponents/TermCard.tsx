@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import AddCourseForm from "./AddCourseForm.tsx";
 import httpClient from "../../httpClient.tsx";
 
@@ -50,6 +50,7 @@ const TermCard: React.FC<TermCardProps> = ({
   refreshToken,
   term,
 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
   const [showForm, setShowForm] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [course, setCourse] = useState<Course | null>(null);
@@ -87,11 +88,13 @@ const TermCard: React.FC<TermCardProps> = ({
     courseId?: string | null,
     course?: Course | null
   ) => {
-    setIsEdit(course !== null);
+    setIsEdit(course !== undefined);
     setShowForm(true);
     setCourse(course || null);
     setCourseId(courseId || null);
-    console.log(termData.courses);
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
   };
 
   const handleCloseForm = () => {
@@ -101,8 +104,17 @@ const TermCard: React.FC<TermCardProps> = ({
     setCourseId(null);
   };
 
+  const scrollToBottom = () => {
+    if (cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  };
+
   return (
-    <div className="flex flex-col bg-[#055AC5] my-8 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-0  element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700 mb-3">
+    <div
+      ref={cardRef}
+      className="flex flex-col bg-[#055AC5] my-8 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-0  element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700 mb-3"
+    >
       <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
         {/* course side */}
         <div className="w-full md:w-[80%] flex flex-col py-3 pl-5">

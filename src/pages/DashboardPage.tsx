@@ -68,7 +68,7 @@ const DashboardPage: React.FC = () => {
         if (!access_token || !refresh_token) {
           // Handle the case when tokens are missing
           console.error("Access token or refresh token is missing");
-          navigate("/login");
+          navigate("/");
           return;
         }
 
@@ -81,12 +81,14 @@ const DashboardPage: React.FC = () => {
             },
           }
         );
+        console.log(response);
 
         if (response.data.data && response.data.data.user) {
           setUser(response.data.data.user);
           setTerms(response.data.data.terms);
         } else {
           console.error("Invalid API response format");
+
           // Handle the case when the response format is unexpected
           navigate("/");
         }

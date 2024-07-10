@@ -77,26 +77,31 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   }, [course]);
 
   const handleDelete = async () => {
-    try {
-      if (courseId) {
-        // Delete the course
-        const response = await httpClient.delete(`/courses/${courseId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "refresh-token": refreshToken,
-          },
-        });
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${course?.subject}-${courseCode} from this term?`
+    );
+    if (confirmDelete) {
+      try {
+        if (courseId) {
+          // Delete the course
+          const response = await httpClient.delete(`/courses/${courseId}`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "refresh-token": refreshToken,
+            },
+          });
 
-        console.log(response);
-        if (response.data.status === 200) {
-          onClose();
-          window.location.reload();
-        } else if (response.data.status === 500) {
-          setError(response.data.message);
+          console.log(response);
+          if (response.data.status === 200) {
+            onClose();
+            window.location.reload();
+          } else if (response.data.status === 500) {
+            setError(response.data.message);
+          }
         }
+      } catch (error) {
+        setError(`${error.response.data.detail}, Please sign in again.`);
       }
-    } catch (error) {
-      setError(`${error.response.data.detail}, Please sign in again.`);
     }
   };
 

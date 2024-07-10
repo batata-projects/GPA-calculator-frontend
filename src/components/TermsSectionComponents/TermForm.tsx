@@ -133,7 +133,7 @@ const TermForm: React.FC<TermFormProps> = ({
       Fall: "10",
       Winter: "15",
       Spring: "20",
-      Summer: "25",
+      Summer: "30",
     }[semester];
     const term = parseInt(`${year}${semesterCode}`);
 
