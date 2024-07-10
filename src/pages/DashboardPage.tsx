@@ -23,6 +23,7 @@ interface Terms {
     credits: number;
     courses: {
       [key: string]: {
+        id: string;
         subject: string;
         course_code: string;
         term: number;
