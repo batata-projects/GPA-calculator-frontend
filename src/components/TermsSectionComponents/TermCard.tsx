@@ -117,10 +117,12 @@ const TermCard: React.FC<TermCardProps> = ({
     >
       <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
         {/* course side */}
-        <div className="w-full md:w-[80%] flex flex-col py-3 pl-5">
+        <div className="w-full md:w-[80%] flex flex-col py-3 pl-5 ">
           {/* term name */}
-          <div className="text-[25px] mb-6 text-center lg:text-start md:text-start sm:text-center">
-            {termData.name}
+          <div className="text-[25px] flex justify-start mb-6 text-center sm:text-center ">
+            <div className=" focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+              {termData.name}
+            </div>
           </div>
           {/* courses */}
           <div className="flex flex-col items-center md:flex-row md:flex-wrap gap-4 md:gap-6">
@@ -176,7 +178,7 @@ const TermCard: React.FC<TermCardProps> = ({
               />
             </svg>
           </button>
-          <div className="mt-12 text-[36px] md:text-[48px] lg:mt-16 font-bold">
+          <div className="mt-12 text-[36px] md:text-[48px] lg:mt-6 font-bold focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
             GPA
           </div>
           <div className="flex justify-center items-center bg-orange-500 rounded-[40px] h-[60px] sm:h-[70px] md:h-[80px] w-[120px] sm:w-[130px] md:w-[140px] text-[24px] sm:text-[28px] md:text-[32px] px-4 overflow-hidden transition duration-300 ease-in-out transform hover:scale-110 mt-4">
