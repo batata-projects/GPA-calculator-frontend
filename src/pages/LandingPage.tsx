@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginForm from "../components/landing-page/LoginForm.tsx";
 import RegisterForm from "../components/landing-page/RegisterForm.tsx";
+
 import httpClient from "../httpClient.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -29,6 +30,7 @@ const LandingPage = () => {
       localStorage.setItem("user_id", user_id);
 
       navigate("/dashboard", { state: { user_id } });
+
     } catch (error: any) {
       if (error.response) {
         // The request was made and the server responded with a status code

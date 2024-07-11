@@ -16,6 +16,7 @@ interface User {
   gpa: number;
 }
 
+
 interface Terms {
   [key: string]: {
     name: string;
