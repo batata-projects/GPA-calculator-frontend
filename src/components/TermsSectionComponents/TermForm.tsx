@@ -257,10 +257,8 @@ const TermForm: React.FC<TermFormProps> = ({
                     required
                   />
                 </div>
+
                 <div className="mb-2">
-                  <label htmlFor={`grade-${index}`} className="block mb-1">
-                    Grade
-                  </label>
                   <select
                     id={`grade-${index}`}
                     name={`grade-${index}`}
