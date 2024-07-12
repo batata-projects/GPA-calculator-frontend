@@ -186,7 +186,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             type="text"
             placeholder="Subject"
             value={subject}
-            onChange={(e) => setSubject(e.target.value)}
+            onChange={(e) => setSubject(e.target.value.toUpperCase())}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded"
           />
@@ -197,7 +197,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             type="text"
             value={courseCode}
             placeholder="Course Code"
-            onChange={(e) => setCourseCode(e.target.value)}
+            onChange={(e) => setCourseCode(e.target.value.toUpperCase())}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded"
           />
