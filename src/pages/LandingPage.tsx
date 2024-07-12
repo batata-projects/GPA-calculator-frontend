@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import LoginForm from "../components/LoginForm.tsx";
-import RegisterForm from "../components/RegisterForm.tsx";
+import LoginForm from "../components/landing-page/LoginForm.tsx";
+import RegisterForm from "../components/landing-page/RegisterForm.tsx";
+
 import httpClient from "../httpClient.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,12 +23,14 @@ const LandingPage = () => {
       const access_token = response.data.data.session.access_token;
       const refresh_token = response.data.data.session.refresh_token;
 
-      const user = response.data.data.user;
+      const user_id = response.data.data.user.id;
 
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("refresh_token", refresh_token);
+      localStorage.setItem("user_id", user_id);
 
-      navigate("/dashboard", { state: { user } });
+      navigate("/dashboard", { state: { user_id } });
+
     } catch (error: any) {
       if (error.response) {
         // The request was made and the server responded with a status code
