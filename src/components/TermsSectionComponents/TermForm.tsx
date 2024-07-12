@@ -7,6 +7,7 @@ interface Course {
   credits: string;
   grade: number | null;
   graded: string;
+  pass: boolean | null;
 }
 
 interface TermFormProps {
@@ -31,6 +32,7 @@ const TermForm: React.FC<TermFormProps> = ({
       credits: "",
       grade: null,
       graded: "true",
+      pass: null,
     },
   ]);
   const [error, setError] = useState("");
@@ -99,6 +101,8 @@ const TermForm: React.FC<TermFormProps> = ({
     const updatedCourses = [...courses];
     if (field === "grade") {
       updatedCourses[index][field] = gradeValues[e.target.value];
+    } else if (field === "pass") {
+      updatedCourses[index][field] = e.target.value === "true";
     } else {
       updatedCourses[index][field] = e.target.value;
     }
@@ -114,6 +118,7 @@ const TermForm: React.FC<TermFormProps> = ({
         credits: "",
         grade: null,
         graded: "true",
+        pass: null,
       },
     ]);
   };
@@ -144,7 +149,7 @@ const TermForm: React.FC<TermFormProps> = ({
         course_code: course.course_code,
         term,
         credits: course.credits,
-        grade: course.grade,
+        grade: course.graded === "true" ? course.grade : course.pass ? 1 : 0,
         graded: course.graded,
       }));
       const response = await httpClient.post("/courses/many", payload, {
@@ -259,27 +264,48 @@ const TermForm: React.FC<TermFormProps> = ({
                 </div>
 
                 <div className="mb-2">
-                  <select
-                    id={`grade-${index}`}
-                    name={`grade-${index}`}
-                    value={
-                      course.grade !== null
-                        ? letterGrades.find(
-                            (grade) => gradeValues[grade] === course.grade
-                          )
-                        : ""
-                    }
-                    onChange={(e) => handleCourseChange(e, index, "grade")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    required
-                  >
-                    <option value="">Select a grade</option>
-                    {letterGrades.map((grade) => (
-                      <option key={grade} value={grade}>
-                        {grade}
-                      </option>
-                    ))}
-                  </select>
+                  {course.graded === "true" ? (
+                    <select
+                      id={`grade-${index}`}
+                      name={`grade-${index}`}
+                      value={
+                        course.grade !== null
+                          ? letterGrades.find(
+                              (grade) => gradeValues[grade] === course.grade
+                            )
+                          : ""
+                      }
+                      onChange={(e) => handleCourseChange(e, index, "grade")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                      required
+                    >
+                      <option value="">Select a grade</option>
+                      {letterGrades.map((grade) => (
+                        <option key={grade} value={grade}>
+                          {grade}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <select
+                      id={`pass-${index}`}
+                      name={`pass-${index}`}
+                      value={
+                        course.pass !== null
+                          ? course.pass
+                            ? "true"
+                            : "false"
+                          : ""
+                      }
+                      onChange={(e) => handleCourseChange(e, index, "pass")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                      required
+                    >
+                      <option value="">Select pass/fail</option>
+                      <option value="true">Pass</option>
+                      <option value="false">Fail</option>
+                    </select>
+                  )}
                 </div>
 
                 <div className="mb-2">
