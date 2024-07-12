@@ -127,6 +127,7 @@ const DashboardPage: React.FC = () => {
                 refreshToken={refresh_token || ""}
               />
               <QuerySection termsData={Object.values(terms)} />
+
             </div>
           </>
         ) : (
