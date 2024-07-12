@@ -30,7 +30,7 @@ const TermForm: React.FC<TermFormProps> = ({
       course_code: "",
       credits: "",
       grade: null,
-      graded: "",
+      graded: "true",
     },
   ]);
   const [error, setError] = useState("");
@@ -113,7 +113,7 @@ const TermForm: React.FC<TermFormProps> = ({
         course_code: "",
         credits: "",
         grade: null,
-        graded: "",
+        graded: "true",
       },
     ]);
   };
