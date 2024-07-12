@@ -221,11 +221,16 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           className="w-full px-3 py-2 border border-gray-300 rounded"
         >
           <option value="">Select a grade</option>
-          {Object.values(letterGrades).map((letterGrade) => (
-            <option key={letterGrade} value={letterGrade}>
-              {letterGrade}
-            </option>
-          ))}
+          {Object.entries(gradeValues)
+            .sort(
+              ([, numericGradeA], [, numericGradeB]) =>
+                numericGradeB - numericGradeA
+            )
+            .map(([letterGrade, numericGrade]) => (
+              <option key={numericGrade} value={letterGrade}>
+                {letterGrade}
+              </option>
+            ))}
         </select>
         <div className=" flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">
           <label htmlFor="grade">Graded:</label>

@@ -281,11 +281,16 @@ const TermForm: React.FC<TermFormProps> = ({
                       required
                     >
                       <option value="">Select a grade</option>
-                      {letterGrades.map((grade) => (
-                        <option key={grade} value={grade}>
-                          {grade}
-                        </option>
-                      ))}
+                      {Object.entries(gradeValues)
+                        .sort(
+                          ([, numericGradeA], [, numericGradeB]) =>
+                            numericGradeB - numericGradeA
+                        )
+                        .map(([letterGrade, numericGrade]) => (
+                          <option key={numericGrade} value={letterGrade}>
+                            {letterGrade}
+                          </option>
+                        ))}
                     </select>
                   ) : (
                     <select
