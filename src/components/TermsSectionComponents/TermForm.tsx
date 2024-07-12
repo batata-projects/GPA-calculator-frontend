@@ -5,7 +5,7 @@ interface Course {
   subject: string;
   course_code: string;
   credits: string;
-  grade: number;
+  grade: number | null;
   graded: string;
 }
 
@@ -29,7 +29,7 @@ const TermForm: React.FC<TermFormProps> = ({
       subject: "",
       course_code: "",
       credits: "",
-      grade: 0,
+      grade: null,
       graded: "",
     },
   ]);
@@ -112,7 +112,7 @@ const TermForm: React.FC<TermFormProps> = ({
         subject: "",
         course_code: "",
         credits: "",
-        grade: 0,
+        grade: null,
         graded: "",
       },
     ]);
@@ -264,9 +264,13 @@ const TermForm: React.FC<TermFormProps> = ({
                   <select
                     id={`grade-${index}`}
                     name={`grade-${index}`}
-                    value={letterGrades.find(
-                      (grade) => gradeValues[grade] === course.grade
-                    )}
+                    value={
+                      course.grade !== null
+                        ? letterGrades.find(
+                            (grade) => gradeValues[grade] === course.grade
+                          )
+                        : ""
+                    }
                     onChange={(e) => handleCourseChange(e, index, "grade")}
                     className="w-full px-3 py-2 border border-gray-300 rounded"
                     required
