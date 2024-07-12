@@ -119,7 +119,7 @@ const TermCard: React.FC<TermCardProps> = ({
         {/* course side */}
         <div className="w-full md:w-[80%] flex flex-col py-3 pl-5 ">
           {/* term name */}
-          <div className="text-[25px] flex justify-start mb-6 text-center sm:text-center ">
+          <div className="text-[29px] flex justify-start mb-6 text-center sm:text-center ">
             <div className=" focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
               {termData.name}
             </div>
@@ -134,16 +134,20 @@ const TermCard: React.FC<TermCardProps> = ({
                 {/* course name */}
                 <button
                   onClick={() => handleAddCourse(courseId, course)}
-                  className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] "
+                  className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[16px] min-w-[150px] h-[45px] "
                 >
                   {course.subject}-{course.course_code}
                 </button>
                 {/* course grade */}
                 <button
                   onClick={() => handleAddCourse(courseId, course)}
-                  className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px]"
+                  className="bg-white text-black rounded-full w-[45px] h-[45px] flex justify-center items-center text-[16px]"
                 >
-                  {gradeMapping[course.grade] || "N/A"}
+                  {course.graded
+                    ? gradeMapping[course.grade]
+                    : course.grade === 1
+                    ? "Pass"
+                    : "Fail"}
                 </button>
               </div>
             ))}

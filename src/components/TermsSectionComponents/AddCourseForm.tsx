@@ -64,16 +64,37 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   const [subject, setSubject] = useState(course?.subject || "");
   const [courseCode, setCourseCode] = useState(course?.course_code || "");
   const [credits, setCredits] = useState(course?.credits.toString() || "");
-  const [grade, setGrade] = useState(course ? letterGrades[course.grade] : "");
+  const [grade, setGrade] = useState(
+    course
+      ? course.graded
+        ? letterGrades[course.grade]
+        : course.grade === 1
+        ? "Pass"
+        : "Fail"
+      : ""
+  );
   const [graded, setGraded] = useState(course?.graded.toString() || "true");
+  const [pass, setPass] = useState(course?.grade === 1 ? "true" : "false");
   const [error, setError] = useState("");
 
   useEffect(() => {
     setSubject(course?.subject || "");
     setCourseCode(course?.course_code || "");
     setCredits(course?.credits.toString() || "");
-    setGrade(course ? letterGrades[course.grade] : "");
-    setGraded(course?.graded.toString() || "");
+    setGraded(course?.graded.toString() || "true");
+
+    if (course) {
+      if (course.graded) {
+        setGrade(letterGrades[course.grade]);
+        setPass("");
+      } else {
+        setGrade("");
+        setPass(course.grade === 1 ? "true" : "false");
+      }
+    } else {
+      setGrade("");
+      setPass("");
+    }
   }, [course]);
 
   const handleDelete = async () => {
@@ -109,7 +130,8 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     e.preventDefault();
     try {
       const termNumber = term !== null ? parseInt(term, 10) : null;
-      const numericGrade = gradeValues[grade];
+      const numericGrade =
+        graded === "true" ? gradeValues[grade] : pass === "true" ? 1 : 0;
 
       if (courseId) {
         // Edit the existing course
@@ -214,24 +236,37 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           />
         </div>
 
-        <select
-          value={grade}
-          onChange={(e) => setGrade(e.target.value)}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded"
-        >
-          <option value="">Select a grade</option>
-          {Object.entries(gradeValues)
-            .sort(
-              ([, numericGradeA], [, numericGradeB]) =>
-                numericGradeB - numericGradeA
-            )
-            .map(([letterGrade, numericGrade]) => (
-              <option key={numericGrade} value={letterGrade}>
-                {letterGrade}
-              </option>
-            ))}
-        </select>
+        {graded === "true" ? (
+          <select
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded"
+          >
+            <option value="">Select a grade</option>
+            {Object.entries(gradeValues)
+              .sort(
+                ([, numericGradeA], [, numericGradeB]) =>
+                  numericGradeB - numericGradeA
+              )
+              .map(([letterGrade, numericGrade]) => (
+                <option key={numericGrade} value={letterGrade}>
+                  {letterGrade}
+                </option>
+              ))}
+          </select>
+        ) : (
+          <select
+            value={pass}
+            onChange={(e) => setPass(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded"
+          >
+            <option value="">Select pass/fail</option>
+            <option value="true">Pass</option>
+            <option value="false">Fail</option>
+          </select>
+        )}
         <div className=" flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">
           <label htmlFor="grade">Graded:</label>
           <div className="flex items-center">
