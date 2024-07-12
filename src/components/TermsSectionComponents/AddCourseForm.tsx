@@ -65,7 +65,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   const [courseCode, setCourseCode] = useState(course?.course_code || "");
   const [credits, setCredits] = useState(course?.credits.toString() || "");
   const [grade, setGrade] = useState(course ? letterGrades[course.grade] : "");
-  const [graded, setGraded] = useState(course?.graded.toString() || "");
+  const [graded, setGraded] = useState(course?.graded.toString() || "true");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -234,7 +234,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
               type="radio"
               id="graded-yes"
               value="true"
-              checked={graded === "true"}
+              checked={graded === "true" || (!course && graded !== "false")}
               onChange={() => setGraded("true")}
               className="mr-2"
             />
