@@ -65,6 +65,7 @@ const TermForm: React.FC<TermFormProps> = ({
     D: 1.0,
     F: 0.0,
   };
+
   const formContainerRef = useRef<HTMLDivElement>(null);
   const semesters = ["Fall", "Winter", "Spring", "Summer"];
 
@@ -145,8 +146,8 @@ const TermForm: React.FC<TermFormProps> = ({
     try {
       const payload = courses.map((course) => ({
         user_id: userId,
-        subject: course.subject,
-        course_code: course.course_code,
+        subject: course.subject.toUpperCase(),
+        course_code: course.course_code.toUpperCase(),
         term,
         credits: course.credits,
         grade: course.graded === "true" ? course.grade : course.pass ? 1 : 0,
