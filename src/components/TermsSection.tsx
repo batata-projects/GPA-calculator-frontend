@@ -44,11 +44,13 @@ const TermsSection: React.FC<TermsSectionProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center mt-7">
-      <h2 className="text-2xl font-bold mb-4">Terms</h2>
+    <div className="flex flex-col items-center mt-[5%]">
+      <h2 className="text-[36px] font-bold mb-4 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+        Terms
+      </h2>
       <button
         onClick={handleOpenForm}
-        className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 mb-4"
+        className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
