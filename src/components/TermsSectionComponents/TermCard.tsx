@@ -198,7 +198,7 @@ const TermCard: React.FC<TermCardProps> = ({
             GPA
           </div>
           <div className="flex justify-center items-center bg-orange-500 rounded-[40px] h-[60px] sm:h-[70px] md:h-[80px] w-[120px] sm:w-[130px] md:w-[140px] text-[24px] sm:text-[28px] md:text-[32px] px-4 overflow-hidden transition duration-300 ease-in-out transform hover:scale-110 mt-4">
-            {termData.gpa.toFixed(2)}
+            {(Math.floor(termData.gpa * 100) / 100).toFixed(2)}
           </div>
         </div>
       </div>
