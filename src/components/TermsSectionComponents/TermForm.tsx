@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import httpClient from "../../httpClient.tsx";
-import userEvent from "@testing-library/user-event";
 
 interface Course {
   subject: string;
@@ -8,7 +7,7 @@ interface Course {
   credits: string;
   grade: number | null;
   graded: string;
-  pass: boolean | null;
+  pass: number | null;
 }
 
 interface TermFormProps {
@@ -31,6 +30,7 @@ const letterGrades = [
   "D+",
   "D",
   "F",
+  "Withdraw",
 ];
 
 const gradeValues: { [key: string]: number } = {
@@ -46,6 +46,14 @@ const gradeValues: { [key: string]: number } = {
   "D+": 1.3,
   D: 1.0,
   F: 0.0,
+  Withdraw: -1,
+};
+
+const notGradedOptions = ["Pass", "Fail", "Withdraw"];
+const notGradedValues: { [key: string]: number } = {
+  Pass: 1,
+  Fail: 0,
+  Withdraw: -1,
 };
 
 const TermForm: React.FC<TermFormProps> = ({
@@ -105,7 +113,7 @@ const TermForm: React.FC<TermFormProps> = ({
     if (field === "grade") {
       updatedCourses[index][field] = gradeValues[e.target.value];
     } else if (field === "pass") {
-      updatedCourses[index][field] = e.target.value === "true";
+      updatedCourses[index][field] = notGradedValues[e.target.value];
     } else {
       updatedCourses[index][field] = e.target.value;
     }
@@ -160,7 +168,7 @@ const TermForm: React.FC<TermFormProps> = ({
         course_code: course.course_code.toUpperCase(),
         term,
         credits: course.credits,
-        grade: course.graded === "true" ? course.grade : course.pass ? 1 : 0,
+        grade: course.graded === "true" ? course.grade : course.pass,
         graded: course.graded,
       }));
       const response = await httpClient.post("/courses/many", payload, {
@@ -315,13 +323,13 @@ const TermForm: React.FC<TermFormProps> = ({
                     </select>
                   ) : (
                     <select
-                      id={`pass-${index}`}
-                      name={`pass-${index}`}
+                      id={`grade-${index}`}
+                      name={`grade-${index}`}
                       value={
                         course.pass !== null
-                          ? course.pass
-                            ? "true"
-                            : "false"
+                          ? notGradedOptions.find(
+                              (grade) => notGradedValues[grade] === course.pass
+                            )
                           : ""
                       }
                       onChange={(e) => handleCourseChange(e, index, "pass")}
@@ -329,8 +337,16 @@ const TermForm: React.FC<TermFormProps> = ({
                       required
                     >
                       <option value="">Select pass/fail</option>
-                      <option value="true">Pass</option>
-                      <option value="false">Fail</option>
+                      {Object.entries(notGradedValues)
+                        .sort(
+                          ([, numericGradeA], [, numericGradeB]) =>
+                            numericGradeB - numericGradeA
+                        )
+                        .map(([letterGrade, numericGrade]) => (
+                          <option key={numericGrade} value={letterGrade}>
+                            {letterGrade}
+                          </option>
+                        ))}
                     </select>
                   )}
                 </div>

@@ -135,22 +135,31 @@ const TermCard: React.FC<TermCardProps> = ({
                 {/* course name */}
                 <button
                   onClick={() => handleAddCourse(courseId, course)}
-                  className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[17px] min-w-[150px] h-[45px] "
+                  className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[17px] min-w-[150px] h-[45px]"
                 >
                   {course.subject}-{course.course_code}
                 </button>
                 {/* course grade */}
                 <button
                   onClick={() => handleAddCourse(courseId, course)}
-                  className="bg-white text-black rounded-full w-10 px-6 h-[45px] flex justify-center items-center text-[17px]"
+                  className="bg-white text-black rounded-full w-[60px] px-2 h-[45px] flex justify-center items-center text-[17px]"
+                  title={
+                    course.graded
+                      ? course.grade === -1
+                        ? "Withdrawn"
+                        : gradeMapping[course.grade]
+                      : course.grade === 1
+                      ? "Pass"
+                      : "Fail"
+                  }
                 >
                   {course.graded
-                    ? gradeMapping[course.grade]
+                    ? course.grade === -1
+                      ? "W"
+                      : gradeMapping[course.grade]
                     : course.grade === 1
-                    ? "Pass"
-                    : course.grade === 0
-                    ? "Fail"
-                    : "Withdraw"}
+                    ? "P"
+                    : "F"}
                 </button>
               </div>
             ))}

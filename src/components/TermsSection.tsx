@@ -45,7 +45,7 @@ const TermsSection: React.FC<TermsSectionProps> = ({
 
   return (
     <div className="flex flex-col items-center mt-[5%]">
-      <h2 className="text-[36px] font-bold mb-4 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+      <h2 className="text-[36px] font-bold mb-8 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
         Terms
       </h2>
       <button
