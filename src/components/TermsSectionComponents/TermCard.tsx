@@ -41,6 +41,7 @@ const gradeMapping: { [key: number]: string } = {
   1.3: "D+",
   1.0: "D",
   0.0: "F",
+  "-1": "WITHDRAW",
 };
 
 const TermCard: React.FC<TermCardProps> = ({
@@ -147,7 +148,9 @@ const TermCard: React.FC<TermCardProps> = ({
                     ? gradeMapping[course.grade]
                     : course.grade === 1
                     ? "Pass"
-                    : "Fail"}
+                    : course.grade === 0
+                    ? "Fail"
+                    : "Withdraw"}
                 </button>
               </div>
             ))}

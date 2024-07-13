@@ -34,6 +34,7 @@ const letterGrades: { [key: number]: string } = {
   1.3: "D+",
   1.0: "D",
   0.0: "F",
+  "-1": "WITHDRAW",
 };
 
 const gradeValues: { [key: string]: number } = {
@@ -49,6 +50,7 @@ const gradeValues: { [key: string]: number } = {
   "D+": 1.3,
   D: 1.0,
   F: 0.0,
+  WITHDRAW: -1,
 };
 
 const AddCourseForm: React.FC<AddCourseFormProps> = ({
@@ -65,16 +67,12 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   const [courseCode, setCourseCode] = useState(course?.course_code || "");
   const [credits, setCredits] = useState(course?.credits.toString() || "");
   const [grade, setGrade] = useState(
-    course
-      ? course.graded
-        ? letterGrades[course.grade]
-        : course.grade === 1
-        ? "Pass"
-        : "Fail"
-      : ""
+    course ? (course.graded ? letterGrades[course.grade] : "") : ""
   );
   const [graded, setGraded] = useState(course?.graded.toString() || "true");
-  const [pass, setPass] = useState(course?.grade === 1 ? "true" : "false");
+  const [pass, setPass] = useState(
+    course?.grade === 1 ? "pass" : course?.grade === 0 ? "fail" : "withdraw"
+  );
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -89,7 +87,9 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
         setPass("");
       } else {
         setGrade("");
-        setPass(course.grade === 1 ? "true" : "false");
+        setPass(
+          course.grade === 1 ? "pass" : course.grade === 0 ? "fail" : "withdraw"
+        );
       }
     } else {
       setGrade("");
@@ -131,7 +131,13 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     try {
       const termNumber = term !== null ? parseInt(term, 10) : null;
       const numericGrade =
-        graded === "true" ? gradeValues[grade] : pass === "true" ? 1 : 0;
+        graded === "true"
+          ? gradeValues[grade]
+          : pass === "pass"
+          ? 1
+          : pass === "fail"
+          ? 0
+          : -1; // Assign -1 for "withdraw"
 
       if (courseId) {
         // Edit the existing course
@@ -262,12 +268,13 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             required
             className="w-full px-3 py-2 border border-gray-300 rounded"
           >
-            <option value="">Select pass/fail</option>
-            <option value="true">Pass</option>
-            <option value="false">Fail</option>
+            <option value="">Select pass/fail/withdraw</option>
+            <option value="pass">Pass</option>
+            <option value="fail">Fail</option>
+            <option value="withdraw">Withdraw</option>
           </select>
         )}
-        <div className=" flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">
+        <div className="flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">
           <label htmlFor="grade">Graded:</label>
           <div className="flex items-center">
             <input
