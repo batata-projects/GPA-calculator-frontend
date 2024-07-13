@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import httpClient from "../../httpClient.tsx";
+import userEvent from "@testing-library/user-event";
 
 interface Course {
   subject: string;
@@ -54,6 +55,7 @@ const TermForm: React.FC<TermFormProps> = ({
   refreshToken,
 }) => {
   const [year, setYear] = useState<number>();
+  const [nextYear, setNextYear] = useState<number>();
   const [semester, setSemester] = useState<string>("");
   const [courses, setCourses] = useState<Course[]>([
     {
@@ -133,6 +135,14 @@ const TermForm: React.FC<TermFormProps> = ({
     }
   }, [courses]);
 
+  useEffect(() => {
+    if (year) {
+      setNextYear(year + 1);
+    } else {
+      setNextYear(undefined);
+    }
+  }, [year]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const semesterCode = {
@@ -203,18 +213,29 @@ const TermForm: React.FC<TermFormProps> = ({
             </div>
             <div className="mb-4">
               <label htmlFor="year" className="block mb-1">
-                Year
+                Academic Year
               </label>
-              <input
-                type="number"
-                id="year"
-                name="year"
-                value={year}
-                placeholder="yyyy"
-                onChange={(e) => handleTermChange(e, "year")}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
-                required
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  id="year"
+                  name="year"
+                  value={year}
+                  placeholder="yyyy"
+                  onChange={(e) => handleTermChange(e, "year")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  required
+                />
+                <div className="h-[2px] w-4 bg-gray-400"></div>
+                <input
+                  type="number"
+                  id="nextYear"
+                  name="nextYear"
+                  value={nextYear}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100"
+                />
+              </div>
             </div>
           </div>
 
