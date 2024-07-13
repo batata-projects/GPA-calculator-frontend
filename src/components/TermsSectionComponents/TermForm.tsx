@@ -171,10 +171,10 @@ const TermForm: React.FC<TermFormProps> = ({
       });
       console.log(response);
 
-      if (response.data.status === 201) {
+      if (response.status === 201) {
         window.location.reload();
         onClose();
-      } else if (response.data.status === 500) {
+      } else if (response.status === 500) {
         setError(response.data.message);
       }
     } catch (error) {
