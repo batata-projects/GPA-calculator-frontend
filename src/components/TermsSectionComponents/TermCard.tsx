@@ -57,6 +57,7 @@ const TermCard: React.FC<TermCardProps> = ({
   const [course, setCourse] = useState<Course | null>(null);
   const [courseId, setCourseId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleDeleteTerm = async () => {
     const confirmDelete = window.confirm(
@@ -91,6 +92,9 @@ const TermCard: React.FC<TermCardProps> = ({
   ) => {
     setIsEdit(course !== undefined);
     setShowForm(true);
+    if (course === undefined) {
+      setIsFormOpen(true);
+    }
     setCourse(course || null);
     setCourseId(courseId || null);
     setTimeout(() => {
@@ -100,6 +104,7 @@ const TermCard: React.FC<TermCardProps> = ({
 
   const handleCloseForm = () => {
     setShowForm(false);
+    setIsFormOpen(false);
     setIsEdit(false);
     setCourse(null);
     setCourseId(null);
@@ -165,12 +170,21 @@ const TermCard: React.FC<TermCardProps> = ({
             ))}
           </div>
           <div className="mt-auto mr-2 md:self-end self-center">
-            <button
-              onClick={() => handleAddCourse()}
-              className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
-            >
-              Add Course
-            </button>
+            {!isEdit && isFormOpen ? (
+              <button
+                onClick={handleCloseForm}
+                className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
+              >
+                Cancel
+              </button>
+            ) : (
+              <button
+                onClick={() => handleAddCourse()}
+                className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
+              >
+                Add Another Course
+              </button>
+            )}
           </div>
         </div>
         {/* gpa side */}
