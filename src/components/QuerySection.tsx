@@ -142,7 +142,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
           />
         </div>
         <motion.div
-          className="flex flex-col results-card bg-[#055AC5] py-5 px-5 rounded-[40px] w-[1000px] mt-8 mb-[100px] min-h-[80px] justify-center focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 relative"
+          className="flex flex-col results-card bg-[#055AC5] py-6 px-8 rounded-[40px] w-[1000px] mt-8 mb-[100px] min-h-[80px] justify-center focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 relative"
           initial={{ maxHeight: "80px", opacity: 0 }}
           animate={{
             maxHeight: filteredCourses.length > 0 ? "500px" : "80px",
@@ -150,7 +150,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          <div className="grid grid-cols-3 gap-4 md:gap-8 ">
+          <div className="grid grid-cols-3 gap-4 md:gap-9 ">
             {filteredCourses.map((course, index) => (
               <motion.div
                 key={`${course.subject}-${course.course_code}`}
