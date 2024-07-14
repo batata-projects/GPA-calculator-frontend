@@ -110,6 +110,20 @@ const TermCard: React.FC<TermCardProps> = ({
     setCourseId(null);
   };
 
+  const sortCourses = (courses: { [key: string]: Course }) => {
+    return Object.entries(courses).sort(([, courseA], [, courseB]) => {
+      if (courseA.graded && courseB.graded) {
+        return courseB.grade - courseA.grade;
+      } else if (courseA.graded) {
+        return -1;
+      } else if (courseB.graded) {
+        return 1;
+      } else {
+        return courseB.grade - courseA.grade;
+      }
+    });
+  };
+
   const scrollToBottom = () => {
     if (cardRef.current) {
       cardRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -132,7 +146,7 @@ const TermCard: React.FC<TermCardProps> = ({
           </div>
           {/* courses */}
           <div className="flex flex-col items-center md:flex-row md:flex-wrap gap-4 md:gap-6">
-            {Object.entries(termData.courses).map(([courseId, course]) => (
+            {sortCourses(termData.courses).map(([courseId, course]) => (
               <div
                 key={courseId}
                 className="flex flex-row items-center md:items-center space-x-2 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
