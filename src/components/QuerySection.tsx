@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { motion } from "framer-motion";
 
 interface Course {
   subject: string;
@@ -88,9 +89,9 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
       const { subject, course_code, grade } = course;
       const letterGrade = getLetterGrade(grade);
       const courseName = `${subject}-${course_code}`;
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
+      // setTimeout(() => {
+      //   scrollToBottom();
+      // }, 100);
 
       return (
         subject.toUpperCase() === uppercaseQuery ||
@@ -112,9 +113,9 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
     <div ref={cardRef} className="flex flex-col items-center mt-5">
       <h2 className="text-2xl font-bold mt-5 mb-10">Query</h2>
       <div className="flex flex-col items-center">
-        <div className="flex flex-row items-center bg-gray-300 py-5 px-5 rounded-[40px] w-[500px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+        <div className="flex flex-row items-center bg-gray-300 rounded-[40px] w-[500px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
           <button
-            className="mr-4 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
+            className="mr-4 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 pl-5 py-5"
             onClick={handleSearch}
           >
             <svg
@@ -133,44 +134,72 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
             </svg>
           </button>
           <input
-            className="flex-grow bg-transparent focus:outline-none"
+            className="flex-grow bg-transparent focus:outline-none text-[20px]"
             placeholder="Enter Course Name, Subject, or Grade..."
             value={query}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
           />
         </div>
-        <div className="bg-[#055AC5] py-5 px-5 rounded-[40px] w-[1000px] mt-5 mb-[100px] min-h-[80px] grid grid-cols-3 justify-center gap-4 md:gap-8 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 relative">
-          {filteredCourses.map((course) => (
-            <div
-              key={`${course.subject}-${course.course_code}`}
-              className="flex flex-col items-center focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 border-2 border-white p-4 rounded-[40px]"
-            >
-              <div className="text-white text-[20px] mb-3">
-                {formatTermName(course.term)}
-              </div>
-              <div className="flex flex-row space-x-2">
-                <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px]">
-                  {course.subject}-{course.course_code}
+        <motion.div
+          className="flex flex-col results-card bg-[#055AC5] py-5 px-5 rounded-[40px] w-[1000px] mt-8 mb-[100px] min-h-[80px] justify-center focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 relative"
+          initial={{ maxHeight: "80px", opacity: 0 }}
+          animate={{
+            maxHeight: filteredCourses.length > 0 ? "500px" : "80px",
+            opacity: 1,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <div className="grid grid-cols-3 gap-4 md:gap-8 ">
+            {filteredCourses.map((course, index) => (
+              <motion.div
+                key={`${course.subject}-${course.course_code}`}
+                className="flex flex-col items-center border-2 text-white border-white p-4 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-500"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.15 * index,
+                  ease: "easeInOut",
+                }}
+                whileHover={{ scale: 1.15 }}
+              >
+                <div className="text-[20px] mb-3">
+                  {formatTermName(course.term)}
                 </div>
-                <div className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px]">
-                  {getLetterGrade(course.grade)}
+                <div className="flex flex-row space-x-2">
+                  <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
+                    {course.subject}-{course.course_code}
+                  </div>
+                  <div className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out">
+                    {getLetterGrade(course.grade)}
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-          {filteredCourses.length === 0 && query !== "" && (
-            <div className="text-white text-center">No courses found.</div>
-          )}
-          {filteredCourses.length > 0 && (
-            <button
-              className="absolute bottom-4 right-4 bg-white text-[#055AC5] px-4 py-2 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
-              onClick={handleClear}
-            >
-              Clear
-            </button>
-          )}
-        </div>
+              </motion.div>
+            ))}
+            {filteredCourses.length === 0 && query !== "" && (
+              <div className="text-white text-center">No courses found.</div>
+            )}
+          </div>
+          <div className=" flex justify-center mt-5">
+            {filteredCourses.length > 0 && (
+              <motion.button
+                className="w-[10%] bg-white text-[#055AC5] px-4 py-2 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.15 * filteredCourses.length,
+                  ease: "easeInOut",
+                }}
+                whileHover={{ scale: 1.05 }}
+                onClick={handleClear}
+              >
+                Clear
+              </motion.button>
+            )}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
