@@ -58,6 +58,7 @@ const TermCard: React.FC<TermCardProps> = ({
   const [courseId, setCourseId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
   const handleDeleteTerm = async () => {
     const confirmDelete = window.confirm(
@@ -90,16 +91,24 @@ const TermCard: React.FC<TermCardProps> = ({
     courseId?: string | null,
     course?: Course | null
   ) => {
-    setIsEdit(course !== undefined);
-    setShowForm(true);
-    if (course === undefined) {
-      setIsFormOpen(true);
+    if (showForm && courseId === selectedCourseId) {
+      setShowForm(false);
+      setIsEdit(false);
+      setCourse(null);
+      setCourseId(null);
+    } else {
+      setIsEdit(course !== undefined);
+      setShowForm(true);
+      if (course === undefined) {
+        setIsFormOpen(true);
+      }
+      setCourse(course || null);
+      setCourseId(courseId || null);
+      setSelectedCourseId(courseId || null);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
-    setCourse(course || null);
-    setCourseId(courseId || null);
-    setTimeout(() => {
-      scrollToBottom();
-    }, 100);
   };
 
   const handleCloseForm = () => {
