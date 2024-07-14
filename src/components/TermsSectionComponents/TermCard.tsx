@@ -142,7 +142,7 @@ const TermCard: React.FC<TermCardProps> = ({
                   onClick={() => handleAddCourse(courseId, course)}
                   className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[17px] min-w-[150px] h-[45px]"
                 >
-                  {course.subject}-{course.course_code}
+                  {course.subject} {course.course_code}
                 </button>
                 {/* course grade */}
                 <button
