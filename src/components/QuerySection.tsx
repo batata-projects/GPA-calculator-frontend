@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface Course {
@@ -17,6 +17,9 @@ interface TermData {
   courses: {
     [key: string]: Course;
   };
+}
+interface GroupedCourses {
+  [key: string]: Course[];
 }
 
 interface QuerySectionProps {
@@ -43,17 +46,55 @@ const gradeMapping: { [key: number]: string } = {
   1.3: "D+",
   1.0: "D",
   0.0: "F",
+  "-1": "W",
 };
 
 const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
+  const resultsCardRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<
+    Course[] | GroupedCourses
+  >([]);
+
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const handleClear = () => {
     setQuery("");
     setFilteredCourses([]);
+    setSelectedFilters([]);
   };
+
+  const toggleFilter = () => {
+    setIsFilterOpen(!isFilterOpen);
+  };
+
+  const handleFilterSelect = (filter: string) => {
+    setSelectedFilters((prevFilters) => {
+      if (prevFilters.includes(filter)) {
+        return prevFilters.filter((f) => f !== filter);
+      } else {
+        return [...prevFilters, filter];
+      }
+    });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsFilterOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const formatTermName = (termCode: number) => {
     const year = Math.floor(termCode / 100);
@@ -70,6 +111,10 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
     setQuery(event.target.value);
   };
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [filteredCourses]);
+
   const handleSearch = () => {
     const courses = filterCourses();
     setFilteredCourses(courses);
@@ -81,7 +126,19 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
     }
   };
 
-  const filterCourses = () => {
+  const scrollToBottom = () => {
+    if (resultsCardRef.current) {
+      const resultsCard = resultsCardRef.current;
+      const scrollPosition =
+        resultsCard.offsetTop + resultsCard.offsetHeight + 20; // Adjust the value (e.g., 20) to control the extra scroll distance
+      window.scrollTo({
+        top: scrollPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const filterCourses = (): Course[] | GroupedCourses => {
     const courses = termsData.flatMap((term) => Object.values(term.courses));
     const uppercaseQuery = query.toUpperCase();
 
@@ -89,9 +146,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
       const { subject, course_code, grade } = course;
       const letterGrade = getLetterGrade(grade);
       const courseName = `${subject}-${course_code}`;
-      // setTimeout(() => {
-      //   scrollToBottom();
-      // }, 100);
 
       return (
         subject.toUpperCase() === uppercaseQuery ||
@@ -100,96 +154,242 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
       );
     });
 
+    if (selectedFilters.includes("term")) {
+      // Group courses by term
+      return filteredCourses.reduce((acc, course) => {
+        const termName = formatTermName(course.term);
+        if (!acc[termName]) {
+          acc[termName] = [];
+        }
+        acc[termName].push(course);
+        return acc;
+      }, {} as GroupedCourses);
+    } else if (selectedFilters.includes("subject")) {
+      // Group courses by subject
+      return filteredCourses.reduce((acc, course) => {
+        const { subject } = course;
+        if (!acc[subject]) {
+          acc[subject] = [];
+        }
+        acc[subject].push(course);
+        return acc;
+      }, {} as GroupedCourses);
+    }
+
     return filteredCourses;
   };
 
-  const scrollToBottom = () => {
-    if (cardRef.current) {
-      cardRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  };
-
   return (
-    <div ref={cardRef} className="flex flex-col items-center mt-5">
+    <div className="flex flex-col items-center mt-5">
       <h2 className="text-2xl font-bold mt-5 mb-10">Query</h2>
       <div className="flex flex-col items-center">
-        <div className="flex flex-row items-center bg-gray-300 rounded-[40px] w-[500px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
-          <button
-            className="mr-4 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 pl-5 py-5"
-            onClick={handleSearch}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="w-6 h-6"
+        <div className="grid grid-cols-[auto_1fr_auto] items-center bg-gray-300 rounded-[40px] w-[500px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+          <div className="col-span-1">
+            <button
+              className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 px-4 py-5"
+              onClick={handleSearch}
+              title="Search"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-              />
-            </svg>
-          </button>
-          <input
-            className="flex-grow bg-transparent focus:outline-none text-[20px]"
-            placeholder="Enter Course Name, Subject, or Grade..."
-            value={query}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
-          />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+            </button>
+          </div>
+          <div className="col-span-1">
+            <input
+              className="w-full bg-transparent focus:outline-none text-[20px] py-5"
+              placeholder="Enter Course Name, Subject, or Grade..."
+              value={query}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+            />
+          </div>
+          <div ref={dropdownRef} className="col-span-1 relative">
+            <button
+              className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 px-4 py-5"
+              onClick={toggleFilter}
+              title="Filter"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="size-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
+                />
+              </svg>
+            </button>
+            {isFilterOpen && (
+              <div className="absolute bottom-[65%] left-[50%] mb-2 bg-white rounded shadow-md z-50">
+                <div className="flex flex-row p-2 border-b space-x-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="size-6 mt-0.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
+                    />
+                  </svg>
+                  <div className="text-[20px] font-semibold">Filter</div>
+                </div>
+
+                <div className="py-2">
+                  <label className="flex items-center px-4 py-2 hover:bg-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters.includes("term")}
+                      onChange={() => handleFilterSelect("term")}
+                      className="mr-2"
+                    />
+                    <span>By Terms</span>
+                  </label>
+                  <label className="flex items-center px-4 py-2 hover:bg-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters.includes("subject")}
+                      onChange={() => handleFilterSelect("subject")}
+                      className="mr-2"
+                    />
+                    <span>By Subject</span>
+                  </label>
+                  <label className="flex items-center px-4 py-2 hover:bg-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters.includes("gradeAscending")}
+                      onChange={() => handleFilterSelect("gradeAscending")}
+                      className="mr-2"
+                    />
+                    <span>By Grade Ascending</span>
+                  </label>
+                  <label className="flex items-center px-4 py-2 hover:bg-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters.includes("gradeDescending")}
+                      onChange={() => handleFilterSelect("gradeDescending")}
+                      className="mr-2"
+                    />
+                    <span>By Grade Descending</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <motion.div
+          ref={resultsCardRef}
           className="flex flex-col results-card bg-[#055AC5] py-6 px-8 rounded-[40px] w-[1000px] mt-8 mb-[100px] min-h-[80px] justify-center focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 relative"
-          initial={{ maxHeight: "80px", opacity: 0 }}
+          initial={{ opacity: 0 }}
           animate={{
-            maxHeight: filteredCourses.length > 0 ? "500px" : "80px",
             opacity: 1,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          <div className="grid grid-cols-3 gap-4 md:gap-9 ">
-            {filteredCourses.map((course, index) => (
-              <motion.div
-                key={`${course.subject}-${course.course_code}`}
-                className="flex flex-col items-center border-2 text-white border-white p-4 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-500"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  duration: 0.6,
-                  delay: 0.15 * index,
-                  ease: "easeInOut",
-                }}
-                whileHover={{ scale: 1.15 }}
-              >
-                <div className="text-[20px] mb-3">
-                  {formatTermName(course.term)}
-                </div>
-                <div className="flex flex-row space-x-2">
-                  <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
-                    {course.subject}-{course.course_code}
-                  </div>
-                  <div className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out">
-                    {getLetterGrade(course.grade)}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-            {filteredCourses.length === 0 && query !== "" && (
+          {Array.isArray(filteredCourses) ? (
+            filteredCourses.length > 0 ? (
+              <div className="grid grid-cols-3 gap-4 md:gap-9">
+                {filteredCourses.map((course, index) => (
+                  <motion.div
+                    key={`${course.subject}-${course.course_code}`}
+                    className="flex flex-col items-center border-2 text-white border-white p-4 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-500"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      duration: 0.6,
+                      delay: 0.15 * index,
+                      ease: "easeInOut",
+                    }}
+                    whileHover={{ scale: 1.15 }}
+                  >
+                    <div className="text-[20px] mb-3">
+                      {formatTermName(course.term)}
+                    </div>
+                    <div className="flex flex-row space-x-2">
+                      <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
+                        {course.subject}-{course.course_code}
+                      </div>
+                      <div className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out">
+                        {getLetterGrade(course.grade)}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
               <div className="text-white text-center">No courses found.</div>
-            )}
-          </div>
-          <div className=" flex justify-center mt-5">
-            {filteredCourses.length > 0 && (
+            )
+          ) : (
+            Object.entries(filteredCourses).map(([groupKey, courses]) => (
+              <div key={groupKey} className="mb-6">
+                <div className="text-white text-xl font-bold mb-4">
+                  {groupKey}
+                </div>
+                <div className="grid grid-cols-3 gap-4 md:gap-9">
+                  {courses.map((course, index) => (
+                    <motion.div
+                      key={`${course.subject}-${course.course_code}`}
+                      className="flex flex-col items-center border-2 text-white border-white p-4 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-500"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        duration: 0.6,
+                        delay: 0.15 * index,
+                        ease: "easeInOut",
+                      }}
+                      whileHover={{ scale: 1.15 }}
+                    >
+                      <div className="text-[20px] mb-3">
+                        {formatTermName(course.term)}
+                      </div>
+                      <div className="flex flex-row space-x-2">
+                        <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
+                          {course.subject}-{course.course_code}
+                        </div>
+                        <div className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out">
+                          {getLetterGrade(course.grade)}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+          <div className="flex justify-center mt-5">
+            {(Array.isArray(filteredCourses) && filteredCourses.length > 0) ||
+            (!Array.isArray(filteredCourses) &&
+              Object.keys(filteredCourses).length > 0) ? (
               <motion.button
                 className="w-[10%] bg-white text-[#055AC5] px-4 py-2 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{
                   duration: 0.6,
-                  delay: 0.15 * filteredCourses.length,
+                  delay: Array.isArray(filteredCourses)
+                    ? 0.15 * filteredCourses.length
+                    : 0.15 * Object.values(filteredCourses).flat().length,
                   ease: "easeInOut",
                 }}
                 whileHover={{ scale: 1.05 }}
@@ -197,7 +397,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({ termsData }) => {
               >
                 Clear
               </motion.button>
-            )}
+            ) : null}
           </div>
         </motion.div>
       </div>
