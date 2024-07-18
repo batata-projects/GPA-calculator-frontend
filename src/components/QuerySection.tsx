@@ -74,6 +74,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
+  // useEffects
   useEffect(() => {
     if (selectedCourse && editFormRef.current) {
       const scrollOptions: ScrollIntoViewOptions = {
@@ -84,6 +85,27 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     }
   }, [selectedCourse]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsFilterOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [filteredCourses]);
+
+  //  Handles
   const handleClear = () => {
     setQuery("");
     setFilteredCourses({});
@@ -108,10 +130,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   const handleCloseForm = () => {
     setSelectedCourse(null);
     setSelectedCourseId(null);
-  };
-
-  const toggleFilter = () => {
-    setIsFilterOpen(!isFilterOpen);
   };
 
   const handleFilterSelect = (filter: string) => {
@@ -148,21 +166,34 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     });
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsFilterOpen(false);
-      }
-    };
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(event.target.value);
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const handleSearch = () => {
+    const courses = filterCourses(query, selectedFilters);
+    setFilteredCourses(courses);
+    setHasSubmittedQuery(true);
+    setShowResultsCard(true);
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSelectedFilters([]);
+    const courses = filterCourses(query, []);
+    setFilteredCourses(courses);
+  };
+
+  // Functions
+
+  const toggleFilter = () => {
+    setIsFilterOpen(!isFilterOpen);
+  };
 
   const formatTermName = (termCode: number) => {
     const year = Math.floor(termCode / 100);
@@ -186,33 +217,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       if (grade === -1) return { display: "W", title: "Withdraw" };
       return { display: "N/A", title: "Not Available" };
     }
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.target.value);
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [filteredCourses]);
-
-  const handleSearch = () => {
-    const courses = filterCourses(query, selectedFilters);
-    setFilteredCourses(courses);
-    setHasSubmittedQuery(true);
-    setShowResultsCard(true);
-  };
-
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  const handleClearFilters = () => {
-    setSelectedFilters([]);
-    const courses = filterCourses(query, []);
-    setFilteredCourses(courses);
   };
 
   const scrollToBottom = () => {
