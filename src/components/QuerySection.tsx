@@ -171,8 +171,21 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     return `${semesterName} ${year}`;
   };
 
-  const getLetterGrade = (grade: number) => {
-    return gradeMapping[grade] || "N/A";
+  const getLetterGrade = (
+    grade: number,
+    graded: boolean
+  ): { display: string; title: string } => {
+    if (graded) {
+      return {
+        display: gradeMapping[grade] || "N/A",
+        title: gradeMapping[grade] || "Not Available",
+      };
+    } else {
+      if (grade === 1) return { display: "P", title: "Pass" };
+      if (grade === 0) return { display: "F", title: "Fail" };
+      if (grade === -1) return { display: "W", title: "Withdraw" };
+      return { display: "N/A", title: "Not Available" };
+    }
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,14 +237,15 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       const term = terms[termKey];
       Object.keys(term.courses).forEach((courseKey) => {
         const course = term.courses[courseKey];
-        const { subject, course_code, grade } = course;
-        const letterGrade = getLetterGrade(grade);
+        const { subject, course_code, grade, graded } = course;
+        const gradeInfo = getLetterGrade(grade, graded);
         const courseName = `${subject}-${course_code}`;
 
         if (
           subject.toUpperCase().includes(searchQuery.toUpperCase()) ||
           courseName.toUpperCase().includes(searchQuery.toUpperCase()) ||
-          letterGrade.includes(searchQuery.toUpperCase())
+          gradeInfo.display.includes(searchQuery.toUpperCase()) ||
+          gradeInfo.title.toUpperCase().includes(searchQuery.toUpperCase())
         ) {
           filteredCourses[courseKey] = course;
         }
@@ -241,11 +255,31 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     // Apply sorting and grouping based on filters
     if (filters.includes("gradeAscending")) {
       filteredCourses = Object.fromEntries(
-        Object.entries(filteredCourses).sort((a, b) => a[1].grade - b[1].grade)
+        Object.entries(filteredCourses).sort((a, b) => {
+          if (a[1].graded && b[1].graded) {
+            return a[1].grade - b[1].grade;
+          } else if (!a[1].graded && !b[1].graded) {
+            return a[1].grade - b[1].grade;
+          } else if (a[1].graded) {
+            return -1;
+          } else {
+            return 1;
+          }
+        })
       );
     } else if (filters.includes("gradeDescending")) {
       filteredCourses = Object.fromEntries(
-        Object.entries(filteredCourses).sort((a, b) => b[1].grade - a[1].grade)
+        Object.entries(filteredCourses).sort((a, b) => {
+          if (a[1].graded && b[1].graded) {
+            return b[1].grade - a[1].grade;
+          } else if (!a[1].graded && !b[1].graded) {
+            return b[1].grade - a[1].grade;
+          } else if (b[1].graded) {
+            return 1;
+          } else {
+            return -1;
+          }
+        })
       );
     }
 
@@ -449,8 +483,17 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                               <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
                                 {course.subject}-{course.course_code}
                               </div>
-                              <div className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out">
-                                {getLetterGrade(course.grade)}
+                              <div
+                                className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out"
+                                title={
+                                  getLetterGrade(course.grade, course.graded)
+                                    .title
+                                }
+                              >
+                                {
+                                  getLetterGrade(course.grade, course.graded)
+                                    .display
+                                }
                               </div>
                             </div>
                           </motion.div>
@@ -501,8 +544,21 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                                   <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
                                     {course.subject}-{course.course_code}
                                   </div>
-                                  <div className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out">
-                                    {getLetterGrade(course.grade)}
+                                  <div
+                                    className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out"
+                                    title={
+                                      getLetterGrade(
+                                        course.grade,
+                                        course.graded
+                                      ).title
+                                    }
+                                  >
+                                    {
+                                      getLetterGrade(
+                                        course.grade,
+                                        course.graded
+                                      ).display
+                                    }
                                   </div>
                                 </div>
                               </motion.div>
