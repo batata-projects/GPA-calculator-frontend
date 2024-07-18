@@ -60,6 +60,7 @@ const TermCard: React.FC<TermCardProps> = ({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
+  // Handles
   const handleDeleteTerm = async () => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this term and all its associated courses?"
@@ -119,6 +120,7 @@ const TermCard: React.FC<TermCardProps> = ({
     setCourseId(null);
   };
 
+  // Sorting
   const sortCourses = (courses: { [key: string]: Course }) => {
     return Object.entries(courses).sort(([, courseA], [, courseB]) => {
       if (courseA.graded && courseB.graded) {
@@ -133,6 +135,7 @@ const TermCard: React.FC<TermCardProps> = ({
     });
   };
 
+  // Scrolls
   const scrollToBottom = () => {
     if (cardRef.current) {
       cardRef.current.scrollIntoView({ behavior: "smooth", block: "end" });

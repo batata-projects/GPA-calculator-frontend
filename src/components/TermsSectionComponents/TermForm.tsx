@@ -79,6 +79,25 @@ const TermForm: React.FC<TermFormProps> = ({
   const formContainerRef = useRef<HTMLDivElement>(null);
   const semesters = ["Fall", "Winter", "Spring", "Summer"];
 
+  // UseEffects
+  useEffect(() => {
+    if (formContainerRef.current) {
+      formContainerRef.current.scrollTo({
+        top: formContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [courses]);
+
+  useEffect(() => {
+    if (year) {
+      setNextYear(year + 1);
+    } else {
+      setNextYear(undefined);
+    }
+  }, [year]);
+
+  // Handles
   const handleTermChange = (
     e:
       | React.ChangeEvent<HTMLSelectElement>
@@ -133,23 +152,6 @@ const TermForm: React.FC<TermFormProps> = ({
       },
     ]);
   };
-
-  useEffect(() => {
-    if (formContainerRef.current) {
-      formContainerRef.current.scrollTo({
-        top: formContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [courses]);
-
-  useEffect(() => {
-    if (year) {
-      setNextYear(year + 1);
-    } else {
-      setNextYear(undefined);
-    }
-  }, [year]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -75,6 +75,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   );
   const [error, setError] = useState("");
 
+  // Use Effects
   useEffect(() => {
     setSubject(course?.subject || "");
     setCourseCode(course?.course_code || "");
@@ -97,6 +98,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     }
   }, [course]);
 
+  // Handles
   const handleDelete = async () => {
     const confirmDelete = window.confirm(
       `Are you sure you want to delete ${course?.subject}-${courseCode} from this term?`
