@@ -100,9 +100,7 @@ const TermCard: React.FC<TermCardProps> = ({
     } else {
       setIsEdit(course !== undefined);
       setShowForm(true);
-      if (course === undefined) {
-        setIsFormOpen(true);
-      }
+      setIsFormOpen(course === undefined);
       setCourse(course || null);
       setCourseId(courseId || null);
       setSelectedCourseId(courseId || null);
@@ -118,6 +116,7 @@ const TermCard: React.FC<TermCardProps> = ({
     setIsEdit(false);
     setCourse(null);
     setCourseId(null);
+    setSelectedCourseId(null);
   };
 
   // Sorting
