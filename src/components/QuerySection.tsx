@@ -393,7 +393,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                   <div className="font-semibold px-4 py-2">Filter by:</div>
                   <label className="flex items-center px-4 py-2 hover:bg-gray-100">
                     <input
-                      type="checkbox"
+                      type="radio"
                       name="filter"
                       value="term"
                       checked={selectedFilters.includes("term")}
@@ -404,7 +404,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                   </label>
                   <label className="flex items-center px-4 py-2 hover:bg-gray-100">
                     <input
-                      type="checkbox"
+                      type="radio"
                       name="filter"
                       value="subject"
                       checked={selectedFilters.includes("subject")}
@@ -418,7 +418,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                   <div className="font-semibold px-4 py-2">Sort by grade:</div>
                   <label className="flex items-center px-4 py-2 hover:bg-gray-100">
                     <input
-                      type="checkbox"
+                      type="radio"
                       name="sort"
                       value="gradeAscending"
                       checked={selectedFilters.includes("gradeAscending")}
@@ -429,7 +429,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                   </label>
                   <label className="flex items-center px-4 py-2 hover:bg-gray-100">
                     <input
-                      type="checkbox"
+                      type="radio"
                       name="sort"
                       value="gradeDescending"
                       checked={selectedFilters.includes("gradeDescending")}
