@@ -17,7 +17,7 @@ interface Course {
   course_code: string;
   term: number;
   credits: number;
-  grade: number;
+  grade: number | null;
   graded: boolean;
 }
 
@@ -67,11 +67,23 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   const [courseCode, setCourseCode] = useState(course?.course_code || "");
   const [credits, setCredits] = useState(course?.credits.toString() || "");
   const [grade, setGrade] = useState(
-    course ? (course.graded ? letterGrades[course.grade] : "") : ""
+    course
+      ? course.graded
+        ? course.grade !== null
+          ? letterGrades[course.grade]
+          : "NOT_COMPLETE"
+        : ""
+      : ""
   );
   const [graded, setGraded] = useState(course?.graded.toString() || "true");
   const [pass, setPass] = useState(
-    course?.grade === 1 ? "pass" : course?.grade === 0 ? "fail" : "withdraw"
+    course?.grade === 1
+      ? "pass"
+      : course?.grade === 0
+      ? "fail"
+      : course?.grade === -1
+      ? "withdraw"
+      : "not_complete"
   );
   const [error, setError] = useState("");
 
@@ -85,12 +97,20 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
 
     if (course) {
       if (course.graded) {
-        setGrade(letterGrades[course.grade]);
+        setGrade(
+          course.grade !== null ? letterGrades[course.grade] : "NOT_COMPLETE"
+        );
         setPass("");
       } else {
         setGrade("");
         setPass(
-          course.grade === 1 ? "pass" : course.grade === 0 ? "fail" : "withdraw"
+          course.grade === 1
+            ? "pass"
+            : course.grade === 0
+            ? "fail"
+            : course.grade === -1
+            ? "withdraw"
+            : "not_complete"
         );
       }
     } else {
@@ -98,7 +118,6 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
       setPass("");
     }
   }, [course]);
-
   // Handles
 
   const handleDelete = async () => {
@@ -134,14 +153,19 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     e.preventDefault();
     try {
       const termNumber = term !== null ? parseInt(term, 10) : null;
-      const numericGrade =
-        graded === "true"
-          ? gradeValues[grade]
-          : pass === "pass"
-          ? 1
-          : pass === "fail"
-          ? 0
-          : -1; // Assign -1 for "withdraw"
+      let numericGrade: number | null;
+      if (graded === "true") {
+        numericGrade = grade === "NOT_COMPLETE" ? null : gradeValues[grade];
+      } else {
+        numericGrade =
+          pass === "pass"
+            ? 1
+            : pass === "fail"
+            ? 0
+            : pass === "withdraw"
+            ? -1
+            : null;
+      }
 
       if (courseId) {
         // Edit the existing course
@@ -251,10 +275,9 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           <select
             value={grade}
             onChange={(e) => setGrade(e.target.value)}
-            required
             className="w-full px-3 py-2 border border-gray-300 rounded"
           >
-            <option value="">Select a grade</option>
+            <option value="">Select GRADE</option>
             {Object.entries(gradeValues)
               .sort(
                 ([, numericGradeA], [, numericGradeB]) =>
@@ -265,18 +288,19 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
                   {letterGrade}
                 </option>
               ))}
+            <option value="NOT_COMPLETE">NOT COMPLETED</option>
           </select>
         ) : (
           <select
             value={pass}
             onChange={(e) => setPass(e.target.value)}
-            required
             className="w-full px-3 py-2 border border-gray-300 rounded"
           >
             <option value="">Select PASS/FAIL</option>
             <option value="pass">PASS</option>
             <option value="fail">FAIL</option>
             <option value="withdraw">WITHDRAW</option>
+            <option value="not_complete">NOT COMPLETED</option>
           </select>
         )}
         <div className="flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">

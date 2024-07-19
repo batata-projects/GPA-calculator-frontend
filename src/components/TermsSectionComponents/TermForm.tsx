@@ -5,9 +5,9 @@ interface Course {
   subject: string;
   course_code: string;
   credits: string;
-  grade: number | null;
+  grade: number | null | undefined;
   graded: string;
-  pass: number | null;
+  pass: number | null | undefined;
 }
 
 interface TermFormProps {
@@ -33,7 +33,7 @@ const letterGrades = [
   "Withdraw",
 ];
 
-const gradeValues: { [key: string]: number } = {
+const gradeValues: { [key: string]: number | null } = {
   "A+": 4.3,
   A: 4.0,
   "A-": 3.7,
@@ -47,10 +47,11 @@ const gradeValues: { [key: string]: number } = {
   D: 1.0,
   F: 0.0,
   Withdraw: -1,
+  "Not Completed": null,
 };
 
 const notGradedOptions = ["Pass", "Fail", "Withdraw"];
-const notGradedValues: { [key: string]: number } = {
+const notGradedValues: { [key: string]: number | null } = {
   Pass: 1,
   Fail: 0,
   Withdraw: -1,
@@ -70,9 +71,9 @@ const TermForm: React.FC<TermFormProps> = ({
       subject: "",
       course_code: "",
       credits: "",
-      grade: null,
+      grade: undefined, // Change this from null to undefined
       graded: "true",
-      pass: null,
+      pass: undefined, // Change this from null to undefined
     },
   ]);
   const [error, setError] = useState("");
@@ -97,7 +98,6 @@ const TermForm: React.FC<TermFormProps> = ({
     }
   }, [year]);
 
-  
   // Handles
   const handleTermChange = (
     e:
@@ -131,9 +131,19 @@ const TermForm: React.FC<TermFormProps> = ({
   ) => {
     const updatedCourses = [...courses];
     if (field === "grade") {
-      updatedCourses[index][field] = gradeValues[e.target.value];
+      updatedCourses[index][field] =
+        e.target.value === ""
+          ? undefined
+          : e.target.value === "Not Completed"
+          ? null
+          : gradeValues[e.target.value];
     } else if (field === "pass") {
-      updatedCourses[index][field] = notGradedValues[e.target.value];
+      updatedCourses[index][field] =
+        e.target.value === ""
+          ? undefined
+          : e.target.value === "Not Completed"
+          ? null
+          : notGradedValues[e.target.value];
     } else {
       updatedCourses[index][field] = e.target.value;
     }
@@ -147,13 +157,13 @@ const TermForm: React.FC<TermFormProps> = ({
         subject: "",
         course_code: "",
         credits: "",
-        grade: null,
+        grade: undefined,
         graded: "true",
-        pass: null,
+        pass: undefined,
       },
     ]);
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const semesterCode = {
@@ -171,7 +181,14 @@ const TermForm: React.FC<TermFormProps> = ({
         course_code: course.course_code.toUpperCase(),
         term,
         credits: course.credits,
-        grade: course.graded === "true" ? course.grade : course.pass,
+        grade:
+          course.graded === "true"
+            ? course.grade === undefined
+              ? null
+              : course.grade
+            : course.pass === undefined
+            ? null
+            : course.pass,
         graded: course.graded,
       }));
       const response = await httpClient.post("/courses/many", payload, {
@@ -302,54 +319,48 @@ const TermForm: React.FC<TermFormProps> = ({
                       id={`grade-${index}`}
                       name={`grade-${index}`}
                       value={
-                        course.grade !== null
-                          ? letterGrades.find(
+                        course.grade === undefined
+                          ? ""
+                          : course.grade === null
+                          ? "Not Completed"
+                          : letterGrades.find(
                               (grade) => gradeValues[grade] === course.grade
-                            )
-                          : ""
+                            ) || ""
                       }
                       onChange={(e) => handleCourseChange(e, index, "grade")}
                       className="w-full px-3 py-2 border border-gray-300 rounded"
-                      required
                     >
                       <option value="">Select a grade</option>
-                      {Object.entries(gradeValues)
-                        .sort(
-                          ([, numericGradeA], [, numericGradeB]) =>
-                            numericGradeB - numericGradeA
-                        )
-                        .map(([letterGrade, numericGrade]) => (
-                          <option key={numericGrade} value={letterGrade}>
-                            {letterGrade}
-                          </option>
-                        ))}
+                      {letterGrades.map((letterGrade) => (
+                        <option key={letterGrade} value={letterGrade}>
+                          {letterGrade}
+                        </option>
+                      ))}
+                      <option value="Not Completed">Not Completed</option>
                     </select>
                   ) : (
                     <select
                       id={`grade-${index}`}
                       name={`grade-${index}`}
                       value={
-                        course.pass !== null
-                          ? notGradedOptions.find(
+                        course.pass === undefined
+                          ? ""
+                          : course.pass === null
+                          ? "Not Completed"
+                          : notGradedOptions.find(
                               (grade) => notGradedValues[grade] === course.pass
-                            )
-                          : ""
+                            ) || ""
                       }
                       onChange={(e) => handleCourseChange(e, index, "pass")}
                       className="w-full px-3 py-2 border border-gray-300 rounded"
-                      required
                     >
                       <option value="">Select pass/fail</option>
-                      {Object.entries(notGradedValues)
-                        .sort(
-                          ([, numericGradeA], [, numericGradeB]) =>
-                            numericGradeB - numericGradeA
-                        )
-                        .map(([letterGrade, numericGrade]) => (
-                          <option key={numericGrade} value={letterGrade}>
-                            {letterGrade}
-                          </option>
-                        ))}
+                      {notGradedOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                      <option value="Not Completed">Not Completed</option>
                     </select>
                   )}
                 </div>

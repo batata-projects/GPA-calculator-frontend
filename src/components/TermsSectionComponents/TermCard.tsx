@@ -7,7 +7,7 @@ interface Course {
   course_code: string;
   term: number;
   credits: number;
-  grade: number;
+  grade: number | null;
   graded: boolean;
 }
 
@@ -41,7 +41,16 @@ const gradeMapping: { [key: number]: string } = {
   1.3: "D+",
   1.0: "D",
   0.0: "F",
-  "-1": "WITHDRAW",
+  "-1": "W",
+};
+
+const getGradeDisplay = (grade: number | null, graded: boolean): string => {
+  if (grade === null) return "NC";
+  if (graded) return gradeMapping[grade] || "NC";
+  if (grade === 1) return "P";
+  if (grade === 0) return "F";
+  if (grade === -1) return "W";
+  return "NC";
 };
 
 const TermCard: React.FC<TermCardProps> = ({
@@ -122,6 +131,9 @@ const TermCard: React.FC<TermCardProps> = ({
   // Sorting
   const sortCourses = (courses: { [key: string]: Course }) => {
     return Object.entries(courses).sort(([, courseA], [, courseB]) => {
+      if (courseA.grade === null && courseB.grade === null) return 0;
+      if (courseA.grade === null) return 1;
+      if (courseB.grade === null) return -1;
       if (courseA.graded && courseB.graded) {
         return courseB.grade - courseA.grade;
       } else if (courseA.graded) {
@@ -144,7 +156,7 @@ const TermCard: React.FC<TermCardProps> = ({
   return (
     <div
       ref={cardRef}
-      className="flex flex-col bg-[#055AC5] my-8 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-0  element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700 mb-3"
+      className="flex flex-col bg-[#055AC5] my-10 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-0  element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700 mb-3"
     >
       <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
         {/* course side */}
@@ -172,9 +184,13 @@ const TermCard: React.FC<TermCardProps> = ({
                 {/* course grade */}
                 <button
                   onClick={() => handleAddCourse(courseId, course)}
-                  className="bg-white text-black rounded-full w-[60px] px-2 h-[45px] flex justify-center items-center text-[17px]"
+                  className={`bg-white text-black rounded-full w-[60px] px-2 h-[45px] flex justify-center items-center text-[17px] ${
+                    course.grade === null ? "not-completed" : ""
+                  }`}
                   title={
-                    course.graded
+                    course.grade === null
+                      ? "Not Completed"
+                      : course.graded
                       ? course.grade === -1
                         ? "Withdrawn"
                         : gradeMapping[course.grade]
@@ -185,15 +201,7 @@ const TermCard: React.FC<TermCardProps> = ({
                       : "Fail"
                   }
                 >
-                  {course.graded
-                    ? course.grade === -1
-                      ? "W"
-                      : gradeMapping[course.grade]
-                    : course.grade === 1
-                    ? "P"
-                    : course.grade === -1
-                    ? "W"
-                    : "F"}
+                  {getGradeDisplay(course.grade, course.graded)}
                 </button>
               </div>
             ))}
@@ -215,6 +223,12 @@ const TermCard: React.FC<TermCardProps> = ({
               </button>
             )}
           </div>
+          {/* <div className="text-sm mt-4 flex flex-wrap justify-start pl-3">
+            <span className="mr-4">NC: Not Completed</span>
+            <span className="mr-4">W: Withdrawn</span>
+            <span className="mr-4">P: Pass</span>
+            <span>F: Fail</span>
+          </div> */}
         </div>
         {/* gpa side */}
         <div className="w-full md:w-1/4 flex flex-col p-4 md:p-8 relative items-center border-t md:border-t-0 md:border-l">
