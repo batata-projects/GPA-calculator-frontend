@@ -76,7 +76,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   const [error, setError] = useState("");
 
   // Use Effects
-  
+
   useEffect(() => {
     setSubject(course?.subject || "");
     setCourseCode(course?.course_code || "");
@@ -100,7 +100,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   }, [course]);
 
   // Handles
-  
+
   const handleDelete = async () => {
     const confirmDelete = window.confirm(
       `Are you sure you want to delete ${course?.subject}-${courseCode} from this term?`
@@ -273,10 +273,10 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             required
             className="w-full px-3 py-2 border border-gray-300 rounded"
           >
-            <option value="">Select pass/fail/withdraw</option>
-            <option value="pass">Pass</option>
-            <option value="fail">Fail</option>
-            <option value="withdraw">Withdraw</option>
+            <option value="">Select PASS/FAIL</option>
+            <option value="pass">PASS</option>
+            <option value="fail">FAIL</option>
+            <option value="withdraw">WITHDRAW</option>
           </select>
         )}
         <div className="flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">

@@ -181,6 +181,8 @@ const TermCard: React.FC<TermCardProps> = ({
                         : gradeMapping[course.grade]
                       : course.grade === 1
                       ? "Pass"
+                      : course.grade === -1
+                      ? "Withdrawn"
                       : "Fail"
                   }
                 >
@@ -190,6 +192,8 @@ const TermCard: React.FC<TermCardProps> = ({
                       : gradeMapping[course.grade]
                     : course.grade === 1
                     ? "P"
+                    : course.grade === -1
+                    ? "W"
                     : "F"}
                 </button>
               </div>
