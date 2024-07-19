@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginForm from "../components/landing-page/LoginForm.tsx";
 import RegisterForm from "../components/landing-page/RegisterForm.tsx";
-
 import httpClient from "../httpClient.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -10,6 +9,12 @@ const LandingPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = isLogin
+      ? "Login - GPA Calculator"
+      : "Register - GPA Calculator";
+  }, [isLogin]);
 
   const handleToggleForm = () => {
     setIsLogin(!isLogin);
@@ -30,7 +35,6 @@ const LandingPage = () => {
       localStorage.setItem("user_id", user_id);
 
       navigate("/dashboard", { state: { user_id } });
-
     } catch (error: any) {
       if (error.response) {
         // The request was made and the server responded with a status code
@@ -89,7 +93,7 @@ const LandingPage = () => {
   return (
     <div className="flex flex-col lg:flex-row font-poppins">
       {/* Left side of the landing page */}
-      <div className="lg:w-7/12 w-full min-h-screen bg-gradient-to-b from-[#0575E6] to-[#021B79] relative">
+      <div className="lg:w-7/12 w-full min-h-full bg-gradient-to-b from-[#0575E6] to-[#021B79] relative">
         <div className="w-full h-full flex flex-col items-center justify-center py-8 lg:py-0 relative z-10">
           <div className="w-4/5 max-w-2xl">
             <div className="text-white font-poppins text-4xl lg:text-5xl font-bold text-shadow-lg mb-4">

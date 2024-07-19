@@ -132,11 +132,13 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           }
         );
 
-        if (response.data.status === 200) {
+        if (response.data.status === 201) {
           onClose();
           window.location.reload();
         } else if (response.data.status === 500) {
           setError(response.data.message);
+        } else if (response.data.status === 422) {
+          setError(response.data.msg);
         }
       } else {
         // Add a new course
@@ -163,17 +165,19 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           onClose();
           window.location.reload();
         } else if (response.data.status === 500) {
-          setError(response.data.message);
+          setError(response.data.msg);
+        } else if (response.data.status === 422) {
+          setError(response.data.msg);
         }
       }
     } catch (error) {
-      setError(`${error.response.data.detail}, Please sign in again.`);
+      setError(`${error.response.data.detail.msg}, Please sign in again.`);
     }
   };
 
   return (
     <div className="py-3 border-t px-5 mt-4">
-      <div className="mb-3 text-[20px]">
+      <div className="mb-3 text-[20px] text-white">
         {isEdit ? "Edit Course" : "Add A Course"}
       </div>
       <form

@@ -16,7 +16,6 @@ interface User {
   gpa: number;
 }
 
-
 interface Terms {
   [key: string]: {
     name: string;
@@ -127,7 +126,12 @@ const DashboardPage: React.FC = () => {
                 accessToken={access_token || ""}
                 refreshToken={refresh_token || ""}
               />
-              <QuerySection />
+              <QuerySection
+                terms={terms}
+                user_id={user_id}
+                accessToken={access_token || ""}
+                refreshToken={refresh_token || ""}
+              />
             </div>
           </>
         ) : (
