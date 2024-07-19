@@ -15,7 +15,7 @@ const LandingPage = () => {
       ? "Login - GPA Calculator"
       : "Register - GPA Calculator";
   }, [isLogin]);
-  
+
   const handleToggleForm = () => {
     setIsLogin(!isLogin);
     setError(null);
