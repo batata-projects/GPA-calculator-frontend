@@ -528,7 +528,11 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                             return (
                               <motion.div
                                 key={courseId}
-                                className="flex flex-col items-center border-2 text-white border-white p-4 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-500"
+                                className={`flex flex-col items-center text-white p-4 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-500 ${
+                                  selectedFilters.includes("term")
+                                    ? ""
+                                    : "border-2 border-white"
+                                }`}
                                 initial={{ opacity: 0, scale: 0 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{
@@ -541,9 +545,11 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                                   handleCourseClick(courseId, course)
                                 }
                               >
-                                <div className="text-[20px] mb-3">
-                                  {formatTermName(course.term)}
-                                </div>
+                                {!selectedFilters.includes("term") && (
+                                  <div className="text-[20px] mb-3">
+                                    {formatTermName(course.term)}
+                                  </div>
+                                )}
                                 <div className="flex flex-row space-x-2">
                                   <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
                                     {course.subject}-{course.course_code}
