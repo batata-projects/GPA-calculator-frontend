@@ -97,6 +97,7 @@ const TermForm: React.FC<TermFormProps> = ({
     }
   }, [year]);
 
+  
   // Handles
   const handleTermChange = (
     e:
@@ -152,7 +153,7 @@ const TermForm: React.FC<TermFormProps> = ({
       },
     ]);
   };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const semesterCode = {

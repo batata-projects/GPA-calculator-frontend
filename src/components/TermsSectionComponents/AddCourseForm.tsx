@@ -76,6 +76,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   const [error, setError] = useState("");
 
   // Use Effects
+  
   useEffect(() => {
     setSubject(course?.subject || "");
     setCourseCode(course?.course_code || "");
@@ -99,6 +100,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   }, [course]);
 
   // Handles
+  
   const handleDelete = async () => {
     const confirmDelete = window.confirm(
       `Are you sure you want to delete ${course?.subject}-${courseCode} from this term?`
@@ -161,7 +163,6 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             },
           }
         );
-        console.log(response);
 
         if (response.status === 200) {
           onClose();
@@ -205,7 +206,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
 
   return (
     <div className="py-3 border-t px-5 mt-4">
-      <div className="mb-3 text-[20px]">
+      <div className="mb-3 text-[20px] text-white">
         {isEdit ? "Edit Course" : "Add A Course"}
       </div>
       <form
