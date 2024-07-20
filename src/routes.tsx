@@ -15,7 +15,7 @@ function Routes(): JSX.Element {
     const getPageTitle = () => {
       switch (location.pathname) {
         case "/":
-          return "Landing Page";
+          return "Login - GPA Calculator";
         case "/dashboard":
           return "Dashboard - GPA Calculator";
         default:

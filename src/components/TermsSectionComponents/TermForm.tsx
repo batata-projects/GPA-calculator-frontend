@@ -5,8 +5,9 @@ interface Course {
   subject: string;
   course_code: string;
   credits: string;
-  grade: number;
+  grade: number | null | undefined;
   graded: string;
+  pass: number | null | undefined;
 }
 
 interface TermFormProps {
@@ -16,6 +17,46 @@ interface TermFormProps {
   refreshToken: string | number | boolean;
 }
 
+const letterGrades = [
+  "A+",
+  "A",
+  "A-",
+  "B+",
+  "B",
+  "B-",
+  "C+",
+  "C",
+  "C-",
+  "D+",
+  "D",
+  "F",
+  "Withdraw",
+];
+
+const gradeValues: { [key: string]: number | null } = {
+  "A+": 4.3,
+  A: 4.0,
+  "A-": 3.7,
+  "B+": 3.3,
+  B: 3.0,
+  "B-": 2.7,
+  "C+": 2.3,
+  C: 2.0,
+  "C-": 1.7,
+  "D+": 1.3,
+  D: 1.0,
+  F: 0.0,
+  Withdraw: -1,
+  "Not Completed": null,
+};
+
+const notGradedOptions = ["Pass", "Fail", "Withdraw"];
+const notGradedValues: { [key: string]: number | null } = {
+  Pass: 1,
+  Fail: 0,
+  Withdraw: -1,
+};
+
 const TermForm: React.FC<TermFormProps> = ({
   onClose,
   userId,
@@ -23,49 +64,41 @@ const TermForm: React.FC<TermFormProps> = ({
   refreshToken,
 }) => {
   const [year, setYear] = useState<number>();
+  const [nextYear, setNextYear] = useState<number>();
   const [semester, setSemester] = useState<string>("");
   const [courses, setCourses] = useState<Course[]>([
     {
       subject: "",
       course_code: "",
       credits: "",
-      grade: 0,
-      graded: "",
+      grade: undefined, // Change this from null to undefined
+      graded: "true",
+      pass: undefined, // Change this from null to undefined
     },
   ]);
   const [error, setError] = useState("");
-  const letterGrades = [
-    "A+",
-    "A",
-    "A-",
-    "B+",
-    "B",
-    "B-",
-    "C+",
-    "C",
-    "C-",
-    "D+",
-    "D",
-    "F",
-  ];
-
-  const gradeValues: { [key: string]: number } = {
-    "A+": 4.3,
-    A: 4.0,
-    "A-": 3.7,
-    "B+": 3.3,
-    B: 3.0,
-    "B-": 2.7,
-    "C+": 2.3,
-    C: 2.0,
-    "C-": 1.7,
-    "D+": 1.3,
-    D: 1.0,
-    F: 0.0,
-  };
   const formContainerRef = useRef<HTMLDivElement>(null);
   const semesters = ["Fall", "Winter", "Spring", "Summer"];
 
+  // UseEffects
+  useEffect(() => {
+    if (formContainerRef.current) {
+      formContainerRef.current.scrollTo({
+        top: formContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [courses]);
+
+  useEffect(() => {
+    if (year) {
+      setNextYear(year + 1);
+    } else {
+      setNextYear(undefined);
+    }
+  }, [year]);
+
+  // Handles
   const handleTermChange = (
     e:
       | React.ChangeEvent<HTMLSelectElement>
@@ -98,7 +131,19 @@ const TermForm: React.FC<TermFormProps> = ({
   ) => {
     const updatedCourses = [...courses];
     if (field === "grade") {
-      updatedCourses[index][field] = gradeValues[e.target.value];
+      updatedCourses[index][field] =
+        e.target.value === ""
+          ? undefined
+          : e.target.value === "Not Completed"
+          ? null
+          : gradeValues[e.target.value];
+    } else if (field === "pass") {
+      updatedCourses[index][field] =
+        e.target.value === ""
+          ? undefined
+          : e.target.value === "Not Completed"
+          ? null
+          : notGradedValues[e.target.value];
     } else {
       updatedCourses[index][field] = e.target.value;
     }
@@ -112,20 +157,12 @@ const TermForm: React.FC<TermFormProps> = ({
         subject: "",
         course_code: "",
         credits: "",
-        grade: 0,
-        graded: "",
+        grade: undefined,
+        graded: "true",
+        pass: undefined,
       },
     ]);
   };
-
-  useEffect(() => {
-    if (formContainerRef.current) {
-      formContainerRef.current.scrollTo({
-        top: formContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [courses]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,11 +177,18 @@ const TermForm: React.FC<TermFormProps> = ({
     try {
       const payload = courses.map((course) => ({
         user_id: userId,
-        subject: course.subject,
-        course_code: course.course_code,
+        subject: course.subject.toUpperCase(),
+        course_code: course.course_code.toUpperCase(),
         term,
         credits: course.credits,
-        grade: course.grade,
+        grade:
+          course.graded === "true"
+            ? course.grade === undefined
+              ? null
+              : course.grade
+            : course.pass === undefined
+            ? null
+            : course.pass,
         graded: course.graded,
       }));
       const response = await httpClient.post("/courses/many", payload, {
@@ -155,10 +199,10 @@ const TermForm: React.FC<TermFormProps> = ({
       });
       console.log(response);
 
-      if (response.data.status === 201) {
+      if (response.status === 201) {
         window.location.reload();
         onClose();
-      } else if (response.data.status === 500) {
+      } else if (response.status === 500) {
         setError(response.data.message);
       }
     } catch (error) {
@@ -197,18 +241,29 @@ const TermForm: React.FC<TermFormProps> = ({
             </div>
             <div className="mb-4">
               <label htmlFor="year" className="block mb-1">
-                Year
+                Academic Year
               </label>
-              <input
-                type="number"
-                id="year"
-                name="year"
-                value={year}
-                placeholder="yyyy"
-                onChange={(e) => handleTermChange(e, "year")}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
-                required
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  id="year"
+                  name="year"
+                  value={year}
+                  placeholder="yyyy"
+                  onChange={(e) => handleTermChange(e, "year")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  required
+                />
+                <div className="h-[2px] w-4 bg-gray-400"></div>
+                <input
+                  type="number"
+                  id="nextYear"
+                  name="nextYear"
+                  value={nextYear}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100"
+                />
+              </div>
             </div>
           </div>
 
@@ -257,27 +312,57 @@ const TermForm: React.FC<TermFormProps> = ({
                     required
                   />
                 </div>
+
                 <div className="mb-2">
-                  <label htmlFor={`grade-${index}`} className="block mb-1">
-                    Grade
-                  </label>
-                  <select
-                    id={`grade-${index}`}
-                    name={`grade-${index}`}
-                    value={letterGrades.find(
-                      (grade) => gradeValues[grade] === course.grade
-                    )}
-                    onChange={(e) => handleCourseChange(e, index, "grade")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    required
-                  >
-                    <option value="">Select a grade</option>
-                    {letterGrades.map((grade) => (
-                      <option key={grade} value={grade}>
-                        {grade}
-                      </option>
-                    ))}
-                  </select>
+                  {course.graded === "true" ? (
+                    <select
+                      id={`grade-${index}`}
+                      name={`grade-${index}`}
+                      value={
+                        course.grade === undefined
+                          ? ""
+                          : course.grade === null
+                          ? "Not Completed"
+                          : letterGrades.find(
+                              (grade) => gradeValues[grade] === course.grade
+                            ) || ""
+                      }
+                      onChange={(e) => handleCourseChange(e, index, "grade")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                    >
+                      <option value="">Select a grade</option>
+                      {letterGrades.map((letterGrade) => (
+                        <option key={letterGrade} value={letterGrade}>
+                          {letterGrade}
+                        </option>
+                      ))}
+                      <option value="Not Completed">Not Completed</option>
+                    </select>
+                  ) : (
+                    <select
+                      id={`grade-${index}`}
+                      name={`grade-${index}`}
+                      value={
+                        course.pass === undefined
+                          ? ""
+                          : course.pass === null
+                          ? "Not Completed"
+                          : notGradedOptions.find(
+                              (grade) => notGradedValues[grade] === course.pass
+                            ) || ""
+                      }
+                      onChange={(e) => handleCourseChange(e, index, "pass")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                    >
+                      <option value="">Select pass/fail</option>
+                      {notGradedOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                      <option value="Not Completed">Not Completed</option>
+                    </select>
+                  )}
                 </div>
 
                 <div className="mb-2">

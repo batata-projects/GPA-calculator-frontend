@@ -214,7 +214,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     } else {
       if (grade === 1) return { display: "P", title: "Pass" };
       if (grade === 0) return { display: "F", title: "Fail" };
-      if (grade === -1) return { display: "W", title: "Withdraw" };
+      if (grade === -1) return { display: "W", title: "Withdrawn" };
       return { display: "N/A", title: "Not Available" };
     }
   };
