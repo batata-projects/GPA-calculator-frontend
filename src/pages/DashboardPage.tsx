@@ -161,7 +161,7 @@ const DashboardPage: React.FC = () => {
         </h1>
         {user ? (
           <>
-            <div className="font-inter text-[25px]">
+            <div className="font-inter text-[35px] font-semibold">
               Hello, {user.first_name}
             </div>
             <div className="flex flex-col">
