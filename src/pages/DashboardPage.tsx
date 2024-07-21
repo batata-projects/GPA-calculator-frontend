@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/navbar/Navbar.tsx";
 import OverallSection from "../components/OverallSection.tsx";
 import TermsSection from "../components/TermsSection.tsx";
 import QuerySection from "../components/QuerySection.tsx";
 import httpClient from "../httpClient.tsx";
+import Sidebar from "../components/Sidebar.tsx";
 
 interface User {
   id: string;
@@ -51,6 +51,12 @@ const DashboardPage: React.FC = () => {
   const user_id = localStorage.getItem("user_id");
   const access_token = localStorage.getItem("access_token");
   const refresh_token = localStorage.getItem("refresh_token");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   const isAuthenticated = () => {
     return !!access_token;
@@ -61,6 +67,22 @@ const DashboardPage: React.FC = () => {
       navigate("/");
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const getUserInfo = useCallback(
     async (user_id: string) => {
@@ -111,11 +133,35 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="font-inter">
-      <Navbar />
+      <button
+        onClick={toggleSidebar}
+        className="fixed top-4 left-4 z-50 text-gray-700 hover:text-gray-900focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="size-7"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+          />
+        </svg>
+      </button>
+      <div ref={sidebarRef}>
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      </div>
       <div className="flex flex-col items-center">
+        <h1 className="text-[50px] font-bold text-center my-8">
+          GPA Calculator
+        </h1>
         {user ? (
           <>
-            <div className="font-inter text-[25px]">
+            <div className="font-inter text-[35px] font-semibold">
               Hello, {user.first_name}
             </div>
             <div className="flex flex-col">
