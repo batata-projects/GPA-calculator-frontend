@@ -141,11 +141,12 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             },
           });
 
-          console.log(response);
-          if (response.data.status === 200) {
+          console.log(response.status);
+
+          if (response.status === 200) {
             onClose();
             window.location.reload();
-          } else if (response.data.status === 500) {
+          } else if (response.status === 500) {
             setError(response.data.message);
           }
         }
@@ -252,7 +253,6 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             },
           }
         );
-        console.log(response);
 
         if (response.status === 201) {
           onClose();
