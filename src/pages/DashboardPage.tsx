@@ -51,6 +51,24 @@ const DashboardPage: React.FC = () => {
   const user_id = localStorage.getItem("user_id");
   const access_token = localStorage.getItem("access_token");
   const refresh_token = localStorage.getItem("refresh_token");
+  const [showToTop, setShowToTop] = useState(false);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.pageYOffset;
+      const windowHeight = window.innerHeight;
+      const bodyHeight = document.body.offsetHeight;
+
+      setShowToTop(scrollPosition > 800); // Show button after scrolling 100px
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const isAuthenticated = () => {
     return !!access_token;
@@ -138,6 +156,28 @@ const DashboardPage: React.FC = () => {
           <div className="">Loading...</div>
         )}
       </div>
+      {showToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-10 right-10 p-2.5 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out transform hover:scale-110 z-50"
+          aria-label="Scroll to top"
+          style={{ zIndex: 9999 }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="w-7.5 h-7.5"
+            style={{ width: "1.875rem", height: "1.875rem" }}
+          >
+            <path
+              fillRule="evenodd"
+              d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v5.69a.75.75 0 0 0 1.5 0v-5.69l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 };
