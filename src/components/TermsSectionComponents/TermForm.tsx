@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import httpClient from "../../httpClient.tsx";
+import axios, { AxiosError } from "axios";
 
 interface Course {
   subject: string;
@@ -16,6 +17,11 @@ interface TermFormProps {
   accessToken: string | null;
   refreshToken: string | number | boolean;
 }
+
+type ErrorResponse = {
+  message: string;
+  data: Record<string, unknown>;
+};
 
 const letterGrades = [
   "A+",
@@ -197,7 +203,8 @@ const TermForm: React.FC<TermFormProps> = ({
           "refresh-token": refreshToken,
         },
       });
-      console.log(response);
+
+      console.log(`here is the error: ${response}`);
 
       if (response.status === 201) {
         window.location.reload();
@@ -206,7 +213,39 @@ const TermForm: React.FC<TermFormProps> = ({
         setError(response.data.message);
       }
     } catch (error) {
-      setError(`${error.response.data.detail}, Please sign in again.`);
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ErrorResponse>;
+        if (axiosError.response) {
+          let errorMessage = "An unknown error occurred";
+          try {
+            const parsedError = JSON.parse(
+              axiosError.response.data.message.replace(/'/g, '"')
+            );
+            errorMessage = parsedError.message || "An unknown error occurred";
+          } catch (parseError) {
+            console.error("Error parsing error message:", parseError);
+            errorMessage = axiosError.response.data.message;
+          }
+
+          setError(
+            `Server Error: ${axiosError.response.status} - ${errorMessage}`
+          );
+          console.error("Full error response:", axiosError.response);
+        } else if (axiosError.request) {
+          setError("No response received from server");
+          console.error("Error request:", axiosError.request);
+        } else {
+          setError(`Error: ${axiosError.message}`);
+          console.error("Error:", axiosError.message);
+        }
+      } else {
+        setError(
+          `An unexpected error occurred: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+        console.error("Unexpected error:", error);
+      }
     }
   };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios, { AxiosError } from "axios";
 import httpClient from "../../httpClient.tsx";
 
 interface AddCourseFormProps {
@@ -20,6 +21,11 @@ interface Course {
   grade: number | null;
   graded: boolean;
 }
+
+type ErrorResponse = {
+  message: string;
+  data: Record<string, unknown>;
+};
 
 const letterGrades: { [key: number]: string } = {
   4.3: "A+",
@@ -135,16 +141,49 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             },
           });
 
-          console.log(response);
-          if (response.data.status === 200) {
+          console.log(response.status);
+
+          if (response.status === 200) {
             onClose();
             window.location.reload();
-          } else if (response.data.status === 500) {
+          } else if (response.status === 500) {
             setError(response.data.message);
           }
         }
       } catch (error) {
-        setError(`${error.response.data.detail}, Please sign in again.`);
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError<ErrorResponse>;
+          if (axiosError.response) {
+            let errorMessage = "An unknown error occurred";
+            try {
+              const parsedError = JSON.parse(
+                axiosError.response.data.message.replace(/'/g, '"')
+              );
+              errorMessage = parsedError.message || "An unknown error occurred";
+            } catch (parseError) {
+              console.error("Error parsing error message:", parseError);
+              errorMessage = axiosError.response.data.message;
+            }
+
+            setError(
+              `Server Error: ${axiosError.response.status} - ${errorMessage}`
+            );
+            console.error("Full error response:", axiosError.response);
+          } else if (axiosError.request) {
+            setError("No response received from server");
+            console.error("Error request:", axiosError.request);
+          } else {
+            setError(`Error: ${axiosError.message}`);
+            console.error("Error:", axiosError.message);
+          }
+        } else {
+          setError(
+            `An unexpected error occurred: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+          console.error("Unexpected error:", error);
+        }
       }
     }
   };
@@ -214,7 +253,6 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             },
           }
         );
-        console.log(response);
 
         if (response.status === 201) {
           onClose();
