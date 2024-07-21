@@ -97,7 +97,6 @@ const DashboardPage: React.FC = () => {
             },
           }
         );
-        console.log(response);
 
         if (response.data.data && response.data.data.user) {
           setUser(response.data.data.user);
