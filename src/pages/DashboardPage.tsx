@@ -61,7 +61,7 @@ const DashboardPage: React.FC = () => {
     const handleScroll = () => {
       const scrollPosition = window.pageYOffset;
 
-      setShowToTop(scrollPosition > 800); // Show button after scrolling 100px
+      setShowToTop(scrollPosition > 100); // Show button after scrolling 100px
     };
 
     window.addEventListener("scroll", handleScroll);
