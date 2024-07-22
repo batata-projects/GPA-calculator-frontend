@@ -309,7 +309,9 @@ const QuerySection: React.FC<QuerySectionProps> = ({
 
   return (
     <div className="flex flex-col items-center mt-5">
-      <h2 className="text-2xl font-bold mt-5 mb-10">Query</h2>
+      <h2 className="text-[36px] font-bold mb-8 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+        Query
+      </h2>
       <div
         className={`flex flex-col items-center ${
           showResultsCard ? "" : "mb-[100px]"
