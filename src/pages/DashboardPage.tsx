@@ -61,7 +61,7 @@ const DashboardPage: React.FC = () => {
     const handleScroll = () => {
       const scrollPosition = window.pageYOffset;
 
-      setShowToTop(scrollPosition > 800); // Show button after scrolling 800px
+      setShowToTop(scrollPosition > 600); // Show button after scrolling 600px
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -156,7 +156,7 @@ const DashboardPage: React.FC = () => {
       {showToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-10 right-10 p-2.5 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out transform hover:scale-110 z-50"
+          className="fixed bottom-10 right-10 p-3 bg-[#055AC5] text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out z-50 animate-slide-up"
           aria-label="Scroll to top"
           style={{ zIndex: 9999 }}
         >
@@ -164,8 +164,7 @@ const DashboardPage: React.FC = () => {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="w-7.5 h-7.5"
-            style={{ width: "1.875rem", height: "1.875rem" }}
+            className="w-10 h-10"
           >
             <path
               fillRule="evenodd"
