@@ -131,7 +131,7 @@ const LandingPage = () => {
 
       {/* Right side of the landing page */}
       <div className="lg:w-5/12 w-full flex min-h-screen justify-center">
-        <div className="w-[70%] max-w-md relative mt-[140px]">
+        <div className="w-[70%] max-w-md relative mt-[250px]">
           <AnimatePresence>
             {isLogin ? (
               // login
