@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface RegisterFormProps {
   onSubmit: (formData: {
@@ -15,11 +15,26 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordsMatch, setPasswordsMatch] = useState(false);
+
+  useEffect(() => {
+    if (password !== "" && confirmPassword !== "") {
+      setPasswordsMatch(password === confirmPassword);
+    } else {
+      setPasswordsMatch(false);
+    }
+  }, [password, confirmPassword]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSubmit({ firstName, lastName, email, password });
+    if (passwordsMatch) {
+      onSubmit({ firstName, lastName, email, password });
+    }
   };
+
+  const isFormValid =
+    firstName !== "" && lastName !== "" && email !== "" && passwordsMatch;
 
   return (
     <div>
@@ -113,18 +128,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
           />
         </div>
 
-        <div className=" flex flex-row mb-4  border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2">
+        <div className="flex flex-row mb-4 border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            stroke-width="1.5"
+            strokeWidth="1.5"
             stroke="currentColor"
             className="size-6"
           >
             <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
             />
           </svg>
@@ -139,9 +154,47 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
           />
         </div>
 
+        <div className="flex flex-col mb-4">
+          <div className="flex flex-row border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="size-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+              />
+            </svg>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              id="confirmPassword"
+              placeholder="Confirm Password"
+              className="ml-4 w-full"
+              style={{ outline: "none" }}
+            />
+          </div>
+          {(password !== "" || confirmPassword !== "") && (
+            <p
+              className={`text-sm mt-2 ${
+                passwordsMatch ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+            </p>
+          )}
+        </div>
+
         <button
           type="submit"
-          className="bg-[#0575E6] text-white text-center w-full rounded-[30px] py-4 mb-1 hover:bg-[#35649b] transition duration-300"
+          className="bg-[#0575E6] text-white text-center w-full rounded-[30px] py-4 mb-1 hover:bg-[#35649b] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={!isFormValid}
         >
           Register
         </button>
