@@ -466,7 +466,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                 {!selectedFilters.includes("term") &&
                   !selectedFilters.includes("subject") && (
                     <div className="grid grid-cols-3 gap-4 md:gap-9">
-                      {Object.keys(filteredCourses).map((courseId) => {
+                      {Object.keys(filteredCourses).map((courseId, index) => {
                         const course = filteredCourses[courseId] as Course;
                         return (
                           <motion.div
@@ -476,7 +476,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{
                               duration: 0.6,
-                              delay: 0.15 * 3,
+                              delay: 0.05 * index,
                               ease: "easeInOut",
                             }}
                             whileHover={{ scale: 1.15 }}
@@ -521,7 +521,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                             filteredCourses[groupKey] as {
                               [key: string]: Course;
                             }
-                          ).map((courseId) => {
+                          ).map((courseId, index) => {
                             const course = (
                               filteredCourses[groupKey] as {
                                 [key: string]: Course;
@@ -539,7 +539,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{
                                   duration: 0.6,
-                                  delay: 0.15 * 3,
+                                  delay: 0.05 * index,
                                   ease: "easeInOut",
                                 }}
                                 whileHover={{ scale: 1.15 }}
@@ -594,8 +594,8 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                   transition={{
                     duration: 0.6,
                     delay: Array.isArray(filteredCourses)
-                      ? 0.15 * filteredCourses.length
-                      : 0.15 * Object.values(filteredCourses).flat().length,
+                      ? 0.05 * filteredCourses.length
+                      : 0.05 * Object.values(filteredCourses).flat().length,
                     ease: "easeInOut",
                   }}
                   whileHover={{ scale: 1.05 }}
