@@ -347,7 +347,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
               placeholder="Enter Course Name, Subject, or Grade..."
               value={query}
               onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
             />
           </div>
           <div ref={dropdownRef} className="col-span-1 relative">
