@@ -63,13 +63,13 @@ const DashboardPage: React.FC = () => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
 
-      setShowToTop(scrollPosition > 0);
+      setShowToTop(scrollPosition > 100);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
