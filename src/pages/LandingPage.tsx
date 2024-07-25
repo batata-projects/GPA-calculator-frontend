@@ -64,11 +64,6 @@ const LandingPage = () => {
     try {
       const response = await httpClient.post("/auth/register", formData);
 
-      const access_token = response.data["session"]["access_token"];
-      const refresh_token = response.data["session"]["refresh_token"];
-
-      console.log(access_token);
-      console.log(refresh_token);
       navigate("/");
     } catch (error: any) {
       if (error.response) {
