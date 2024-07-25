@@ -54,6 +54,7 @@ const DashboardPage: React.FC = () => {
   const [showToTop, setShowToTop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const [isButtonLeaving, setIsButtonLeaving] = useState(false);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -63,12 +64,18 @@ const DashboardPage: React.FC = () => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
 
-      setShowToTop(scrollPosition > 100);
+      if (scrollPosition > 100 && !showToTop) {
+        setShowToTop(true);
+        setIsButtonLeaving(false);
+      } else if (scrollPosition <= 100 && showToTop) {
+        setIsButtonLeaving(true);
+        setTimeout(() => setShowToTop(false), 300); // Match this with the animation duration
+      }
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [showToTop]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -202,7 +209,9 @@ const DashboardPage: React.FC = () => {
       {showToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-10 right-10 p-3 bg-[#055AC5] text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out z-50 animate-slide-up"
+          className={`fixed bottom-10 right-10 p-3 bg-[#055AC5] text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out z-50 ${
+            isButtonLeaving ? "animate-slide-down" : "animate-slide-up"
+          }`}
           aria-label="Scroll to top"
           style={{ zIndex: 9999 }}
         >
