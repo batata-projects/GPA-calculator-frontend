@@ -63,9 +63,13 @@ const DashboardPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate("/");
-    }
+    const checkAuth = async () => {
+      if (!isAuthenticated()) {
+        navigate("/");
+      }
+    };
+
+    checkAuth();
   }, [navigate]);
 
   useEffect(() => {
