@@ -180,7 +180,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
               style={{ outline: "none" }}
             />
           </div>
-          {(password !== "" || confirmPassword !== "") && (
+          {confirmPassword !== "" && (
             <p
               className={`text-sm mt-2 ${
                 passwordsMatch ? "text-green-500" : "text-red-500"
