@@ -21,13 +21,15 @@ const LandingPage = () => {
     setError(null);
   };
 
-  const handleLogin = async (formData: { email: string; password: string }) => {
+  const handleLogin = async (formData: {
+    email: string;
+    password: string;
+  }): Promise<void> => {
     try {
       const response = await httpClient.post("/auth/login", formData);
 
       const access_token = response.data.data.session.access_token;
       const refresh_token = response.data.data.session.refresh_token;
-
       const user_id = response.data.data.user.id;
 
       localStorage.setItem("access_token", access_token);
@@ -37,7 +39,6 @@ const LandingPage = () => {
       navigate("/dashboard", { state: { user_id } });
     } catch (error: any) {
       if (error.response) {
-        // The request was made and the server responded with a status code
         if (error.response.status === 400) {
           setError(error.response.data.detail);
         } else if (error.response.status === 422) {
@@ -46,12 +47,11 @@ const LandingPage = () => {
           setError("An error occurred. Please try again.");
         }
       } else if (error.request) {
-        // The request was made but no response was received
         setError("No response from the server. Please try again.");
       } else {
-        // Something else happened in making the request
         setError("An error occurred. Please try again.");
       }
+      throw error;
     }
   };
 
@@ -60,7 +60,7 @@ const LandingPage = () => {
     lastName: string;
     email: string;
     password: string;
-  }) => {
+  }): Promise<void> => {
     try {
       const response = await httpClient.post("/auth/register", formData);
 
@@ -72,7 +72,6 @@ const LandingPage = () => {
       navigate("/");
     } catch (error: any) {
       if (error.response) {
-        // The request was made and the server responded with a status code
         if (error.response.status === 400) {
           setError(error.response.data.detail);
         } else if (error.response.status === 422) {
@@ -81,12 +80,11 @@ const LandingPage = () => {
           setError("An error occurred. Please try again.");
         }
       } else if (error.request) {
-        // The request was made but no response was received
         setError("No response from the server. Please try again.");
       } else {
-        // Something else happened in making the request
         setError("An error occurred. Please try again.");
       }
+      throw error;
     }
   };
 
