@@ -56,8 +56,8 @@ const LandingPage = () => {
   };
 
   const handleRegister = async (formData: {
-    firstName: string;
-    lastName: string;
+    first_name: string;
+    last_name: string;
     email: string;
     password: string;
   }): Promise<void> => {
@@ -67,8 +67,6 @@ const LandingPage = () => {
       const access_token = response.data["session"]["access_token"];
       const refresh_token = response.data["session"]["refresh_token"];
 
-      console.log(access_token);
-      console.log(refresh_token);
       navigate("/");
     } catch (error: any) {
       if (error.response) {
