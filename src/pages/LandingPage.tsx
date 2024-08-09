@@ -4,10 +4,12 @@ import LoginForm from "../components/landing-page/LoginForm.tsx";
 import RegisterForm from "../components/landing-page/RegisterForm.tsx";
 import httpClient from "../httpClient.tsx";
 import { motion, AnimatePresence } from "framer-motion";
+import ReadMore from "../components/landing-page/ReadMore.tsx";
 
 const LandingPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [websiteSummary, setWebsiteSummary] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,9 +65,6 @@ const LandingPage = () => {
     try {
       const response = await httpClient.post("/auth/register", formData);
 
-      const access_token = response.data["session"]["access_token"];
-      const refresh_token = response.data["session"]["refresh_token"];
-
       navigate("/");
     } catch (error: any) {
       if (error.response) {
@@ -81,7 +80,6 @@ const LandingPage = () => {
       } else {
         setError("An error occurred. Please try again.");
       }
-      throw error;
     }
   };
 
@@ -91,15 +89,13 @@ const LandingPage = () => {
       <div className="lg:w-7/12 w-full min-h-full bg-gradient-to-b from-[#0575E6] to-[#021B79] relative">
         <div className="w-full h-full flex flex-col items-center justify-center py-8 lg:py-0 relative z-10">
           <div className="w-4/5 max-w-2xl">
-            <div className="text-white font-poppins text-4xl lg:text-5xl font-bold text-shadow-lg mb-4">
+            <div className="text-white font-poppins text-3xl lg:text-4xl font-bold text-shadow-lg mb-4">
               GPA Calculator
             </div>
-            <div className="text-white font-poppins text-lg lg:text-xl font-medium mb-8 text-shadow-default">
+            <div className="text-white font-poppins text-base lg:text-lg font-medium mb-6 text-shadow-default">
               We are here to help you calculate your grades
             </div>
-            <button className="bg-blue-500 text-white font-poppins text-base font-normal px-8 py-3 rounded-full shadow-lg hover:bg-blue-400 transition duration-300">
-              Read More
-            </button>
+            <ReadMore summaryPath="/landing-page/websitesummary.md" />
           </div>
         </div>
         <div className="absolute inset-0 z-0 overflow-hidden">
@@ -126,7 +122,7 @@ const LandingPage = () => {
 
       {/* Right side of the landing page */}
       <div className="lg:w-5/12 w-full flex min-h-screen justify-center">
-        <div className="w-[70%] max-w-md relative mt-[250px]">
+        <div className="w-[80%] max-w-md relative mt-[200px]">
           <AnimatePresence>
             {isLogin ? (
               // login
