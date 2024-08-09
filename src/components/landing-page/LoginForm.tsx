@@ -23,7 +23,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
   return (
     <div className="flex flex-col justify-center flex-1">
       <div className="text-[25px] text-[#333] font-bold">Hello Again!</div>
-      <div className="text-[20px] text-[#333] mb-[40px]">Welcome Back</div>
+      <div className="text-[20px] text-[#333] mb-[20px]">Welcome Back</div>
       <form onSubmit={handleSubmit} className="text-md">
         <div className="flex mb-4 border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2">
           <svg
