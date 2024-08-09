@@ -48,6 +48,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
             placeholder="Email Address"
             className="ml-4 w-full"
             style={{ outline: "none" }}
+            required
           />
         </div>
         <div className="flex flex-row mb-4 border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2">
@@ -73,6 +74,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
             placeholder="Password"
             className="ml-4 w-full"
             style={{ outline: "none" }}
+            required
           />
         </div>
         <button

@@ -51,7 +51,6 @@ const LandingPage = () => {
       } else {
         setError("An error occurred. Please try again.");
       }
-      throw error;
     }
   };
 
