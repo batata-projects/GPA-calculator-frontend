@@ -46,8 +46,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
 
   return (
     <div>
-      <div className=" text-[26px] text-[#333] font-bold">Hello!</div>
-      <div className=" text-lg text-[#333] mb-[40px]">
+      <div className=" text-[25px] text-[#333] font-bold">Hello!</div>
+      <div className=" text-[20px] text-[#333] mb-[40px]">
         Sign Up To Get Started
       </div>
       <form onSubmit={handleSubmit} className=" text-md">
