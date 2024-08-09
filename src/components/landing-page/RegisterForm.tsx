@@ -18,15 +18,23 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordsMatch, setPasswordsMatch] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<string[]>([]);
+  const [passwordStrength, setPasswordStrength] = useState<{
+    [key: string]: "pristine" | "valid" | "invalid";
+  }>({
+    "Uppercase letter": "pristine",
+    "Lowercase letter": "pristine",
+    "8 or more characters": "pristine",
+    "1 or more number": "pristine",
+  });
 
   const checkPasswordStrength = (password: string) => {
-    const strengths: string[] = [];
-    if (password.length >= 8) strengths.push("8 or more characters");
-    if (/[A-Z]/.test(password)) strengths.push("Uppercase letter");
-    if (/[a-z]/.test(password)) strengths.push("Lowercase letter");
-    if (/\d/.test(password)) strengths.push("1 or more number");
-    setPasswordStrength(strengths);
+    const newStrength: { [key: string]: "pristine" | "valid" | "invalid" } = {
+      "Uppercase letter": /[A-Z]/.test(password) ? "valid" : "invalid",
+      "Lowercase letter": /[a-z]/.test(password) ? "valid" : "invalid",
+      "8 or more characters": password.length >= 8 ? "valid" : "invalid",
+      "1 or more number": /\d/.test(password) ? "valid" : "invalid",
+    };
+    setPasswordStrength(newStrength);
   };
 
   useEffect(() => {
@@ -39,7 +47,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (passwordsMatch && passwordStrength.length === 4) {
+    if (
+      passwordsMatch &&
+      Object.values(passwordStrength).every((status) => status === "valid")
+    ) {
       setIsLoading(true);
       try {
         await onSubmit({ first_name, last_name, email, password });
@@ -56,7 +67,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
     last_name !== "" &&
     email !== "" &&
     passwordsMatch &&
-    passwordStrength.length === 4;
+    Object.values(passwordStrength).every((status) => status === "valid");
 
   return (
     <div>
@@ -170,7 +181,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              checkPasswordStrength(e.target.value);
+              if (e.target.value === "") {
+                setPasswordStrength({
+                  "Uppercase letter": "pristine",
+                  "Lowercase letter": "pristine",
+                  "8 or more characters": "pristine",
+                  "1 or more number": "pristine",
+                });
+              } else {
+                checkPasswordStrength(e.target.value);
+              }
             }}
             id="password"
             placeholder="Password"
@@ -219,21 +239,23 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
         <div className="my-2">
           <p className="text-sm font-semibold">Password should contain:</p>
           <ul className="text-sm">
-            {[
-              "Uppercase letter",
-              "Lowercase letter",
-              "8 or more characters",
-              "1 or more number",
-            ].map((requirement) => (
+            {Object.entries(passwordStrength).map(([requirement, status]) => (
               <li
                 key={requirement}
                 className={`flex items-center ${
-                  passwordStrength.includes(requirement)
+                  status === "pristine"
+                    ? "text-gray-400"
+                    : status === "valid"
                     ? "text-green-500"
                     : "text-red-500"
                 }`}
               >
-                {passwordStrength.includes(requirement) ? (
+                {status === "pristine" && (
+                  <span className="h-4 w-4 mr-2 inline-flex items-center justify-center">
+                    -
+                  </span>
+                )}
+                {status === "valid" && (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 mr-2"
@@ -246,7 +268,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
                       clipRule="evenodd"
                     />
                   </svg>
-                ) : (
+                )}
+                {status === "invalid" && (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 mr-2"
