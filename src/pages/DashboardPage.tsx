@@ -5,6 +5,7 @@ import TermsSection from "../components/TermsSection.tsx";
 import QuerySection from "../components/QuerySection.tsx";
 import httpClient from "../httpClient.tsx";
 import Sidebar from "../components/Sidebar.tsx";
+import Loader from "../components/Loader.tsx";
 
 interface User {
   id: string;
@@ -247,7 +248,9 @@ const DashboardPage: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="">Loading...</div>
+          <div className="flex justify-center items-center h-64">
+            <Loader />
+          </div>
         )}
       </div>
     </div>
