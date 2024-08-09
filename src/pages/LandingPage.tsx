@@ -9,7 +9,6 @@ import ReadMore from "../components/landing-page/ReadMore.tsx";
 const LandingPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [websiteSummary, setWebsiteSummary] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,7 +62,7 @@ const LandingPage = () => {
     password: string;
   }): Promise<void> => {
     try {
-      const response = await httpClient.post("/auth/register", formData);
+      await httpClient.post("/auth/register", formData);
 
       navigate("/");
     } catch (error: any) {
