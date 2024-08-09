@@ -121,7 +121,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       setSelectedCourse(null);
       setSelectedCourseId(null);
     } else {
-      console.log(courseId);
       setSelectedCourse(course);
       setSelectedCourseId(courseId);
     }
