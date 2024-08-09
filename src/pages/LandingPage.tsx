@@ -139,6 +139,10 @@ const LandingPage = () => {
                   <div className="mb-2 cursor-pointer underline">
                     Forget Password?
                   </div>
+                  <div className="text-xs mb-2">
+                    If you just made an account, make sure you verify it using
+                    your email before logging in for the first time.
+                  </div>
                   <div className="text-sm text-gray-400 mb-1">
                     Don't have an account?
                   </div>
