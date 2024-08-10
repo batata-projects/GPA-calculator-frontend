@@ -76,7 +76,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     course
       ? course.graded
         ? course.grade !== null
-          ? letterGrades[course.grade]
+          ? letterGrades[course.grade] || "NOT_COMPLETE"
           : "NOT_COMPLETE"
         : ""
       : ""
@@ -93,8 +93,6 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   );
   const [error, setError] = useState("");
 
-  // Use Effects
-
   useEffect(() => {
     setSubject(course?.subject || "");
     setCourseCode(course?.course_code || "");
@@ -104,7 +102,9 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     if (course) {
       if (course.graded) {
         setGrade(
-          course.grade !== null ? letterGrades[course.grade] : "NOT_COMPLETE"
+          course.grade !== null
+            ? letterGrades[course.grade] || "NOT_COMPLETE"
+            : "NOT_COMPLETE"
         );
         setPass("");
       } else {
@@ -124,7 +124,33 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
       setPass("");
     }
   }, [course]);
-  // Handles
+
+  const handleError = (error: unknown) => {
+    console.error("Error:", error);
+
+    let errorMessage = "An unexpected error occurred. Please try again.";
+
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<any>;
+      if (axiosError.response) {
+        errorMessage =
+          axiosError.response.data?.detail ||
+          axiosError.response.data?.message ||
+          axiosError.message ||
+          "Server error occurred.";
+      } else if (axiosError.request) {
+        errorMessage =
+          "No response received from server. Please check your connection.";
+      } else {
+        errorMessage =
+          axiosError.message || "An error occurred while sending the request.";
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    setError(errorMessage);
+  };
 
   const handleDelete = async () => {
     const confirmDelete = window.confirm(
@@ -133,7 +159,6 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     if (confirmDelete) {
       try {
         if (courseId) {
-          // Delete the course
           const response = await httpClient.delete(`/courses/${courseId}`, {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -141,58 +166,29 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             },
           });
 
-          console.log(response.status);
-
           if (response.status === 200) {
             onClose();
             window.location.reload();
-          } else if (response.status === 500) {
-            setError(response.data.message);
+          } else {
+            setError(
+              response.data.message ||
+                "An error occurred while deleting the course."
+            );
           }
         }
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError<ErrorResponse>;
-          if (axiosError.response) {
-            let errorMessage = "An unknown error occurred";
-            try {
-              const parsedError = JSON.parse(
-                axiosError.response.data.message.replace(/'/g, '"')
-              );
-              errorMessage = parsedError.message || "An unknown error occurred";
-            } catch (parseError) {
-              console.error("Error parsing error message:", parseError);
-              errorMessage = axiosError.response.data.message;
-            }
-
-            setError(
-              `Server Error: ${axiosError.response.status} - ${errorMessage}`
-            );
-            console.error("Full error response:", axiosError.response);
-          } else if (axiosError.request) {
-            setError("No response received from server");
-            console.error("Error request:", axiosError.request);
-          } else {
-            setError(`Error: ${axiosError.message}`);
-            console.error("Error:", axiosError.message);
-          }
-        } else {
-          setError(
-            `An unexpected error occurred: ${
-              error instanceof Error ? error.message : String(error)
-            }`
-          );
-          console.error("Unexpected error:", error);
-        }
+        handleError(error);
       }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(""); // Clear any existing errors
     try {
       const termNumber = term !== null ? parseInt(term, 10) : null;
-      let numericGrade: number | null;
+      let numericGrade: number | null = null;
+
       if (graded === "true") {
         numericGrade = grade === "NOT_COMPLETE" ? null : gradeValues[grade];
       } else {
@@ -206,198 +202,181 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             : null;
       }
 
-      if (courseId) {
-        // Edit the existing course
-        const response = await httpClient.put(
-          `/courses/${courseId}`,
-          {
-            user_id,
-            subject,
-            course_code: courseCode,
-            term: termNumber,
-            credits,
-            grade: numericGrade,
-            graded,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "refresh-token": refreshToken,
-            },
-          }
-        );
+      const courseData = {
+        user_id,
+        subject,
+        course_code: courseCode,
+        term: termNumber,
+        credits: parseFloat(credits),
+        grade: numericGrade,
+        graded: graded === "true",
+      };
 
-        if (response.status === 200) {
-          onClose();
-          window.location.reload();
-        } else if (response.status === 500) {
-          setError(response.data.message);
-        }
+      let response;
+      if (isEdit && courseId) {
+        response = await httpClient.put(`/courses/${courseId}`, courseData, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "refresh-token": refreshToken,
+          },
+        });
       } else {
-        // Add a new course
-        const response = await httpClient.post(
-          "/courses/",
-          {
-            user_id,
-            subject,
-            course_code: courseCode,
-            term: termNumber,
-            credits,
-            grade: numericGrade,
-            graded,
+        response = await httpClient.post("/courses/", courseData, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "refresh-token": refreshToken,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "refresh-token": refreshToken,
-            },
-          }
-        );
+        });
+      }
 
-        if (response.status === 201) {
-          onClose();
-          window.location.reload();
-        } else if (response.status === 500) {
-          setError(response.data.message);
-        }
+      if (response.status === 200 || response.status === 201) {
+        onClose();
+        window.location.reload();
+      } else {
+        setError(response.data.message || "An unexpected error occurred.");
       }
     } catch (error) {
-      setError(`${error.response.data.detail}, Please sign in again.`);
+      handleError(error);
     }
   };
 
   return (
-    <div className="py-3 border-t px-5 mt-4">
-      <div className="mb-3 text-[20px] text-white">
-        {isEdit ? "Edit Course" : "Add A Course"}
-      </div>
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-2 gap-y-4 gap-x-[8%] text-black"
-      >
-        <div className="col-span-1">
-          <input
-            id="subject"
-            type="text"
-            placeholder="Subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value.toUpperCase())}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          />
+    <div className="bg-white/10 rounded-lg p-4 mt-4 text-white">
+      <h3 className="text-xl font-semibold mb-4">
+        {isEdit ? "Edit Course" : "Add Course"}
+      </h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="subject" className="block text-sm font-medium mb-1">
+            Subject & Code
+          </label>
+          <div className="flex space-x-2">
+            <input
+              id="subject"
+              type="text"
+              placeholder="e.g MATH"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value.toUpperCase())}
+              required
+              className="w-1/2 px-3 py-2 bg-white/20 border border-white/30 rounded text-white placeholder-white/50"
+            />
+            <input
+              id="courseCode"
+              type="text"
+              placeholder="e.g 101"
+              value={courseCode}
+              onChange={(e) => setCourseCode(e.target.value.toUpperCase())}
+              required
+              className="w-1/2 px-3 py-2 bg-white/20 border border-white/30 rounded text-white placeholder-white/50"
+            />
+          </div>
         </div>
-        <div className="col-span-1">
-          <input
-            id="course code"
-            type="text"
-            value={courseCode}
-            placeholder="Course Code"
-            onChange={(e) => setCourseCode(e.target.value.toUpperCase())}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          />
-        </div>
-        <div className="col-span-1">
+
+        <div>
+          <label htmlFor="credits" className="block text-sm font-medium mb-1">
+            Credits
+          </label>
           <input
             id="credits"
-            type="text"
+            type="number"
+            min="0"
+            step="0.5"
             value={credits}
-            placeholder="Credits"
             onChange={(e) => setCredits(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            placeholder="e.g 3"
+            className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded text-white"
           />
         </div>
 
-        {graded === "true" ? (
-          <select
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          >
-            <option value="">Select GRADE</option>
-            {Object.entries(gradeValues)
-              .sort(
-                ([, numericGradeA], [, numericGradeB]) =>
-                  numericGradeB - numericGradeA
-              )
-              .map(([letterGrade, numericGrade]) => (
-                <option key={numericGrade} value={letterGrade}>
-                  {letterGrade}
-                </option>
-              ))}
-            <option value="NOT_COMPLETE">NOT COMPLETED</option>
-          </select>
-        ) : (
-          <select
-            value={pass}
-            onChange={(e) => setPass(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          >
-            <option value="">Select PASS/FAIL</option>
-            <option value="pass">PASS</option>
-            <option value="fail">FAIL</option>
-            <option value="withdraw">WITHDRAW</option>
-            <option value="not_complete">NOT COMPLETED</option>
-          </select>
-        )}
-        <div className="flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">
-          <label htmlFor="grade">Graded:</label>
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="graded-yes"
-              value="true"
-              checked={graded === "true" || (!course && graded !== "false")}
-              onChange={() => setGraded("true")}
-              className="mr-2"
-            />
-            <label htmlFor="graded-yes" className="text-gray-800">
-              Yes
+        <div>
+          <label className="block text-sm font-medium mb-1">Grading Type</label>
+          <div className="flex space-x-4">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-500"
+                name="gradingType"
+                value="true"
+                checked={graded === "true"}
+                onChange={() => setGraded("true")}
+              />
+              <span className="ml-2">Graded</span>
             </label>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="graded-no"
-              value="false"
-              checked={graded === "false"}
-              onChange={() => setGraded("false")}
-              className="mr-2"
-            />
-            <label htmlFor="graded-no" className="text-gray-800">
-              No
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-500"
+                name="gradingType"
+                value="false"
+                checked={graded === "false"}
+                onChange={() => setGraded("false")}
+              />
+              <span className="ml-2">Pass/Fail</span>
             </label>
           </div>
         </div>
-        {isEdit && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="px-4 py-2 text-white bg-red-500 rounded focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-red-600"
+
+        <div>
+          <label htmlFor="grade" className="block text-sm font-medium mb-1">
+            {graded === "true" ? "Grade" : "Status"}
+          </label>
+          <select
+            id="grade"
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
+            className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded text-white"
           >
-            Delete Course
-          </button>
-        )}
+            <option value="">
+              Select {graded === "true" ? "Grade" : "Status"}
+            </option>
+            {graded === "true" ? (
+              Object.entries(gradeValues)
+                .sort(([, a], [, b]) => b - a)
+                .map(([letterGrade]) => (
+                  <option key={letterGrade} value={letterGrade}>
+                    {letterGrade}
+                  </option>
+                ))
+            ) : (
+              <>
+                <option value="pass">PASS</option>
+                <option value="fail">FAIL</option>
+                <option value="withdraw">WITHDRAW</option>
+              </>
+            )}
+            <option value="NOT_COMPLETE">NOT COMPLETED</option>
+          </select>
+        </div>
 
         {error && (
-          <div className="col-span-2 px-4 py-2 text-red-500 bg-red-100 border border-red-400 rounded">
+          <div className="px-4 py-2 bg-red-500/50 border border-red-700 rounded text-white text-sm">
             {error}
           </div>
         )}
-        <div className="col-span-2 flex justify-end mt-4 mb-2">
-          <button
-            type="submit"
-            className="px-4 py-2 mr-2 text-white bg-orange-500 rounded focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-800"
-          >
-            Submit
-          </button>
+
+        <div className="flex justify-end space-x-3 mt-6">
+          {isEdit && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
+            >
+              Delete
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 border border-gray-300 rounded bg-white focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-gray-400"
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition duration-300"
           >
             Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+          >
+            {isEdit ? "Update" : "Add"}
           </button>
         </div>
       </form>
