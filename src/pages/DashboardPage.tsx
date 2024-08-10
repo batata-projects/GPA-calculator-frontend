@@ -154,10 +154,10 @@ const DashboardPage: React.FC = () => {
   }, [user_id, navigate, getUserInfo]);
 
   return (
-    <div className="font-inter">
+    <div className="font-inter max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 text-gray-700 hover:text-gray-900focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
+        className="fixed top-4 left-4 z-50 text-gray-700 hover:text-gray-900 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -165,7 +165,7 @@ const DashboardPage: React.FC = () => {
           viewBox="0 0 24 24"
           strokeWidth="1.5"
           stroke="currentColor"
-          className="size-7"
+          className="w-6 h-6"
         >
           <path
             strokeLinecap="round"
@@ -178,15 +178,13 @@ const DashboardPage: React.FC = () => {
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </div>
       <div className="flex flex-col items-center">
-        <h1 className="text-[50px] font-bold text-center my-8">
-          GPA Calculator
-        </h1>
+        <h1 className="text-4xl font-bold text-center my-6">GPA Calculator</h1>
         {user ? (
           <>
-            <div className="font-inter text-[35px] font-semibold">
+            <div className="text-2xl font-semibold mb-4">
               Hello, {user.first_name}
             </div>
-            <div className="flex flex-col">
+            <div className="w-full max-w-4xl">
               <OverallSection user={user} />
               <TermsSection
                 terms={terms}
@@ -203,23 +201,22 @@ const DashboardPage: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="">Loading...</div>
+          <div className="text-xl">Loading...</div>
         )}
       </div>
       {showToTop && (
         <button
           onClick={scrollToTop}
-          className={`fixed bottom-10 right-10 p-3 bg-[#055AC5] text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out z-50 ${
+          className={`fixed bottom-8 right-8 p-2 bg-[#055AC5] text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out z-50 ${
             isButtonLeaving ? "animate-slide-down" : "animate-slide-up"
           }`}
           aria-label="Scroll to top"
-          style={{ zIndex: 9999 }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="w-10 h-10"
+            className="w-8 h-8"
           >
             <path
               fillRule="evenodd"
