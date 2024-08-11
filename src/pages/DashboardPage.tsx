@@ -81,15 +81,14 @@ const DashboardPage: React.FC = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const isAuthenticated = () => {
-    return !!access_token;
-  };
-
   useEffect(() => {
+    const isAuthenticated = () => {
+      return !!access_token;
+    };
     if (!isAuthenticated()) {
       navigate("/");
     }
-  }, [navigate]);
+  }, [navigate, access_token]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
