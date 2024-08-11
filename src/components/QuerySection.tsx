@@ -70,6 +70,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   const [showResultsCard, setShowResultsCard] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
 
   // useEffect for scrolling to results
   useEffect(() => {
@@ -101,13 +102,17 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   }, [selectedCourse]);
 
   const handleClear = () => {
-    setQuery("");
-    setFilteredCourses({});
-    setSelectedFilters([]);
-    setHasSubmittedQuery(false);
-    setShowResultsCard(false);
-    setSelectedCourseId(null);
-    setSelectedCourse(null);
+    setIsClearing(true);
+    setTimeout(() => {
+      setQuery("");
+      setFilteredCourses({});
+      setSelectedFilters([]);
+      setHasSubmittedQuery(false);
+      setShowResultsCard(false);
+      setSelectedCourseId(null);
+      setSelectedCourse(null);
+      setIsClearing(false);
+    }, 300);
   };
 
   const handleCourseClick = (courseId: string, course: Course) => {
@@ -346,9 +351,14 @@ const QuerySection: React.FC<QuerySectionProps> = ({
           <motion.div
             ref={resultsCardRef}
             className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl text-white p-6 mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, y: 20, scale: 1 }}
+            animate={{
+              opacity: isClearing ? 0 : 1,
+              y: isClearing ? 20 : 0,
+              scale: isClearing ? 0.8 : 1,
+            }}
+            exit={{ opacity: 0, y: 20, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
           >
             <h3 className="text-2xl font-semibold mb-6">Search Results</h3>
             {hasSubmittedQuery && Object.keys(filteredCourses).length === 0 ? (
@@ -528,6 +538,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
               <button
                 className="bg-white text-blue-800 px-6 py-2 rounded-full hover:bg-blue-100 transition duration-300 ease-in-out"
                 onClick={handleClear}
+                disabled={isClearing}
               >
                 Clear Results
               </button>
