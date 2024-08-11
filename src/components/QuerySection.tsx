@@ -85,6 +85,15 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     }
   }, [showResultsCard]);
 
+  const scrollToBottom = () => {
+    if (resultsCardRef.current) {
+      resultsCardRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
+  };
+
   useEffect(() => {
     if (!selectedCourse) {
       setSelectedCourseId(null);
@@ -108,6 +117,9 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     } else {
       setSelectedCourse(course);
       setSelectedCourseId(courseId);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 300);
     }
   };
 
