@@ -140,6 +140,16 @@ const TermCard: React.FC<TermCardProps> = ({
     setSelectedCourseId(null);
   };
 
+  const handleAddOrCancel = () => {
+    if (isFormOpen) {
+      // If the form is open, close it
+      handleCloseForm();
+    } else {
+      // If the form is closed, open it
+      handleAddCourse();
+    }
+  };
+
   // Sorting
   const sortCourses = (courses: { [key: string]: Course }) => {
     return Object.entries(courses).sort(([, courseA], [, courseB]) => {
@@ -294,10 +304,14 @@ const TermCard: React.FC<TermCardProps> = ({
           </div>
           <div className="mt-6 flex justify-between items-center">
             <button
-              onClick={() => handleAddCourse()}
-              className="bg-green-500 hover:bg-white hover:text-green-500 text-white py-2 px-6 rounded-full text-sm transition duration-300 ease-in-out transform hover:scale-105"
+              onClick={handleAddOrCancel}
+              className={`${
+                isFormOpen
+                  ? "bg-red-500 hover:bg-white hover:text-red-500"
+                  : "bg-green-500 hover:bg-white hover:text-green-500"
+              } text-white py-2 px-6 rounded-full text-sm transition duration-300 ease-in-out transform hover:scale-105`}
             >
-              Add Another Course
+              {isFormOpen ? "Cancel" : "Add Another Course"}
             </button>
             <p className="text-sm text-blue-200">
               Total Credits: {getTotalCredits()}
