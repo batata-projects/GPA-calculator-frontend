@@ -107,10 +107,23 @@ const DashboardPage: React.FC = () => {
     return !!accessToken;
   };
 
-  const refreshAccessToken = async () => {
-    try {
-      if (!accessToken || !refreshToken) {
-        throw new Error("Access token or refresh token is missing");
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!isAuthenticated()) {
+        navigate("/");
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        setSidebarOpen(false);
       }
 
       const response = await httpClient.post<RefreshTokenResponse>(
@@ -156,8 +169,14 @@ const DashboardPage: React.FC = () => {
               Authorization: `Bearer ${token}`,
               "refresh-token": refreshToken,
             },
-          });
-        };
+          }
+        );
+
+        if (response.data.data && response.data.data.user) {
+          setUser(response.data.data.user);
+          setTerms(response.data.data.terms);
+        } else {
+          console.error("Invalid API response format");
 
         try {
           const response = await makeRequest(accessToken);
