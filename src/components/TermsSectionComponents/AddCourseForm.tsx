@@ -22,11 +22,6 @@ interface Course {
   graded: boolean;
 }
 
-type ErrorResponse = {
-  message: string;
-  data: Record<string, unknown>;
-};
-
 const letterGrades: { [key: number]: string } = {
   4.3: "A+",
   4.0: "A",

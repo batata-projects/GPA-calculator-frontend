@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import AddCourseForm from "../components/TermsSectionComponents/AddCourseForm.tsx";
 
 interface Course {
@@ -63,49 +63,34 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   refreshToken,
 }) => {
   const resultsCardRef = useRef<HTMLDivElement>(null);
-  const editFormRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [filteredCourses, setFilteredCourses] = useState<FilteredCourses>({});
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [hasSubmittedQuery, setHasSubmittedQuery] = useState(false);
   const [showResultsCard, setShowResultsCard] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
-  // useEffects
+  // useEffect for scrolling to results
   useEffect(() => {
-    if (selectedCourse && editFormRef.current) {
-      const scrollOptions: ScrollIntoViewOptions = {
-        behavior: "smooth",
-        block: "end",
-      };
-      editFormRef.current.scrollIntoView(scrollOptions);
+    if (showResultsCard && resultsCardRef.current) {
+      const timer = setTimeout(() => {
+        resultsCardRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }, 100); // Short delay to ensure the content is rendered
+
+      return () => clearTimeout(timer);
+    }
+  }, [showResultsCard]);
+
+  useEffect(() => {
+    if (!selectedCourse) {
+      setSelectedCourseId(null);
     }
   }, [selectedCourse]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsFilterOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [filteredCourses]);
-
-  //  Handles
   const handleClear = () => {
     setQuery("");
     setFilteredCourses({});
@@ -156,17 +141,10 @@ const QuerySection: React.FC<QuerySectionProps> = ({
           newFilters = [...prevFilters, filter];
         }
       }
-
-      // Re-run the search with the new filters
       const courses = filterCourses(query, newFilters);
       setFilteredCourses(courses);
-
       return newFilters;
     });
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.target.value);
   };
 
   const handleSearch = () => {
@@ -182,18 +160,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     }
   };
 
-  const handleClearFilters = () => {
-    setSelectedFilters([]);
-    const courses = filterCourses(query, []);
-    setFilteredCourses(courses);
-  };
-
-  // Functions
-
-  const toggleFilter = () => {
-    setIsFilterOpen(!isFilterOpen);
-  };
-
   const formatTermName = (termCode: number) => {
     const year = Math.floor(termCode / 100);
     const semester = termCode % 100;
@@ -201,33 +167,13 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     return `${semesterName} ${year}`;
   };
 
-  const getLetterGrade = (
-    grade: number,
-    graded: boolean
-  ): { display: string; title: string } => {
-    if (graded) {
-      return {
-        display: gradeMapping[grade] || "N/A",
-        title: gradeMapping[grade] || "Not Available",
-      };
-    } else {
-      if (grade === 1) return { display: "P", title: "Pass" };
-      if (grade === 0) return { display: "F", title: "Fail" };
-      if (grade === -1) return { display: "W", title: "Withdrawn" };
-      return { display: "N/A", title: "Not Available" };
-    }
-  };
-
-  const scrollToBottom = () => {
-    if (resultsCardRef.current) {
-      const resultsCard = resultsCardRef.current;
-      const scrollPosition =
-        resultsCard.offsetTop + resultsCard.offsetHeight + 20; // Adjust the value (e.g., 20) to control the extra scroll distance
-      window.scrollTo({
-        top: scrollPosition,
-        behavior: "smooth",
-      });
-    }
+  const getLetterGrade = (grade: number | null, graded: boolean): string => {
+    if (grade === null) return "NC";
+    if (graded) return gradeMapping[grade] || "NC";
+    if (grade === 1) return "P";
+    if (grade === 0) return "F";
+    if (grade === -1) return "W";
+    return "NC";
   };
 
   const filterCourses = (
@@ -241,47 +187,33 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       Object.keys(term.courses).forEach((courseKey) => {
         const course = term.courses[courseKey];
         const { subject, course_code, grade, graded } = course;
-        const gradeInfo = getLetterGrade(grade, graded);
+        const gradeDisplay = getLetterGrade(grade, graded);
         const courseName = `${subject}-${course_code}`;
 
         if (
           subject.toUpperCase().includes(searchQuery.toUpperCase()) ||
           courseName.toUpperCase().includes(searchQuery.toUpperCase()) ||
-          gradeInfo.display.includes(searchQuery.toUpperCase()) ||
-          gradeInfo.title.toUpperCase().includes(searchQuery.toUpperCase())
+          gradeDisplay.toUpperCase().includes(searchQuery.toUpperCase())
         ) {
           filteredCourses[courseKey] = course;
         }
       });
     });
 
-    // Apply sorting and grouping based on filters
     if (filters.includes("gradeAscending")) {
       filteredCourses = Object.fromEntries(
         Object.entries(filteredCourses).sort((a, b) => {
-          if (a[1].graded && b[1].graded) {
-            return a[1].grade - b[1].grade;
-          } else if (!a[1].graded && !b[1].graded) {
-            return a[1].grade - b[1].grade;
-          } else if (a[1].graded) {
-            return -1;
-          } else {
-            return 1;
-          }
+          if (a[1].grade === null) return 1;
+          if (b[1].grade === null) return -1;
+          return a[1].grade - b[1].grade;
         })
       );
     } else if (filters.includes("gradeDescending")) {
       filteredCourses = Object.fromEntries(
         Object.entries(filteredCourses).sort((a, b) => {
-          if (a[1].graded && b[1].graded) {
-            return b[1].grade - a[1].grade;
-          } else if (!a[1].graded && !b[1].graded) {
-            return b[1].grade - a[1].grade;
-          } else if (b[1].graded) {
-            return 1;
-          } else {
-            return -1;
-          }
+          if (a[1].grade === null) return 1;
+          if (b[1].grade === null) return -1;
+          return b[1].grade - a[1].grade;
         })
       );
     }
@@ -308,315 +240,285 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center mt-5">
-      <h2 className="text-[36px] font-bold mb-8 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+    <div className="flex flex-col items-center mt-10 px-4">
+      {/* section title */}
+      <h2 className="text-[36px] font-bold mb-5 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
         Query
       </h2>
-      <div
-        className={`flex flex-col items-center ${
-          showResultsCard ? "" : "mb-[100px]"
-        }`}
-      >
-        <div className="grid grid-cols-[auto_1fr_auto] items-center bg-gray-300 rounded-[40px] w-[500px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
-          <div className="col-span-1">
-            <button
-              className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 px-4 py-5"
-              onClick={handleSearch}
-              title="Search"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                />
-              </svg>
-            </button>
-          </div>
-          <div className="col-span-1">
+
+      <div className="w-full max-w-4xl">
+        <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
+          {/* search bar */}
+          <div className="flex items-center bg-gray-100 rounded-full overflow-hidden">
             <input
-              className="w-full bg-transparent focus:outline-none text-[20px] py-5"
+              className="flex-grow bg-transparent px-6 py-4 text-lg focus:outline-none text-gray-800"
               placeholder="Enter Course Name, Subject, or Grade..."
               value={query}
-              onChange={handleInputChange}
+              onChange={(e) => setQuery(e.target.value)}
               onKeyPress={handleKeyPress}
             />
-          </div>
-          <div ref={dropdownRef} className="col-span-1 relative">
             <button
-              className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 px-4 py-5"
-              onClick={toggleFilter}
-              title="Filter"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 transition duration-300 ease-in-out"
+              onClick={handleSearch}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth="1.5"
                 stroke="currentColor"
-                className="size-6"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
             </button>
-            {isFilterOpen && (
-              <div className="absolute bottom-[65%] left-[50%] mb-2 bg-white rounded shadow-md z-50">
-                <div className="flex flex-row p-2 border-b space-x-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="size-6 mt-0.5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
-                    />
-                  </svg>
-                  <div className="text-[20px] font-semibold">Filter</div>
-                </div>
+          </div>
 
-                <div className="py-2">
-                  <div className="font-semibold px-4 py-2">Filter by:</div>
-                  <label className="flex items-center px-4 py-2 hover:bg-gray-100">
-                    <input
-                      type="radio"
-                      name="filter"
-                      value="term"
-                      checked={selectedFilters.includes("term")}
-                      onChange={() => handleFilterSelect("term")}
-                      className="mr-2"
-                    />
-                    <span>Terms</span>
-                  </label>
-                  <label className="flex items-center px-4 py-2 hover:bg-gray-100">
-                    <input
-                      type="radio"
-                      name="filter"
-                      value="subject"
-                      checked={selectedFilters.includes("subject")}
-                      onChange={() => handleFilterSelect("subject")}
-                      className="mr-2"
-                    />
-                    <span>Subject</span>
-                  </label>
-                </div>
-                <div className="py-2">
-                  <div className="font-semibold px-4 py-2">Sort by grade:</div>
-                  <label className="flex items-center px-4 py-2 hover:bg-gray-100">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value="gradeAscending"
-                      checked={selectedFilters.includes("gradeAscending")}
-                      onChange={() => handleFilterSelect("gradeAscending")}
-                      className="mr-2"
-                    />
-                    <span>Ascending</span>
-                  </label>
-                  <label className="flex items-center px-4 py-2 hover:bg-gray-100">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value="gradeDescending"
-                      checked={selectedFilters.includes("gradeDescending")}
-                      onChange={() => handleFilterSelect("gradeDescending")}
-                      className="mr-2"
-                    />
-                    <span>Descending</span>
-                  </label>
-                </div>
-                <button
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md ml-2 mb-3"
-                  onClick={handleClearFilters}
-                >
-                  Clear Filters
-                </button>
+          {/* filters */}
+          <div className="mt-4 flex flex-row items-start">
+            <div>
+              <span className="text-sm font-semibold text-gray-700">
+                Group By:
+              </span>
+              <div className="flex flex-row gap-2 mt-1">
+                {["term", "subject"].map((filter) => (
+                  <button
+                    key={filter}
+                    className={`px-4 py-2 rounded-full text-sm ${
+                      selectedFilters.includes(filter)
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    } transition duration-300 ease-in-out`}
+                    onClick={() => handleFilterSelect(filter)}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
+
+            <div className="mx-4 self-stretch flex items-center">
+              <div className="w-px bg-gray-300 h-full"></div>
+            </div>
+
+            <div className="flex-1">
+              <span className="text-sm font-semibold text-gray-700">
+                Sort By Grade:
+              </span>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {["gradeAscending", "gradeDescending"].map((filter) => (
+                  <button
+                    key={filter}
+                    className={`px-4 py-2 rounded-full text-sm ${
+                      selectedFilters.includes(filter)
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    } transition duration-300 ease-in-out`}
+                    onClick={() => handleFilterSelect(filter)}
+                  >
+                    {filter === "gradeAscending"
+                      ? "Lowest to Highest"
+                      : "Highest to Lowest"}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
+
         {showResultsCard && (
           <motion.div
             ref={resultsCardRef}
-            className="flex flex-col results-card bg-[#055AC5] py-6 px-8 rounded-[40px] w-[1000px] mt-10 mb-[100px] min-h-[80px] justify-center focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 relative scroll-smooth"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl text-white p-6 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
+            <h3 className="text-2xl font-semibold mb-6">Search Results</h3>
             {hasSubmittedQuery && Object.keys(filteredCourses).length === 0 ? (
-              <div className="text-white text-center">No courses found.</div>
+              <div className="text-center text-xl">No courses found.</div>
             ) : (
               <>
-                {!selectedFilters.includes("term") &&
-                  !selectedFilters.includes("subject") && (
-                    <div className="grid grid-cols-3 gap-4 md:gap-9">
-                      {Object.keys(filteredCourses).map((courseId) => {
-                        const course = filteredCourses[courseId] as Course;
-                        return (
-                          <motion.div
-                            key={courseId}
-                            className="flex flex-col items-center border-2 text-white border-white p-4 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-500"
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{
-                              duration: 0.6,
-                              delay: 0.15 * 3,
-                              ease: "easeInOut",
-                            }}
-                            whileHover={{ scale: 1.15 }}
-                            onClick={() => handleCourseClick(courseId, course)}
-                          >
-                            <div className="text-[20px] mb-3">
-                              {formatTermName(course.term)}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  {Object.entries(filteredCourses).map(([key, value]) => {
+                    if (typeof value === "object" && "subject" in value) {
+                      // This is a course
+                      const course = value as Course;
+                      return (
+                        <div
+                          key={key}
+                          className={`flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out transform hover:scale-102 hover:bg-white/20 ${
+                            selectedCourseId === key
+                              ? "ring-2 ring-yellow-400"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
+                              {course.subject.slice(0, 2)}
                             </div>
-                            <div className="flex flex-row space-x-2">
-                              <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
-                                {course.subject}-{course.course_code}
-                              </div>
-                              <div
-                                className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out"
-                                title={
-                                  getLetterGrade(course.grade, course.graded)
-                                    .title
-                                }
+                            <div>
+                              <h4 className="font-semibold text-sm">
+                                {course.subject} {course.course_code}
+                              </h4>
+                              <p className="text-xs text-blue-200">
+                                {course.credits} credit
+                                {course.credits !== 1 ? "s" : ""} |{" "}
+                                {formatTermName(course.term)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleCourseClick(key, course)}
+                              className="bg-yellow-500 hover:bg-yellow-600 text-blue-800 p-1.5 rounded-full transition duration-300 ease-in-out transform hover:scale-110"
+                              title="Edit course"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-4 h-4"
                               >
-                                {
-                                  getLetterGrade(course.grade, course.graded)
-                                    .display
-                                }
-                              </div>
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                                />
+                              </svg>
+                            </button>
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${
+                                course.grade === null
+                                  ? "bg-gray-400 text-gray-800"
+                                  : "bg-white text-blue-800"
+                              }`}
+                              title={getLetterGrade(
+                                course.grade,
+                                course.graded
+                              )}
+                            >
+                              {getLetterGrade(course.grade, course.graded)}
                             </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                {(selectedFilters.includes("term") ||
-                  selectedFilters.includes("subject")) && (
-                  <>
-                    {Object.keys(filteredCourses).map((groupKey) => (
-                      <div key={groupKey} className="mb-6">
-                        <div className="text-white text-xl font-bold mb-4">
-                          {groupKey}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-4 md:gap-9">
-                          {Object.keys(
-                            filteredCourses[groupKey] as {
-                              [key: string]: Course;
-                            }
-                          ).map((courseId) => {
-                            const course = (
-                              filteredCourses[groupKey] as {
-                                [key: string]: Course;
-                              }
-                            )[courseId];
-                            return (
-                              <motion.div
-                                key={courseId}
-                                className={`flex flex-col items-center text-white p-4 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110 hover:bg-orange-500 ${
-                                  selectedFilters.includes("term")
-                                    ? ""
-                                    : "border-2 border-white"
+                      );
+                    } else {
+                      // This is a group (term or subject)
+                      return (
+                        <div key={key} className="col-span-full">
+                          <h4 className="text-xl font-semibold mb-2">{key}</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {Object.entries(
+                              value as { [key: string]: Course }
+                            ).map(([courseKey, course]) => (
+                              <div
+                                key={courseKey}
+                                className={`flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out transform hover:scale-102 hover:bg-white/20 ${
+                                  selectedCourseId === courseKey
+                                    ? "ring-2 ring-yellow-400"
+                                    : ""
                                 }`}
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{
-                                  duration: 0.6,
-                                  delay: 0.15 * 3,
-                                  ease: "easeInOut",
-                                }}
-                                whileHover={{ scale: 1.15 }}
-                                onClick={() =>
-                                  handleCourseClick(courseId, course)
-                                }
                               >
-                                {!selectedFilters.includes("term") && (
-                                  <div className="text-[20px] mb-3">
-                                    {formatTermName(course.term)}
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
+                                    {course.subject.slice(0, 2)}
                                   </div>
-                                )}
-                                <div className="flex flex-row space-x-2">
-                                  <div className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[14px] min-w-[150px] h-[40px] transition duration-300 ease-in-out">
-                                    {course.subject}-{course.course_code}
-                                  </div>
-                                  <div
-                                    className="bg-white text-black rounded-full w-[40px] h-[40px] flex justify-center items-center text-[14px] transition duration-300 ease-in-out"
-                                    title={
-                                      getLetterGrade(
-                                        course.grade,
-                                        course.graded
-                                      ).title
-                                    }
-                                  >
-                                    {
-                                      getLetterGrade(
-                                        course.grade,
-                                        course.graded
-                                      ).display
-                                    }
+                                  <div>
+                                    <h5 className="font-semibold text-sm">
+                                      {course.subject} {course.course_code}
+                                    </h5>
+                                    <p className="text-xs text-blue-200">
+                                      {course.credits} credit
+                                      {course.credits !== 1 ? "s" : ""} |{" "}
+                                      {formatTermName(course.term)}
+                                    </p>
                                   </div>
                                 </div>
-                              </motion.div>
-                            );
-                          })}
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={() =>
+                                      handleCourseClick(courseKey, course)
+                                    }
+                                    className="bg-yellow-500 hover:bg-yellow-600 text-blue-800 p-1.5 rounded-full transition duration-300 ease-in-out transform hover:scale-110"
+                                    title="Edit course"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={1.5}
+                                      stroke="currentColor"
+                                      className="w-4 h-4"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                                      />
+                                    </svg>
+                                  </button>
+                                  <div
+                                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${
+                                      course.grade === null
+                                        ? "bg-gray-400 text-gray-800"
+                                        : "bg-white text-blue-800"
+                                    }`}
+                                    title={getLetterGrade(
+                                      course.grade,
+                                      course.graded
+                                    )}
+                                  >
+                                    {getLetterGrade(
+                                      course.grade,
+                                      course.graded
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </>
-                )}
+                      );
+                    }
+                  })}
+                </div>
+                <AnimatePresence>
+                  {selectedCourse && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <AddCourseForm
+                        user_id={user_id}
+                        accessToken={accessToken}
+                        refreshToken={refreshToken}
+                        term={String(selectedCourse.term)}
+                        onClose={handleCloseForm}
+                        isEdit={true}
+                        course={selectedCourse}
+                        courseId={selectedCourseId}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </>
             )}
-            <div className="flex justify-center mt-5">
-              {(Array.isArray(filteredCourses) && filteredCourses.length > 0) ||
-              (!Array.isArray(filteredCourses) &&
-                Object.keys(filteredCourses).length > 0) ? (
-                <motion.button
-                  className="w-[10%] bg-white text-[#055AC5] px-4 py-2 rounded-[40px] focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{
-                    duration: 0.6,
-                    delay: Array.isArray(filteredCourses)
-                      ? 0.15 * filteredCourses.length
-                      : 0.15 * Object.values(filteredCourses).flat().length,
-                    ease: "easeInOut",
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  onClick={handleClear}
-                >
-                  Clear
-                </motion.button>
-              ) : null}
-            </div>
-            <div ref={editFormRef}>
-              {selectedCourse && (
-                <AddCourseForm
-                  user_id={user_id}
-                  accessToken={accessToken}
-                  refreshToken={refreshToken}
-                  term={String(selectedCourse.term)}
-                  onClose={handleCloseForm}
-                  isEdit={true}
-                  course={selectedCourse}
-                  courseId={selectedCourseId}
-                />
-              )}
+            <div className="mt-6 flex justify-center">
+              <button
+                className="bg-white text-blue-800 px-6 py-2 rounded-full hover:bg-blue-100 transition duration-300 ease-in-out"
+                onClick={handleClear}
+              >
+                Clear Results
+              </button>
             </div>
           </motion.div>
         )}
