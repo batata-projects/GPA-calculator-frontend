@@ -5,6 +5,7 @@ import TermsSection from "../components/TermsSection.tsx";
 import QuerySection from "../components/QuerySection.tsx";
 import httpClient from "../httpClient.tsx";
 import Sidebar from "../components/Sidebar.tsx";
+import Loader from "../components/Loader.tsx";
 
 interface User {
   id: string;
@@ -44,13 +45,34 @@ interface ApiResponse {
   };
 }
 
+interface RefreshTokenResponse {
+  message: string;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      first_name: string;
+      last_name: string;
+    };
+    session: {
+      access_token: string;
+      refresh_token: string;
+      expires_in: number;
+    };
+  };
+}
+
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [terms, setTerms] = useState<Terms>({});
   const [user, setUser] = useState<User | null>(null);
   const user_id = localStorage.getItem("user_id");
-  const access_token = localStorage.getItem("access_token");
-  const refresh_token = localStorage.getItem("refresh_token");
+  const [accessToken, setAccessToken] = useState<string | null>(
+    localStorage.getItem("access_token")
+  );
+  const [refreshToken, setRefreshToken] = useState<string | null>(
+    localStorage.getItem("refresh_token")
+  );
   const [showToTop, setShowToTop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -82,8 +104,92 @@ const DashboardPage: React.FC = () => {
   };
 
   const isAuthenticated = () => {
-    return !!access_token;
+    return !!accessToken;
   };
+
+  const refreshAccessToken = async () => {
+    try {
+      if (!accessToken || !refreshToken) {
+        throw new Error("Access token or refresh token is missing");
+      }
+
+      const response = await httpClient.post<RefreshTokenResponse>(
+        "/auth/refresh",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "refresh-token": refreshToken,
+          },
+        }
+      );
+
+      const { access_token, refresh_token } = response.data.data.session;
+      setAccessToken(access_token);
+      setRefreshToken(refresh_token);
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
+
+      return access_token;
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user_id");
+      navigate("/");
+      throw error;
+    }
+  };
+
+  const getUserInfo = useCallback(
+    async (user_id: string) => {
+      try {
+        if (!accessToken || !refreshToken) {
+          console.error("Access token or refresh token is missing");
+          navigate("/");
+          return;
+        }
+
+        const makeRequest = async (token: string) => {
+          return httpClient.get<ApiResponse>(`/users/dashboard/${user_id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "refresh-token": refreshToken,
+            },
+          });
+        };
+
+        try {
+          const response = await makeRequest(accessToken);
+          if (response.data.data && response.data.data.user) {
+            setUser(response.data.data.user);
+            setTerms(response.data.data.terms);
+          } else {
+            console.error("Invalid API response format");
+            navigate("/");
+          }
+        } catch (error: any) {
+          if (error.response && error.response.status === 401) {
+            const newToken = await refreshAccessToken();
+            const retryResponse = await makeRequest(newToken);
+            if (retryResponse.data.data && retryResponse.data.data.user) {
+              setUser(retryResponse.data.data.user);
+              setTerms(retryResponse.data.data.terms);
+            } else {
+              console.error("Invalid API response format after token refresh");
+              navigate("/");
+            }
+          } else {
+            throw error;
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+        navigate("/");
+      }
+    },
+    [navigate, accessToken, refreshToken]
+  );
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -107,44 +213,6 @@ const DashboardPage: React.FC = () => {
     };
   }, []);
 
-  const getUserInfo = useCallback(
-    async (user_id: string) => {
-      try {
-        if (!access_token || !refresh_token) {
-          // Handle the case when tokens are missing
-          console.error("Access token or refresh token is missing");
-          navigate("/");
-          return;
-        }
-
-        const response = await httpClient.get<ApiResponse>(
-          `/users/dashboard/${user_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${access_token}`,
-              "refresh-token": refresh_token,
-            },
-          }
-        );
-
-        if (response.data.data && response.data.data.user) {
-          setUser(response.data.data.user);
-          setTerms(response.data.data.terms);
-        } else {
-          console.error("Invalid API response format");
-
-          // Handle the case when the response format is unexpected
-          navigate("/");
-        }
-      } catch (error) {
-        console.error("Error fetching user info:", error);
-        // Handle error, show error message, etc.
-        navigate("/");
-      }
-    },
-    [navigate, access_token, refresh_token]
-  );
-
   useEffect(() => {
     if (user_id) {
       getUserInfo(user_id);
@@ -157,7 +225,7 @@ const DashboardPage: React.FC = () => {
     <div className="font-inter">
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 text-gray-700 hover:text-gray-900focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
+        className="fixed top-4 left-4 z-50 text-gray-700 hover:text-gray-900 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -191,19 +259,21 @@ const DashboardPage: React.FC = () => {
               <TermsSection
                 terms={terms}
                 userId={user_id}
-                accessToken={access_token || ""}
-                refreshToken={refresh_token || ""}
+                accessToken={accessToken || ""}
+                refreshToken={refreshToken || ""}
               />
               <QuerySection
                 terms={terms}
                 user_id={user_id}
-                accessToken={access_token || ""}
-                refreshToken={refresh_token || ""}
+                accessToken={accessToken || ""}
+                refreshToken={refreshToken || ""}
               />
             </div>
           </>
         ) : (
-          <div className="">Loading...</div>
+          <div className="flex justify-center items-center h-64">
+            <Loader />
+          </div>
         )}
       </div>
       {showToTop && (
