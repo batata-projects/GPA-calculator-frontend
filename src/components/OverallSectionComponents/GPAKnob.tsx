@@ -89,8 +89,8 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
           showValue={false}
           showMiniCircle={false}
           sx={{
-            strokeColor: "#f97316", // Change color on hover
-            bgStrokeColor: "#0575E6", // Change background color on hover
+            strokeColor: "#f97316",
+            bgStrokeColor: "#0575E6",
             barWidth: 8,
             shape: "threequarters",
           }}
