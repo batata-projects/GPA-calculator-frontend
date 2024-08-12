@@ -392,7 +392,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
               placeholder="Enter Course Name, Subject, Grade, or Grade Comparison (e.g., >B, <=A-)"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
             />
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 transition duration-300 ease-in-out flex items-center justify-center"
