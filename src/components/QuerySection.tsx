@@ -416,7 +416,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
           </div>
 
           {/* Helpful text for users */}
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-gray-400 mt-2">
             Tip: Use '{">"}', '{">"}=', '{"<"}', '{"<"}=', or '=' followed by a
             grade (e.g., {">"}=B+) for grade comparisons.
           </p>
