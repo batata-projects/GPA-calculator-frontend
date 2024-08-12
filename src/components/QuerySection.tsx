@@ -56,6 +56,21 @@ interface FilteredCourses {
   [key: string]: Course | { [key: string]: Course };
 }
 
+const gradeOrder = [
+  "F",
+  "D",
+  "D+",
+  "C-",
+  "C",
+  "C+",
+  "B-",
+  "B",
+  "B+",
+  "A-",
+  "A",
+  "A+",
+];
+
 const QuerySection: React.FC<QuerySectionProps> = ({
   terms,
   user_id,
@@ -71,6 +86,39 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
+
+  const courseVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.8,
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        opacity: { duration: 0.5 },
+        scale: { duration: 0.3, ease: "easeOut" },
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      transition: {
+        opacity: { duration: 0.3 },
+        scale: { duration: 0.2 },
+      },
+    },
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 1 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
 
   // useEffect for scrolling to results
   useEffect(() => {
@@ -193,11 +241,47 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     return "NC";
   };
 
+  const parseGradeQuery = (
+    query: string
+  ): { type: string; value: string } | null => {
+    const gradeRegex = /^([<>]=?|=)([A-D][+-]?|F)$/i;
+    const match = query.match(gradeRegex);
+    if (match) {
+      const [, operator, grade] = match;
+      let type;
+      switch (operator) {
+        case ">":
+          type = "gt";
+          break;
+        case ">=":
+          type = "gte";
+          break;
+        case "<":
+          type = "lt";
+          break;
+        case "<=":
+          type = "lte";
+          break;
+        default:
+          type = "exact";
+      }
+      return { type, value: grade.toUpperCase() };
+    }
+    return null;
+  };
+
   const filterCourses = (
     searchQuery: string,
     filters: string[]
   ): FilteredCourses => {
     let filteredCourses: { [key: string]: Course } = {};
+
+    const normalizedQuery = searchQuery.toLowerCase().trim();
+    const gradeFilter = parseGradeQuery(normalizedQuery);
+
+    // Check if the query matches the full course name pattern (subject + code)
+    const fullCourseNameRegex = /^([a-z]+)\s*(\d+)$/i;
+    const fullCourseNameMatch = normalizedQuery.match(fullCourseNameRegex);
 
     Object.keys(terms).forEach((termKey) => {
       const term = terms[termKey];
@@ -207,16 +291,51 @@ const QuerySection: React.FC<QuerySectionProps> = ({
         const gradeDisplay = getLetterGrade(grade, graded);
         const courseName = `${subject}-${course_code}`;
 
-        if (
-          subject.toUpperCase().includes(searchQuery.toUpperCase()) ||
-          courseName.toUpperCase().includes(searchQuery.toUpperCase()) ||
-          gradeDisplay.toUpperCase().includes(searchQuery.toUpperCase())
-        ) {
+        let matches = false;
+
+        if (fullCourseNameMatch) {
+          // If we have a full course name match, compare it directly
+          const [, querySubject, queryCourseCode] = fullCourseNameMatch;
+          matches =
+            subject.toLowerCase() === querySubject.toLowerCase() &&
+            course_code.toLowerCase() === queryCourseCode.toLowerCase();
+        } else if (gradeFilter) {
+          const courseGradeIndex = gradeOrder.indexOf(gradeDisplay);
+          const filterGradeIndex = gradeOrder.indexOf(gradeFilter.value);
+
+          switch (gradeFilter.type) {
+            case "gt":
+              matches = courseGradeIndex > filterGradeIndex;
+              break;
+            case "gte":
+              matches = courseGradeIndex >= filterGradeIndex;
+              break;
+            case "lt":
+              matches = courseGradeIndex < filterGradeIndex;
+              break;
+            case "lte":
+              matches = courseGradeIndex <= filterGradeIndex;
+              break;
+            case "exact":
+              matches = gradeDisplay === gradeFilter.value;
+              break;
+          }
+        } else {
+          // If it's not a full course name or grade filter, use the existing logic
+          matches =
+            subject.toLowerCase() === normalizedQuery ||
+            course_code.toLowerCase() === normalizedQuery ||
+            gradeDisplay.toLowerCase() === normalizedQuery ||
+            courseName.toLowerCase().includes(normalizedQuery);
+        }
+
+        if (matches) {
           filteredCourses[courseKey] = course;
         }
       });
     });
 
+    // Apply sorting if necessary
     if (filters.includes("gradeAscending")) {
       filteredCourses = Object.fromEntries(
         Object.entries(filteredCourses).sort((a, b) => {
@@ -235,6 +354,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       );
     }
 
+    // Apply grouping if necessary
     if (filters.includes("term")) {
       const groupedCourses: { [key: string]: { [key: string]: Course } } = {};
       Object.entries(filteredCourses).forEach(([courseKey, course]) => {
@@ -269,7 +389,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
           <div className="flex items-center bg-gray-100 rounded-full overflow-hidden">
             <input
               className="flex-grow bg-transparent px-6 py-4 text-lg focus:outline-none text-gray-800"
-              placeholder="Enter Course Name, Subject, or Grade..."
+              placeholder="Enter Course Name, Subject, Grade, or Grade Comparison (e.g., >B, <=A-)"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -294,6 +414,12 @@ const QuerySection: React.FC<QuerySectionProps> = ({
               </svg>
             </button>
           </div>
+
+          {/* Helpful text for users */}
+          <p className="text-sm text-gray-600 mt-2">
+            Tip: Use '{">"}', '{">"}=', '{"<"}', '{"<"}=', or '=' followed by a
+            grade (e.g., {">"}=B+) for grade comparisons.
+          </p>
 
           {/* filters */}
           <div className="mt-4 flex flex-row items-start">
@@ -365,152 +491,183 @@ const QuerySection: React.FC<QuerySectionProps> = ({
               <div className="text-center text-xl">No courses found.</div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {Object.entries(filteredCourses).map(([key, value]) => {
-                    if (typeof value === "object" && "subject" in value) {
-                      // This is a course
-                      const course = value as Course;
-                      return (
-                        <div
-                          key={key}
-                          className={`flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out transform hover:scale-102 hover:bg-white/20 ${
-                            selectedCourseId === key
-                              ? "ring-2 ring-yellow-400"
-                              : ""
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
-                              {course.subject.slice(0, 2)}
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-sm">
-                                {course.subject} {course.course_code}
-                              </h4>
-                              <p className="text-xs text-blue-200">
-                                {course.credits} credit
-                                {course.credits !== 1 ? "s" : ""} |{" "}
-                                {formatTermName(course.term)}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => handleCourseClick(key, course)}
-                              className="bg-yellow-500 hover:bg-yellow-600 text-blue-800 p-1.5 rounded-full transition duration-300 ease-in-out transform hover:scale-110"
-                              title="Edit course"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-4 h-4"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
-                                />
-                              </svg>
-                            </button>
-                            <div
-                              className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${
-                                course.grade === null
-                                  ? "bg-gray-400 text-gray-800"
-                                  : "bg-white text-blue-800"
-                              }`}
-                              title={getLetterGrade(
-                                course.grade,
-                                course.graded
-                              )}
-                            >
-                              {getLetterGrade(course.grade, course.graded)}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      // This is a group (term or subject)
-                      return (
-                        <div key={key} className="col-span-full">
-                          <h4 className="text-xl font-semibold mb-2">{key}</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {Object.entries(
-                              value as { [key: string]: Course }
-                            ).map(([courseKey, course]) => (
-                              <div
-                                key={courseKey}
-                                className={`flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out transform hover:scale-102 hover:bg-white/20 ${
-                                  selectedCourseId === courseKey
-                                    ? "ring-2 ring-yellow-400"
-                                    : ""
-                                }`}
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
-                                    {course.subject.slice(0, 2)}
-                                  </div>
-                                  <div>
-                                    <h5 className="font-semibold text-sm">
-                                      {course.subject} {course.course_code}
-                                    </h5>
-                                    <p className="text-xs text-blue-200">
-                                      {course.credits} credit
-                                      {course.credits !== 1 ? "s" : ""} |{" "}
-                                      {formatTermName(course.term)}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <button
-                                    onClick={() =>
-                                      handleCourseClick(courseKey, course)
-                                    }
-                                    className="bg-yellow-500 hover:bg-yellow-600 text-blue-800 p-1.5 rounded-full transition duration-300 ease-in-out transform hover:scale-110"
-                                    title="Edit course"
-                                  >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      strokeWidth={1.5}
-                                      stroke="currentColor"
-                                      className="w-4 h-4"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
-                                      />
-                                    </svg>
-                                  </button>
-                                  <div
-                                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${
-                                      course.grade === null
-                                        ? "bg-gray-400 text-gray-800"
-                                        : "bg-white text-blue-800"
-                                    }`}
-                                    title={getLetterGrade(
-                                      course.grade,
-                                      course.graded
-                                    )}
-                                  >
-                                    {getLetterGrade(
-                                      course.grade,
-                                      course.graded
-                                    )}
-                                  </div>
-                                </div>
+                <motion.div
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {Object.entries(filteredCourses).map(
+                    ([key, value], index) => {
+                      if (typeof value === "object" && "subject" in value) {
+                        const course = value as Course;
+                        return (
+                          <motion.div
+                            key={key}
+                            variants={courseVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            layout
+                            className={`flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out hover:bg-white/20 ${
+                              selectedCourseId === key
+                                ? "ring-2 ring-yellow-400"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
+                                {course.subject.slice(0, 2)}
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
+                              <div>
+                                <h4 className="font-semibold text-sm">
+                                  {course.subject} {course.course_code}
+                                </h4>
+                                <p className="text-xs text-blue-200">
+                                  {course.credits} credit
+                                  {course.credits !== 1 ? "s" : ""} |{" "}
+                                  {formatTermName(course.term)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => handleCourseClick(key, course)}
+                                className="bg-yellow-500 hover:bg-yellow-600 text-blue-800 p-1.5 rounded-full transition duration-300 ease-in-out transform hover:scale-110"
+                                title="Edit course"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.5}
+                                  stroke="currentColor"
+                                  className="w-4 h-4"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                                  />
+                                </svg>
+                              </button>
+                              <div
+                                className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${
+                                  course.grade === null
+                                    ? "bg-gray-400 text-gray-800"
+                                    : "bg-white text-blue-800"
+                                }`}
+                                title={getLetterGrade(
+                                  course.grade,
+                                  course.graded
+                                )}
+                              >
+                                {getLetterGrade(course.grade, course.graded)}
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      } else {
+                        // This is a group (term or subject)
+                        return (
+                          <motion.div
+                            key={key}
+                            variants={courseVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            layout
+                            className="col-span-full"
+                          >
+                            <h4 className="text-xl font-semibold mb-2">
+                              {key}
+                            </h4>
+                            <motion.div
+                              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                              variants={containerVariants}
+                              initial="hidden"
+                              animate="visible"
+                            >
+                              {Object.entries(
+                                value as { [key: string]: Course }
+                              ).map(([courseKey, course], courseIndex) => (
+                                <motion.div
+                                  key={courseKey}
+                                  variants={courseVariants}
+                                  initial="hidden"
+                                  animate="visible"
+                                  exit="exit"
+                                  layout
+                                  className={`flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out hover:bg-white/20 ${
+                                    selectedCourseId === courseKey
+                                      ? "ring-2 ring-yellow-400"
+                                      : ""
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
+                                      {course.subject.slice(0, 2)}
+                                    </div>
+                                    <div>
+                                      <h5 className="font-semibold text-sm">
+                                        {course.subject} {course.course_code}
+                                      </h5>
+                                      <p className="text-xs text-blue-200">
+                                        {course.credits} credit
+                                        {course.credits !== 1 ? "s" : ""} |{" "}
+                                        {formatTermName(course.term)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <button
+                                      onClick={() =>
+                                        handleCourseClick(courseKey, course)
+                                      }
+                                      className="bg-yellow-500 hover:bg-yellow-600 text-blue-800 p-1.5 rounded-full transition duration-300 ease-in-out transform hover:scale-110"
+                                      title="Edit course"
+                                    >
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                        className="w-4 h-4"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                                        />
+                                      </svg>
+                                    </button>
+                                    <div
+                                      className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${
+                                        course.grade === null
+                                          ? "bg-gray-400 text-gray-800"
+                                          : "bg-white text-blue-800"
+                                      }`}
+                                      title={getLetterGrade(
+                                        course.grade,
+                                        course.graded
+                                      )}
+                                    >
+                                      {getLetterGrade(
+                                        course.grade,
+                                        course.graded
+                                      )}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </motion.div>
+                          </motion.div>
+                        );
+                      }
                     }
-                  })}
-                </div>
+                  )}
+                </motion.div>
                 <AnimatePresence>
                   {selectedCourse && (
                     <motion.div
