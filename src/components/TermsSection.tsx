@@ -50,6 +50,7 @@ const TermsSection: React.FC<TermsSectionProps> = ({
       </h2>
       <button
         onClick={handleOpenForm}
+        title="Add Term"
         className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-105 mb-8"
       >
         <svg
