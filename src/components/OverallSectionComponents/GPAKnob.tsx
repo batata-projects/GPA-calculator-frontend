@@ -25,7 +25,7 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
   const valueKnob = Math.min(value, 4);
 
   useEffect(() => {
-    if (value > 4) {
+    if (value > 3.6) {
       setShowConfetti(true);
       const timer = setTimeout(() => setShowConfetti(false), 5000);
       return () => clearTimeout(timer);
