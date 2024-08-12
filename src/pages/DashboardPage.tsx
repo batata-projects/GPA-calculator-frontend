@@ -198,6 +198,37 @@ const DashboardPage: React.FC = () => {
                 refreshToken={refresh_token || ""}
               />
             </div>
+
+            <div
+              id="additional-info"
+              className="mt-16 pb-16 flex flex-col items-center text-center"
+            >
+              <div className="max-w-2xl">
+                <h2 className="text-2xl font-semibold mb-4">
+                  Additional Information
+                </h2>
+                <p className="mb-4">
+                  This GPA Calculator helps you track your academic progress and
+                  plan for future terms. Remember that your GPA is just one
+                  aspect of your academic journey. Keep striving for knowledge
+                  and personal growth!
+                </p>
+                <p className="mb-4">
+                  If you have any questions or need assistance with using this
+                  calculator, please don't hesitate to contact our support team
+                  at support@gpacalculator.com.
+                </p>
+                <p className="mb-8">
+                  Thank you for using our GPA Calculator. We wish you the best
+                  in your academic endeavors!
+                </p>
+              </div>
+              {/* Horizontal line */}
+              <hr className="border-t border-gray-300 my-8 w-full max-w-2xl" />
+              <p className="text-sm text-gray-500">
+                © 2024 GPA Calculator. All rights reserved.
+              </p>
+            </div>
           </>
         ) : (
           <div className="text-xl">Loading...</div>
