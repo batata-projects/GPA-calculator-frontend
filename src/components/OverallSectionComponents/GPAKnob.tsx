@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Flat } from "@alptugidin/react-circular-progress-bar";
-import { useSpring, animated } from "react-spring";
+import { useSpring, animated, config } from "react-spring";
 import Confetti from "react-confetti";
 
 interface GPAKnobProps {
@@ -9,13 +9,17 @@ interface GPAKnobProps {
 
 const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
   const [showConfetti, setShowConfetti] = useState(false);
+  const [comment, setComment] = useState("");
 
   // Animation for the GPA value
   const animatedProps = useSpring({
     number: value,
     from: { number: 0 },
-    config: { duration: 1000 }, // Set a fixed duration for the animation
+    config: { duration: 1000 },
   });
+
+  // Animation for the comment
+  const [{ textLength }, setTextLength] = useSpring(() => ({ textLength: 0 }));
 
   // This is done to prevent knob from getting bigger for values above 4
   const valueKnob = Math.min(value, 4);
@@ -27,6 +31,33 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
       return () => clearTimeout(timer);
     }
   }, [value]);
+
+  useEffect(() => {
+    // Set comment based on GPA range
+    let newComment = "";
+    if (value >= 4.0) {
+      newComment =
+        "Congratulations! Your GPA is in the top 1% of university students.";
+    } else if (value >= 3.7) {
+      newComment = "Excellent work! You're performing at a very high level.";
+    } else if (value >= 3.3) {
+      newComment = "Great job! You're well above average.";
+    } else if (value >= 3.0) {
+      newComment = "Good work! You're performing above average.";
+    } else if (value >= 2.7) {
+      newComment = "You're doing well. Keep up the good work!";
+    } else if (value >= 2.3) {
+      newComment = "You're on the right track. Keep pushing yourself!";
+    } else if (value >= 2.0) {
+      newComment = "You're meeting the basic requirements. Aim higher!";
+    } else {
+      newComment = "There's room for improvement. Seek help if needed!";
+    }
+    setComment(newComment);
+
+    // Animate the text length
+    setTextLength({ textLength: newComment.length, config: config.molasses });
+  }, [value, setTextLength]);
 
   const scaleProps = useSpring({
     transform: value > 4 ? "scale(1.1)" : "scale(1)",
@@ -90,6 +121,11 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
           recycle={false}
         />
       )}
+      <div className="mt-[5%] text-center max-w-md h-6">
+        <animated.p className="text-lg font-semibold text-gray-700">
+          {textLength.to((len) => comment.slice(0, Math.floor(len)))}
+        </animated.p>
+      </div>
     </div>
   );
 };
