@@ -5,7 +5,7 @@ const GPAKnob = ({ value }) => {
   // this is done to prevent knob from getting bigger for values above 4
   let valueKnob = value;
 
-  if (valueKnob === 4.3) {
+  if (valueKnob > 4) {
     valueKnob = 4;
   }
 
