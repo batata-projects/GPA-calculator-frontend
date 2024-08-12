@@ -5,6 +5,7 @@ import TermsSection from "../components/TermsSection.tsx";
 import QuerySection from "../components/QuerySection.tsx";
 import httpClient from "../httpClient.tsx";
 import Sidebar from "../components/Sidebar.tsx";
+import GradingScaleButton from "../components/GradeScale.tsx";
 
 interface User {
   id: string;
@@ -153,7 +154,7 @@ const DashboardPage: React.FC = () => {
   }, [user_id, navigate, getUserInfo]);
 
   return (
-    <div className="font-inter max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="font-inter mx-auto px-4 sm:px-6 lg:px-8">
       <button
         onClick={toggleSidebar}
         className="fixed top-4 left-4 z-50 text-gray-700 hover:text-gray-900 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
@@ -177,7 +178,12 @@ const DashboardPage: React.FC = () => {
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </div>
       <div className="flex flex-col items-center">
-        <h1 className="text-4xl font-bold text-center my-6">GPA Calculator</h1>
+        <div className="relative w-full flex flex-col items-center mt-6 mb-8">
+          <h1 className="text-4xl font-bold text-center">GPA Calculator</h1>
+          <div className="absolute top-0 right-0">
+            <GradingScaleButton />
+          </div>
+        </div>
         {user ? (
           <>
             <div className="text-2xl font-semibold mb-4">
