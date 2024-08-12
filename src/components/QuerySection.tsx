@@ -386,21 +386,21 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       <div className="w-full max-w-4xl">
         <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
           {/* search bar */}
-          <div className="flex items-center bg-gray-100 rounded-full overflow-hidden">
+          <div className="flex items-stretch bg-gray-100 rounded-full overflow-hidden">
             <input
-              className="flex-grow bg-transparent px-6 py-4 text-lg focus:outline-none text-gray-800"
+              className="flex-grow bg-transparent px-6 py-3 text-lg focus:outline-none text-gray-800"
               placeholder="Enter Course Name, Subject, Grade, or Grade Comparison (e.g., >B, <=A-)"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyPress={handleKeyPress}
             />
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 transition duration-300 ease-in-out"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 transition duration-300 ease-in-out flex items-center justify-center"
               onClick={handleSearch}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
