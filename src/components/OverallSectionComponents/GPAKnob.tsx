@@ -10,6 +10,7 @@ interface GPAKnobProps {
 const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [comment, setComment] = useState("");
+  const [isHovered, setIsHovered] = useState(false);
 
   // Animation for the GPA value
   const animatedProps = useSpring({
@@ -60,7 +61,11 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
   }, [value, setTextLength]);
 
   const scaleProps = useSpring({
-    transform: value > 4 ? "scale(1.1)" : "scale(1)",
+    transform: isHovered
+      ? "scale(1.05)"
+      : value > 4
+      ? "scale(1.1)"
+      : "scale(1)",
     config: { tension: 300, friction: 10 },
   });
 
@@ -73,7 +78,9 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
     <div className="w-full flex flex-col items-center justify-center font-[inter]">
       <animated.div
         style={scaleProps}
-        className="relative w-64 h-80 focus:outline-none transition duration-300 ease-in-out"
+        className="relative w-64 h-80 focus:outline-none transition duration-300 ease-in-out cursor-pointer"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         <Flat
           progress={valueKnob}
@@ -82,15 +89,17 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
           showValue={false}
           showMiniCircle={false}
           sx={{
-            strokeColor: "#f97316",
-            bgStrokeColor: "#0575E6",
+            strokeColor: "#f97316", // Change color on hover
+            bgStrokeColor: "#0575E6", // Change background color on hover
             barWidth: 8,
             shape: "threequarters",
           }}
         />
         <div className="absolute bottom-[-18%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
           <h2 className="text-3xl font-bold mb-2">GPA</h2>
-          <div className="mb-2 bg-orange-500 text-white px-5 py-1 rounded-3xl text-3xl">
+          <div
+            className={`mb-2 bg-orange-500 text-white px-5 py-1 rounded-3xl text-3xl transition-colors duration-300`}
+          >
             <animated.span>
               {animatedProps.number.to((n) => formatGPA(n))}
             </animated.span>
