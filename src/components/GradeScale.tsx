@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover.tsx";
 import { Button } from "./ui/button.tsx";
 import { Info } from "lucide-react";
