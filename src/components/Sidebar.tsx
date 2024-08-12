@@ -19,10 +19,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     navigate("/");
   };
 
-  const handleSettings = () => {
-    // Navigate to settings page
-    navigate("/settings");
-  };
+  // const handleSettings = () => {
+  //   // Navigate to settings page
+  //   navigate("/settings");
+  // };
 
   const scrollToInfo = () => {
     const infoSection = document.getElementById("additional-info");
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         &times;
       </button>
       <nav className="mt-16 flex flex-col items-start pl-8">
-        <button
+        {/* <button
           onClick={handleSettings}
           className="text-gray-800 py-2 focus:outline-none flex items-center transition-transform duration-200 ease-in-out transform hover:scale-110"
         >
@@ -69,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             />
           </svg>
           Settings
-        </button>
+        </button> */}
         <button
           onClick={scrollToInfo}
           className="text-gray-800 py-2 focus:outline-none flex items-center transition-transform duration-200 ease-in-out transform hover:scale-110 mt-2"
