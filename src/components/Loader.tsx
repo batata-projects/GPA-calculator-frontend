@@ -2,7 +2,7 @@ import React from "react";
 
 const Loader: React.FC = () => (
   <div className="flex justify-center items-center h-64">
-    <div className="p-2 rounded-full bg-gradient-to-b from-[rgb(0,0,0)] to-[#5e606b]">
+    <div className="p-2 rounded-full bg-gradient-to-b from-[#0575E6] to-[#021B79]">
       <svg
         className="animate-spin h-10 w-10 text-white"
         xmlns="http://www.w3.org/2000/svg"
