@@ -244,7 +244,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   const parseGradeQuery = (
     query: string
   ): { type: string; value: string } | null => {
-    const gradeRegex = /^([<>]=?|=)([A-D][+-]?|F)$/i;
+    const gradeRegex = /^([<>]=?|=)?([A-D][+-]?|F)$/i;
     const match = query.match(gradeRegex);
     if (match) {
       const [, operator, grade] = match;
@@ -261,6 +261,10 @@ const QuerySection: React.FC<QuerySectionProps> = ({
           break;
         case "<=":
           type = "lte";
+          break;
+        case "=":
+        case undefined:
+          type = "exact";
           break;
         default:
           type = "exact";
@@ -293,13 +297,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
 
         let matches = false;
 
-        if (fullCourseNameMatch) {
-          // If we have a full course name match, compare it directly
-          const [, querySubject, queryCourseCode] = fullCourseNameMatch;
-          matches =
-            subject.toLowerCase() === querySubject.toLowerCase() &&
-            course_code.toLowerCase() === queryCourseCode.toLowerCase();
-        } else if (gradeFilter) {
+        if (gradeFilter) {
           const courseGradeIndex = gradeOrder.indexOf(gradeDisplay);
           const filterGradeIndex = gradeOrder.indexOf(gradeFilter.value);
 
@@ -320,12 +318,17 @@ const QuerySection: React.FC<QuerySectionProps> = ({
               matches = gradeDisplay === gradeFilter.value;
               break;
           }
+        } else if (fullCourseNameMatch) {
+          // If we have a full course name match, compare it directly
+          const [, querySubject, queryCourseCode] = fullCourseNameMatch;
+          matches =
+            subject.toLowerCase() === querySubject.toLowerCase() &&
+            course_code.toLowerCase() === queryCourseCode.toLowerCase();
         } else {
-          // If it's not a full course name or grade filter, use the existing logic
+          // If it's not a grade filter or full course name, use the existing logic
           matches =
             subject.toLowerCase() === normalizedQuery ||
             course_code.toLowerCase() === normalizedQuery ||
-            gradeDisplay.toLowerCase() === normalizedQuery ||
             courseName.toLowerCase().includes(normalizedQuery);
         }
 
