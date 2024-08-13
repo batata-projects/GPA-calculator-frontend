@@ -77,8 +77,10 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
       : ""
   );
   const [graded, setGraded] = useState(course?.graded.toString() || "true");
-  const [pass, setPass] = useState(
-    course?.grade === 1
+  const [status, setStatus] = useState(
+    course?.graded
+      ? ""
+      : course?.grade === 1
       ? "pass"
       : course?.grade === 0
       ? "fail"
@@ -101,10 +103,10 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             ? letterGrades[course.grade] || "NOT_COMPLETE"
             : "NOT_COMPLETE"
         );
-        setPass("");
+        setStatus("");
       } else {
         setGrade("");
-        setPass(
+        setStatus(
           course.grade === 1
             ? "pass"
             : course.grade === 0
@@ -116,7 +118,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
       }
     } else {
       setGrade("");
-      setPass("");
+      setStatus("");
     }
   }, [course]);
 
@@ -128,15 +130,18 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<any>;
       if (axiosError.response) {
+        // Server responded with a status code outside of 2xx range
         errorMessage =
           axiosError.response.data?.detail ||
           axiosError.response.data?.message ||
-          axiosError.message ||
-          "Server error occurred.";
+          axiosError.response.data ||
+          "An error occurred while processing your request.";
       } else if (axiosError.request) {
+        // Request was made but no response was received
         errorMessage =
           "No response received from server. Please check your connection.";
       } else {
+        // Something happened in setting up the request that triggered an Error
         errorMessage =
           axiosError.message || "An error occurred while sending the request.";
       }
@@ -188,11 +193,11 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
         numericGrade = grade === "NOT_COMPLETE" ? null : gradeValues[grade];
       } else {
         numericGrade =
-          pass === "pass"
+          status === "pass"
             ? 1
-            : pass === "fail"
+            : status === "fail"
             ? 0
-            : pass === "withdraw"
+            : status === "withdraw"
             ? -1
             : null;
       }
@@ -228,7 +233,8 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
         onClose();
         window.location.reload();
       } else {
-        setError(response.data.message || "An unexpected error occurred.");
+        // This block will likely not be reached due to Axios throwing an error for non-2xx responses
+        setError(response.data?.message || "An unexpected error occurred.");
       }
     } catch (error) {
       handleError(error);
@@ -318,8 +324,12 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           </label>
           <select
             id="grade"
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
+            value={graded === "true" ? grade : status}
+            onChange={(e) =>
+              graded === "true"
+                ? setGrade(e.target.value)
+                : setStatus(e.target.value)
+            }
             className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded text-white"
           >
             <option value="">
