@@ -118,6 +118,7 @@ const TermCard: React.FC<TermCardProps> = ({
       setIsEdit(false);
       setCourse(null);
       setCourseId(null);
+      setSelectedCourseId(null);
     } else {
       setIsEdit(course !== undefined);
       setShowForm(true);
@@ -240,7 +241,11 @@ const TermCard: React.FC<TermCardProps> = ({
             {sortCourses(termData.courses).map(([courseId, course]) => (
               <div
                 key={courseId}
-                className="flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out transform hover:scale-102 hover:bg-white/20"
+                className={`flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out transform hover:scale-102 hover:bg-white/20 ${
+                  selectedCourseId === courseId
+                    ? "border-2 border-yellow-400"
+                    : ""
+                }`}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
