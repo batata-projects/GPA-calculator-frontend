@@ -78,6 +78,10 @@ const DashboardPage: React.FC = () => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isButtonLeaving, setIsButtonLeaving] = useState(false);
 
+  const isAuthenticated = useCallback(() => {
+    return !!accessToken;
+  }, [accessToken]);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -91,7 +95,7 @@ const DashboardPage: React.FC = () => {
         setIsButtonLeaving(false);
       } else if (scrollPosition <= 100 && showToTop) {
         setIsButtonLeaving(true);
-        setTimeout(() => setShowToTop(false), 300); // Match this with the animation duration
+        setTimeout(() => setShowToTop(false), 300);
       }
     };
 
@@ -103,27 +107,10 @@ const DashboardPage: React.FC = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const isAuthenticated = () => {
-    return !!accessToken;
-  };
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!isAuthenticated()) {
-        navigate("/");
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target as Node)
-      ) {
-        setSidebarOpen(false);
+  const refreshAccessToken = useCallback(async (): Promise<string> => {
+    try {
+      if (!refreshToken) {
+        throw new Error("Refresh token is missing");
       }
 
       const response = await httpClient.post<RefreshTokenResponse>(
@@ -152,7 +139,7 @@ const DashboardPage: React.FC = () => {
       navigate("/");
       throw error;
     }
-  };
+  }, [accessToken, refreshToken, navigate]);
 
   const getUserInfo = useCallback(
     async (user_id: string) => {
@@ -169,14 +156,8 @@ const DashboardPage: React.FC = () => {
               Authorization: `Bearer ${token}`,
               "refresh-token": refreshToken,
             },
-          }
-        );
-
-        if (response.data.data && response.data.data.user) {
-          setUser(response.data.data.user);
-          setTerms(response.data.data.terms);
-        } else {
-          console.error("Invalid API response format");
+          });
+        };
 
         try {
           const response = await makeRequest(accessToken);
@@ -207,14 +188,14 @@ const DashboardPage: React.FC = () => {
         navigate("/");
       }
     },
-    [navigate, accessToken, refreshToken]
+    [navigate, accessToken, refreshToken, refreshAccessToken]
   );
 
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate("/");
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -277,13 +258,13 @@ const DashboardPage: React.FC = () => {
               <OverallSection user={user} />
               <TermsSection
                 terms={terms}
-                userId={user_id}
+                userId={user_id || ""}
                 accessToken={accessToken || ""}
                 refreshToken={refreshToken || ""}
               />
               <QuerySection
                 terms={terms}
-                user_id={user_id}
+                user_id={user_id || ""}
                 accessToken={accessToken || ""}
                 refreshToken={refreshToken || ""}
               />
