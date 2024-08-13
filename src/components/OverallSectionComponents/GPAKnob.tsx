@@ -62,9 +62,9 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
 
   const scaleProps = useSpring({
     transform: isHovered
-      ? "scale(1.05)"
-      : value > 4
       ? "scale(1.1)"
+      : value > 4
+      ? "scale(1.05)"
       : "scale(1)",
     config: { tension: 300, friction: 10 },
   });
