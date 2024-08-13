@@ -6,6 +6,7 @@ import QuerySection from "../components/QuerySection.tsx";
 import httpClient from "../httpClient.tsx";
 import Sidebar from "../components/Sidebar.tsx";
 import GradingScaleButton from "../components/GradeScale.tsx";
+import Loader from "../components/Loader.tsx";
 
 interface User {
   id: string;
@@ -45,13 +46,34 @@ interface ApiResponse {
   };
 }
 
+interface RefreshTokenResponse {
+  message: string;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      first_name: string;
+      last_name: string;
+    };
+    session: {
+      access_token: string;
+      refresh_token: string;
+      expires_in: number;
+    };
+  };
+}
+
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [terms, setTerms] = useState<Terms>({});
   const [user, setUser] = useState<User | null>(null);
   const user_id = localStorage.getItem("user_id");
-  const access_token = localStorage.getItem("access_token");
-  const refresh_token = localStorage.getItem("refresh_token");
+  const [accessToken, setAccessToken] = useState<string | null>(
+    localStorage.getItem("access_token")
+  );
+  const [refreshToken, setRefreshToken] = useState<string | null>(
+    localStorage.getItem("refresh_token")
+  );
   const [showToTop, setShowToTop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -99,30 +121,49 @@ const DashboardPage: React.FC = () => {
       ) {
         setSidebarOpen(false);
       }
-    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+      const response = await httpClient.post<RefreshTokenResponse>(
+        "/auth/refresh",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "refresh-token": refreshToken,
+          },
+        }
+      );
+
+      const { access_token, refresh_token } = response.data.data.session;
+      setAccessToken(access_token);
+      setRefreshToken(refresh_token);
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
+
+      return access_token;
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user_id");
+      navigate("/");
+      throw error;
+    }
+  };
 
   const getUserInfo = useCallback(
     async (user_id: string) => {
       try {
-        if (!access_token || !refresh_token) {
-          // Handle the case when tokens are missing
+        if (!accessToken || !refreshToken) {
           console.error("Access token or refresh token is missing");
           navigate("/");
           return;
         }
 
-        const response = await httpClient.get<ApiResponse>(
-          `/users/dashboard/${user_id}`,
-          {
+        const makeRequest = async (token: string) => {
+          return httpClient.get<ApiResponse>(`/users/dashboard/${user_id}`, {
             headers: {
-              Authorization: `Bearer ${access_token}`,
-              "refresh-token": refresh_token,
+              Authorization: `Bearer ${token}`,
+              "refresh-token": refreshToken,
             },
           }
         );
@@ -133,17 +174,59 @@ const DashboardPage: React.FC = () => {
         } else {
           console.error("Invalid API response format");
 
-          // Handle the case when the response format is unexpected
-          navigate("/");
+        try {
+          const response = await makeRequest(accessToken);
+          if (response.data.data && response.data.data.user) {
+            setUser(response.data.data.user);
+            setTerms(response.data.data.terms);
+          } else {
+            console.error("Invalid API response format");
+            navigate("/");
+          }
+        } catch (error: any) {
+          if (error.response && error.response.status === 401) {
+            const newToken = await refreshAccessToken();
+            const retryResponse = await makeRequest(newToken);
+            if (retryResponse.data.data && retryResponse.data.data.user) {
+              setUser(retryResponse.data.data.user);
+              setTerms(retryResponse.data.data.terms);
+            } else {
+              console.error("Invalid API response format after token refresh");
+              navigate("/");
+            }
+          } else {
+            throw error;
+          }
         }
       } catch (error) {
         console.error("Error fetching user info:", error);
-        // Handle error, show error message, etc.
         navigate("/");
       }
     },
-    [navigate, access_token, refresh_token]
+    [navigate, accessToken, refreshToken]
   );
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate("/");
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (user_id) {
@@ -194,14 +277,14 @@ const DashboardPage: React.FC = () => {
               <TermsSection
                 terms={terms}
                 userId={user_id}
-                accessToken={access_token || ""}
-                refreshToken={refresh_token || ""}
+                accessToken={accessToken || ""}
+                refreshToken={refreshToken || ""}
               />
               <QuerySection
                 terms={terms}
                 user_id={user_id}
-                accessToken={access_token || ""}
-                refreshToken={refresh_token || ""}
+                accessToken={accessToken || ""}
+                refreshToken={refreshToken || ""}
               />
             </div>
 
@@ -237,7 +320,9 @@ const DashboardPage: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="text-xl">Loading...</div>
+          <div className="flex justify-center items-center h-64">
+            <Loader />
+          </div>
         )}
       </div>
       {showToTop && (
