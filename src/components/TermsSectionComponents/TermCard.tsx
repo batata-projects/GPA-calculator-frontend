@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import AddCourseForm from "./AddCourseForm.tsx";
 import httpClient from "../../httpClient.tsx";
 
@@ -68,11 +68,23 @@ const TermCard: React.FC<TermCardProps> = ({
   const [error, setError] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsExpanded(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Handles
   const handleDeleteTerm = async () => {
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this term and all its associated courses?"
+      `Are you sure you want to delete the ${termData.name} term and all its associated courses?`
     );
 
     if (confirmDelete) {
@@ -106,6 +118,7 @@ const TermCard: React.FC<TermCardProps> = ({
       setIsEdit(false);
       setCourse(null);
       setCourseId(null);
+      setSelectedCourseId(null);
     } else {
       setIsEdit(course !== undefined);
       setShowForm(true);
@@ -128,6 +141,16 @@ const TermCard: React.FC<TermCardProps> = ({
     setSelectedCourseId(null);
   };
 
+  const handleAddOrCancel = () => {
+    if (isFormOpen) {
+      // If the form is open, close it
+      handleCloseForm();
+    } else {
+      // If the form is closed, open it
+      handleAddCourse();
+    }
+  };
+
   // Sorting
   const sortCourses = (courses: { [key: string]: Course }) => {
     return Object.entries(courses).sort(([, courseA], [, courseB]) => {
@@ -146,95 +169,176 @@ const TermCard: React.FC<TermCardProps> = ({
     });
   };
 
-  // Scrolls
   const scrollToBottom = () => {
     if (cardRef.current) {
       cardRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   };
 
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const getTotalCredits = () => {
+    return Object.values(termData.courses).reduce(
+      (total, course) => total + course.credits,
+      0
+    );
+  };
+
   return (
     <div
       ref={cardRef}
-      className="flex flex-col bg-[#055AC5] my-10 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-0  element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700 mb-3"
+      className="flex flex-col bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl text-white w-full max-w-4xl mx-auto p-6 transition duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl"
     >
-      <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
-        {/* course side */}
-        <div className="w-full md:w-[80%] flex flex-col py-3 pl-5 ">
-          {/* term name */}
-          <div className="text-[29px] flex justify-start mb-6 text-center sm:text-center ">
-            <div className=" focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
-              {termData.name}
-            </div>
+      <div className="flex flex-col lg:flex-row">
+        {/* Left side: Term name and courses */}
+        <div className="w-full lg:w-3/4 pr-6">
+          <div className="flex justify-between items-center mb-6 pb-2 border-b border-white/30">
+            <h2 className="text-3xl font-bold">{termData.name}</h2>
+            <button
+              onClick={toggleExpand}
+              className="lg:hidden bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full transition duration-300 ease-in-out"
+            >
+              {isExpanded ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              )}
+            </button>
           </div>
-          {/* courses */}
-          <div className="flex flex-col items-center md:flex-row md:flex-wrap gap-4 md:gap-6">
+          <div
+            className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
+              isExpanded ? "" : "max-h-96 overflow-y-auto"
+            }`}
+          >
             {sortCourses(termData.courses).map(([courseId, course]) => (
               <div
                 key={courseId}
-                className="flex flex-row items-center md:items-center space-x-2 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
+                className={`flex items-center justify-between bg-white/10 rounded-lg p-3 transition duration-300 ease-in-out transform hover:scale-102 hover:bg-white/20 ${
+                  selectedCourseId === courseId
+                    ? "border-2 border-yellow-400"
+                    : ""
+                }`}
               >
-                {/* course name */}
-                <button
-                  onClick={() => handleAddCourse(courseId, course)}
-                  className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[17px] min-w-[150px] h-[45px]"
-                >
-                  {course.subject} {course.course_code}
-                </button>
-                {/* course grade */}
-                <button
-                  onClick={() => handleAddCourse(courseId, course)}
-                  className={`bg-white text-black rounded-full w-[60px] px-2 h-[45px] flex justify-center items-center text-[17px] ${
-                    course.grade === null ? "not-completed" : ""
-                  }`}
-                  title={
-                    course.grade === null
-                      ? "Not Completed"
-                      : course.graded
-                      ? course.grade === -1
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
+                    {course.subject.slice(0, 2)}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm">
+                      {course.subject} {course.course_code}
+                    </h3>
+                    <p className="text-xs text-blue-200">
+                      {course.credits} credit{course.credits !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleAddCourse(courseId, course)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-blue-800 p-1.5 rounded-full transition duration-300 ease-in-out transform hover:scale-110"
+                    title="Edit course"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                      />
+                    </svg>
+                  </button>
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${
+                      course.grade === null
+                        ? "bg-gray-400 text-gray-800"
+                        : "bg-white text-blue-800"
+                    }`}
+                    title={
+                      course.grade === null
+                        ? "Not Completed"
+                        : course.graded
+                        ? course.grade === -1
+                          ? "Withdrawn"
+                          : gradeMapping[course.grade]
+                        : course.grade === 1
+                        ? "Pass"
+                        : course.grade === -1
                         ? "Withdrawn"
-                        : gradeMapping[course.grade]
-                      : course.grade === 1
-                      ? "Pass"
-                      : course.grade === -1
-                      ? "Withdrawn"
-                      : "Fail"
-                  }
-                >
-                  {getGradeDisplay(course.grade, course.graded)}
-                </button>
+                        : "Fail"
+                    }
+                  >
+                    {getGradeDisplay(course.grade, course.graded)}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-          <div className="mt-auto mr-2 md:self-end self-center">
-            {!isEdit && isFormOpen ? (
-              <button
-                onClick={handleCloseForm}
-                className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
-              >
-                Cancel
-              </button>
-            ) : (
-              <button
-                onClick={() => handleAddCourse()}
-                className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
-              >
-                Add Another Course
-              </button>
-            )}
+          <div className="mt-6 flex justify-between items-center">
+            <button
+              onClick={handleAddOrCancel}
+              className={`${
+                isFormOpen
+                  ? "bg-red-500 hover:bg-white hover:text-red-500"
+                  : "bg-green-500 hover:bg-white hover:text-green-500"
+              } text-white py-2 px-6 rounded-full text-sm transition duration-300 ease-in-out transform hover:scale-105`}
+            >
+              {isFormOpen ? "Cancel" : "Add Another Course"}
+            </button>
+            <p className="text-sm text-blue-200">
+              Total Credits: {getTotalCredits()}
+            </p>
           </div>
-          {/* <div className="text-sm mt-4 flex flex-wrap justify-start pl-3">
-            <span className="mr-4">NC: Not Completed</span>
-            <span className="mr-4">W: Withdrawn</span>
-            <span className="mr-4">P: Pass</span>
-            <span>F: Fail</span>
-          </div> */}
         </div>
-        {/* gpa side */}
-        <div className="w-full md:w-1/4 flex flex-col p-4 md:p-8 relative items-center border-t md:border-t-0 md:border-l">
+
+        {/* Right side: GPA */}
+        <div className="w-full lg:w-1/4 mt-6 lg:mt-0 flex flex-col items-center justify-center border-t lg:border-t-0 lg:border-l border-white/30 pt-6 lg:pt-0 lg:pl-6">
+          <h3 className="text-2xl font-semibold mb-4">Term GPA</h3>
+          <div className="relative w-32 h-32 group">
+            <div className="absolute inset-0 bg-white rounded-full transition-all duration-300 ease-in-out transform group-hover:scale-110 group-hover:shadow-lg"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-4xl font-bold text-blue-800 transition-all duration-300 ease-in-out transform group-hover:scale-110">
+                {(Math.floor(termData.gpa * 100) / 100).toFixed(2)}
+              </span>
+            </div>
+            <div className="absolute inset-0 bg-blue-500 rounded-full opacity-0 transition-all duration-300 ease-in-out transform scale-0 group-hover:scale-100"></div>
+          </div>
           <button
             onClick={handleDeleteTerm}
-            className="absolute top-4 right-4 transition duration-300 ease-in-out transform hover:scale-150"
+            className="mt-6 text-red-300 hover:text-red-500 transition duration-300 ease-in-out transform hover:scale-110"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -251,16 +355,10 @@ const TermCard: React.FC<TermCardProps> = ({
               />
             </svg>
           </button>
-          <div className="mt-12 text-[36px] md:text-[48px] lg:mt-6 font-bold focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
-            GPA
-          </div>
-          <div className="flex justify-center items-center bg-orange-500 rounded-[40px] h-[60px] sm:h-[70px] md:h-[80px] w-[120px] sm:w-[130px] md:w-[140px] text-[24px] sm:text-[28px] md:text-[32px] px-4 overflow-hidden transition duration-300 ease-in-out transform hover:scale-110 mt-4">
-            {(Math.floor(termData.gpa * 100) / 100).toFixed(2)}
-          </div>
         </div>
       </div>
       {error && (
-        <div className="col-span-2 px-4 py-2 text-red-500 bg-red-100 border border-red-400 rounded">
+        <div className="px-4 py-2 text-red-500 bg-red-100 border border-red-400 rounded-full text-sm mt-4">
           {error}
         </div>
       )}

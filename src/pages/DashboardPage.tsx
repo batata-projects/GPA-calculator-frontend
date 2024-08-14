@@ -6,6 +6,7 @@ import QuerySection from "../components/QuerySection.tsx";
 import httpClient from "../httpClient.tsx";
 import Sidebar from "../components/Sidebar.tsx";
 import Loader from "../components/Loader.tsx";
+import GradingScaleButton from "../components/GradeScale.tsx";
 
 interface User {
   id: string;
@@ -222,7 +223,7 @@ const DashboardPage: React.FC = () => {
   }, [user_id, navigate, getUserInfo]);
 
   return (
-    <div className="font-inter">
+    <div className="font-inter mx-auto px-4 sm:px-6 lg:px-8">
       <button
         onClick={toggleSidebar}
         className="fixed top-4 left-4 z-50 text-gray-700 hover:text-gray-900 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
@@ -233,7 +234,7 @@ const DashboardPage: React.FC = () => {
           viewBox="0 0 24 24"
           strokeWidth="1.5"
           stroke="currentColor"
-          className="size-7"
+          className="w-6 h-6"
         >
           <path
             strokeLinecap="round"
@@ -246,15 +247,18 @@ const DashboardPage: React.FC = () => {
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </div>
       <div className="flex flex-col items-center">
-        <h1 className="text-[50px] font-bold text-center my-8">
-          GPA Calculator
-        </h1>
+        <div className="relative w-full flex flex-col items-center mt-6 mb-8">
+          <h1 className="text-4xl font-bold text-center">GPA Calculator</h1>
+          <div className="absolute top-0 right-0">
+            <GradingScaleButton />
+          </div>
+        </div>
         {user ? (
           <>
-            <div className="font-inter text-[35px] font-semibold">
+            <div className="text-2xl font-semibold mb-4">
               Hello, {user.first_name}
             </div>
-            <div className="flex flex-col">
+            <div className="w-full max-w-4xl">
               <OverallSection user={user} />
               <TermsSection
                 terms={terms}
@@ -269,6 +273,37 @@ const DashboardPage: React.FC = () => {
                 refreshToken={refreshToken || ""}
               />
             </div>
+
+            <div
+              id="additional-info"
+              className="mt-16 pb-16 flex flex-col items-center text-center"
+            >
+              <div className="max-w-2xl">
+                <h2 className="text-2xl font-semibold mb-4">
+                  Additional Information
+                </h2>
+                <p className="mb-4">
+                  This GPA Calculator helps you track your academic progress and
+                  plan for future terms. Remember that your GPA is just one
+                  aspect of your academic journey. Keep striving for knowledge
+                  and personal growth!
+                </p>
+                <p className="mb-4">
+                  If you have any questions or need assistance with using this
+                  calculator, please don't hesitate to contact our support team
+                  at support@gpacalculator.com.
+                </p>
+                <p className="mb-8">
+                  Thank you for using our GPA Calculator. We wish you the best
+                  in your academic endeavors!
+                </p>
+              </div>
+              {/* Horizontal line */}
+              <hr className="border-t border-gray-300 my-8 w-full max-w-2xl" />
+              <p className="text-sm text-gray-500">
+                © 2024 GPA Calculator. All rights reserved.
+              </p>
+            </div>
           </>
         ) : (
           <div className="flex justify-center items-center h-64">
@@ -279,17 +314,16 @@ const DashboardPage: React.FC = () => {
       {showToTop && (
         <button
           onClick={scrollToTop}
-          className={`fixed bottom-10 right-10 p-3 bg-[#055AC5] text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out z-50 ${
+          className={`fixed bottom-8 right-8 p-2 bg-[#055AC5] text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 ease-in-out z-50 ${
             isButtonLeaving ? "animate-slide-down" : "animate-slide-up"
           }`}
           aria-label="Scroll to top"
-          style={{ zIndex: 9999 }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="w-10 h-10"
+            className="w-8 h-8"
           >
             <path
               fillRule="evenodd"

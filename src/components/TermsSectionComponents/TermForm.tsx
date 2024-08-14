@@ -77,16 +77,15 @@ const TermForm: React.FC<TermFormProps> = ({
       subject: "",
       course_code: "",
       credits: "",
-      grade: undefined, // Change this from null to undefined
+      grade: undefined,
       graded: "true",
-      pass: undefined, // Change this from null to undefined
+      pass: undefined,
     },
   ]);
   const [error, setError] = useState("");
   const formContainerRef = useRef<HTMLDivElement>(null);
   const semesters = ["Fall", "Winter", "Spring", "Summer"];
 
-  // UseEffects
   useEffect(() => {
     if (formContainerRef.current) {
       formContainerRef.current.scrollTo({
@@ -104,7 +103,6 @@ const TermForm: React.FC<TermFormProps> = ({
     }
   }, [year]);
 
-  // Handles
   const handleTermChange = (
     e:
       | React.ChangeEvent<HTMLSelectElement>
@@ -123,7 +121,7 @@ const TermForm: React.FC<TermFormProps> = ({
       setError(
         "Course cannot be removed. A term needs to have at least 1 course."
       );
-      return; // Prevent removal if there is only one course
+      return;
     }
     const updatedCourses = [...courses];
     updatedCourses.splice(index, 1);
@@ -204,8 +202,6 @@ const TermForm: React.FC<TermFormProps> = ({
         },
       });
 
-      console.log(`here is the error: ${response}`);
-
       if (response.status === 201) {
         window.location.reload();
         onClose();
@@ -253,13 +249,13 @@ const TermForm: React.FC<TermFormProps> = ({
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div
         ref={formContainerRef}
-        className="bg-white p-8 rounded shadow-lg max-h-[80vh] min-w-[50%] max-w-[50%] overflow-y-auto"
+        className="bg-gradient-to-br from-blue-600 to-blue-800 p-8 rounded-3xl shadow-2xl max-h-[90vh] w-full max-w-3xl overflow-y-auto text-white"
       >
-        <h2 className="text-2xl font-bold mb-6">Add Term</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="mb-4">
-              <label htmlFor="semester" className="block mb-1">
+        <h2 className="text-3xl font-bold mb-6 text-center">Add Term</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="semester" className="block mb-2 font-semibold">
                 Semester
               </label>
               <select
@@ -267,19 +263,19 @@ const TermForm: React.FC<TermFormProps> = ({
                 name="semester"
                 value={semester}
                 onChange={(e) => handleTermChange(e, "semester")}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
+                className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-300"
                 required
               >
                 <option value="">Select a semester</option>
-                {semesters.map((semester) => (
-                  <option key={semester} value={semester}>
-                    {semester}
+                {semesters.map((sem) => (
+                  <option key={sem} value={sem}>
+                    {sem}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="mb-4">
-              <label htmlFor="year" className="block mb-1">
+            <div>
+              <label htmlFor="year" className="block mb-2 font-semibold">
                 Academic Year
               </label>
               <div className="flex items-center gap-2">
@@ -290,183 +286,144 @@ const TermForm: React.FC<TermFormProps> = ({
                   value={year}
                   placeholder="yyyy"
                   onChange={(e) => handleTermChange(e, "year")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-300"
                   required
                 />
-                <div className="h-[2px] w-4 bg-gray-400"></div>
+                <div className="h-[2px] w-4 bg-white/50"></div>
                 <input
                   type="number"
                   id="nextYear"
                   name="nextYear"
                   value={nextYear}
                   disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
                 />
               </div>
             </div>
           </div>
 
           {courses.map((course, index) => (
-            <div key={index} className="mb-6 pt-6 border-t">
-              <div className=" flex flex-row">
-                <h3 className="text-lg font-bold mb-2">Course {index + 1}</h3>
+            <div key={index} className="bg-white/10 p-6 rounded-2xl space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Course {index + 1}</h3>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveCourse(index)}
+                  className="px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300"
+                >
+                  Remove
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="mb-2">
-                  <input
-                    type="text"
-                    id={`subject-${index}`}
-                    name={`subject-${index}`}
-                    value={course.subject}
-                    placeholder="Subject"
-                    onChange={(e) => handleCourseChange(e, index, "subject")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    required
-                  />
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Subject"
+                  value={course.subject}
+                  onChange={(e) => handleCourseChange(e, index, "subject")}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-300"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Course Code"
+                  value={course.course_code}
+                  onChange={(e) => handleCourseChange(e, index, "course_code")}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-300"
+                  required
+                />
+                <input
+                  type="number"
+                  placeholder="Credits"
+                  value={course.credits}
+                  onChange={(e) => handleCourseChange(e, index, "credits")}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-300"
+                  required
+                />
+                <div>
+                  <select
+                    value={course.graded}
+                    onChange={(e) => handleCourseChange(e, index, "graded")}
+                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-300"
+                  >
+                    <option value="true">Graded</option>
+                    <option value="false">Pass/Fail</option>
+                  </select>
                 </div>
-                <div className="mb-2">
-                  <input
-                    type="text"
-                    id={`course_code-${index}`}
-                    name={`course_code-${index}`}
-                    value={course.course_code}
-                    placeholder="Course Code"
-                    onChange={(e) =>
-                      handleCourseChange(e, index, "course_code")
+                {course.graded === "true" ? (
+                  <select
+                    value={
+                      course.grade === undefined
+                        ? ""
+                        : course.grade === null
+                        ? "Not Completed"
+                        : Object.keys(gradeValues).find(
+                            (key) => gradeValues[key] === course.grade
+                          ) || ""
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    required
-                  />
-                </div>
-                <div className="mb-2">
-                  <input
-                    type="number"
-                    id={`credits-${index}`}
-                    name={`credits-${index}`}
-                    value={course.credits}
-                    placeholder="Credits"
-                    onChange={(e) => handleCourseChange(e, index, "credits")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    required
-                  />
-                </div>
-
-                <div className="mb-2">
-                  {course.graded === "true" ? (
-                    <select
-                      id={`grade-${index}`}
-                      name={`grade-${index}`}
-                      value={
-                        course.grade === undefined
-                          ? ""
-                          : course.grade === null
-                          ? "Not Completed"
-                          : letterGrades.find(
-                              (grade) => gradeValues[grade] === course.grade
-                            ) || ""
-                      }
-                      onChange={(e) => handleCourseChange(e, index, "grade")}
-                      className="w-full px-3 py-2 border border-gray-300 rounded"
-                    >
-                      <option value="">Select a grade</option>
-                      {letterGrades.map((letterGrade) => (
-                        <option key={letterGrade} value={letterGrade}>
-                          {letterGrade}
-                        </option>
-                      ))}
-                      <option value="Not Completed">Not Completed</option>
-                    </select>
-                  ) : (
-                    <select
-                      id={`grade-${index}`}
-                      name={`grade-${index}`}
-                      value={
-                        course.pass === undefined
-                          ? ""
-                          : course.pass === null
-                          ? "Not Completed"
-                          : notGradedOptions.find(
-                              (grade) => notGradedValues[grade] === course.pass
-                            ) || ""
-                      }
-                      onChange={(e) => handleCourseChange(e, index, "pass")}
-                      className="w-full px-3 py-2 border border-gray-300 rounded"
-                    >
-                      <option value="">Select pass/fail</option>
-                      {notGradedOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                      <option value="Not Completed">Not Completed</option>
-                    </select>
-                  )}
-                </div>
-
-                <div className="mb-2">
-                  <label className="block mb-1">Graded</label>
-                  <div className="flex items-center">
-                    <label className="inline-flex items-center mr-4">
-                      <input
-                        type="radio"
-                        name={`graded-${index}`}
-                        value="true"
-                        checked={course.graded === "true"}
-                        onChange={(e) => handleCourseChange(e, index, "graded")}
-                        className="mr-2"
-                        required
-                      />
-                      <span>Yes</span>
-                    </label>
-                    <label className="inline-flex items-center">
-                      <input
-                        type="radio"
-                        name={`graded-${index}`}
-                        value="false"
-                        checked={course.graded === "false"}
-                        onChange={(e) => handleCourseChange(e, index, "graded")}
-                        className="mr-2"
-                        required
-                      />
-                      <span>No</span>
-                    </label>
-                  </div>
-                </div>
+                    onChange={(e) => handleCourseChange(e, index, "grade")}
+                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-300"
+                  >
+                    <option value="">Select a grade</option>
+                    {letterGrades.map((grade) => (
+                      <option key={grade} value={grade}>
+                        {grade}
+                      </option>
+                    ))}
+                    <option value="Not Completed">Not Completed</option>
+                  </select>
+                ) : (
+                  <select
+                    value={
+                      course.pass === undefined
+                        ? ""
+                        : course.pass === null
+                        ? "Not Completed"
+                        : Object.keys(notGradedValues).find(
+                            (key) => notGradedValues[key] === course.pass
+                          ) || ""
+                    }
+                    onChange={(e) => handleCourseChange(e, index, "pass")}
+                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-300"
+                  >
+                    <option value="">Select pass/fail</option>
+                    {notGradedOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                    <option value="Not Completed">Not Completed</option>
+                  </select>
+                )}
               </div>
-
-              <button
-                type="button"
-                onClick={() => handleRemoveCourse(index)}
-                className="px-2 py-1 text-white bg-red-500 rounded"
-              >
-                Remove
-              </button>
             </div>
           ))}
+
           {error && (
-            <div className="px-4 py-2 mb-4 text-red-500 bg-red-100 border w-[60%] border-red-400 rounded overflow-y-auto  ">
+            <div className="px-4 py-3 bg-red-500/50 border border-red-700 rounded-lg text-white">
               {error}
             </div>
           )}
+
           <button
             type="button"
             onClick={handleAddCourse}
-            className="px-4 py-2 mb-4 text-white bg-blue-500 rounded"
+            className="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300"
           >
             Add Course
           </button>
-          <div className="flex justify-end">
+
+          <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 mr-2 text-gray-700 border border-gray-300 rounded"
+              className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-white bg-blue-500 rounded"
+              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300"
             >
               Submit
             </button>
