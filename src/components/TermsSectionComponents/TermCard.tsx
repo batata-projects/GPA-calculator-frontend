@@ -1,8 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
+import { useDashboard } from "../../hooks/useDashboard.ts";
 import AddCourseForm from "./AddCourseForm.tsx";
 import httpClient from "../../httpClient.tsx";
 
 interface Course {
+  id: string;
   subject: string;
   course_code: string;
   term: number;
@@ -11,21 +13,16 @@ interface Course {
   graded: boolean;
 }
 
-interface TermData {
-  name: string;
-  gpa: number;
-  credits: number;
-  courses: {
-    [key: string]: Course;
-  };
-}
-
 interface TermCardProps {
   term: string;
-  termData: TermData;
-  user_id: string | null;
-  accessToken: string | null;
-  refreshToken: string | number | boolean;
+  termData: {
+    name: string;
+    gpa: number;
+    credits: number;
+    courses: {
+      [key: string]: Course;
+    };
+  };
 }
 
 const gradeMapping: { [key: number]: string } = {
@@ -53,137 +50,84 @@ const getGradeDisplay = (grade: number | null, graded: boolean): string => {
   return "NC";
 };
 
-const TermCard: React.FC<TermCardProps> = ({
-  termData,
-  user_id,
-  accessToken,
-  refreshToken,
-  term,
-}) => {
+const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
+  const { fetchDashboardData } = useDashboard();
   const cardRef = useRef<HTMLDivElement>(null);
   const [showForm, setShowForm] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [course, setCourse] = useState<Course | null>(null);
-  const [courseId, setCourseId] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [error, setError] = useState("");
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
-  // Handles
-  const handleDeleteTerm = async () => {
+  const handleDeleteTerm = useCallback(async () => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this term and all its associated courses?"
     );
 
     if (confirmDelete) {
       try {
-        // Delete each course in the term
         await Promise.all(
-          Object.entries(termData.courses).map(async ([courseId, course]) => {
-            await httpClient.delete(`courses/${courseId}`, {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "refresh-token": refreshToken,
-              },
-            });
-          })
+          Object.values(termData.courses).map((course) =>
+            httpClient.delete(`courses/${course.id}`)
+          )
         );
-
-        // Reload the page after successful deletion of courses
-        window.location.reload();
+        await fetchDashboardData();
       } catch (error) {
-        setError(`${error.response.data.detail}, Please sign in again.`);
+        setError("Failed to delete term. Please try again.");
+        console.error("Error deleting term:", error);
       }
     }
-  };
+  }, [termData.courses, fetchDashboardData]);
 
-  const handleAddCourse = (
-    courseId?: string | null,
-    course?: Course | null
-  ) => {
-    if (showForm && courseId === selectedCourseId) {
-      setShowForm(false);
-      setIsEdit(false);
-      setCourse(null);
-      setCourseId(null);
-    } else {
-      setIsEdit(course !== undefined);
-      setShowForm(true);
-      setIsFormOpen(course === undefined);
-      setCourse(course || null);
-      setCourseId(courseId || null);
-      setSelectedCourseId(courseId || null);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-    }
-  };
+  const handleAddCourse = useCallback((course?: Course) => {
+    setIsEdit(!!course);
+    setShowForm(true);
+    setSelectedCourse(course || null);
+    setTimeout(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 100);
+  }, []);
 
-  const handleCloseForm = () => {
+  const handleCloseForm = useCallback(() => {
     setShowForm(false);
-    setIsFormOpen(false);
     setIsEdit(false);
-    setCourse(null);
-    setCourseId(null);
-    setSelectedCourseId(null);
-  };
+    setSelectedCourse(null);
+  }, []);
 
-  // Sorting
-  const sortCourses = (courses: { [key: string]: Course }) => {
-    return Object.entries(courses).sort(([, courseA], [, courseB]) => {
-      if (courseA.grade === null && courseB.grade === null) return 0;
-      if (courseA.grade === null) return 1;
-      if (courseB.grade === null) return -1;
-      if (courseA.graded && courseB.graded) {
-        return courseB.grade - courseA.grade;
-      } else if (courseA.graded) {
-        return -1;
-      } else if (courseB.graded) {
-        return 1;
-      } else {
-        return courseB.grade - courseA.grade;
-      }
+  const sortCourses = useCallback((courses: { [key: string]: Course }) => {
+    return Object.entries(courses).sort(([, a], [, b]) => {
+      if (a.grade === null && b.grade === null) return 0;
+      if (a.grade === null) return 1;
+      if (b.grade === null) return -1;
+      return b.grade - a.grade;
     });
-  };
-
-  // Scrolls
-  const scrollToBottom = () => {
-    if (cardRef.current) {
-      cardRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  };
+  }, []);
 
   return (
     <div
       ref={cardRef}
-      className="flex flex-col bg-[#055AC5] my-10 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-0  element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700 mb-3"
+      className="flex flex-col bg-[#055AC5] my-10 rounded-[40px] text-white w-full min-w-[300px] sm:min-w-[500px] md:min-w-[700px] lg:min-w-[900px] max-w-[1000px] mx-auto px-4 sm:px-6 sm:pr-0 lg:px-0 element transition duration-300 ease-in-out transform hover:scale-110 hover:shadow-md hover:border-2 hover:border-gray-700 mb-3"
     >
       <div className="flex flex-col md:flex-row flex-grow min-h-[300px]">
-        {/* course side */}
-        <div className="w-full md:w-[80%] flex flex-col py-3 pl-5 ">
-          {/* term name */}
-          <div className="text-[29px] flex justify-start mb-6 text-center sm:text-center ">
-            <div className=" focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+        <div className="w-full md:w-[80%] flex flex-col py-3 pl-5">
+          <div className="text-[29px] flex justify-start mb-6 text-center sm:text-center">
+            <div className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
               {termData.name}
             </div>
           </div>
-          {/* courses */}
           <div className="flex flex-col items-center md:flex-row md:flex-wrap gap-4 md:gap-6">
             {sortCourses(termData.courses).map(([courseId, course]) => (
               <div
                 key={courseId}
                 className="flex flex-row items-center md:items-center space-x-2 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
               >
-                {/* course name */}
                 <button
-                  onClick={() => handleAddCourse(courseId, course)}
+                  onClick={() => handleAddCourse(course)}
                   className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[17px] min-w-[150px] h-[45px]"
                 >
                   {course.subject} {course.course_code}
                 </button>
-                {/* course grade */}
                 <button
-                  onClick={() => handleAddCourse(courseId, course)}
+                  onClick={() => handleAddCourse(course)}
                   className={`bg-white text-black rounded-full w-[60px] px-2 h-[45px] flex justify-center items-center text-[17px] ${
                     course.grade === null ? "not-completed" : ""
                   }`}
@@ -207,30 +151,14 @@ const TermCard: React.FC<TermCardProps> = ({
             ))}
           </div>
           <div className="mt-auto mr-2 md:self-end self-center">
-            {!isEdit && isFormOpen ? (
-              <button
-                onClick={handleCloseForm}
-                className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
-              >
-                Cancel
-              </button>
-            ) : (
-              <button
-                onClick={() => handleAddCourse()}
-                className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
-              >
-                Add Another Course
-              </button>
-            )}
+            <button
+              onClick={() => handleAddCourse()}
+              className="bg-orange-500 hover:bg-white hover:text-black text-white py-2 px-5 rounded-[40px] text-[14px] transition duration-300 ease-in-out transform hover:scale-110 mt-5"
+            >
+              Add Another Course
+            </button>
           </div>
-          {/* <div className="text-sm mt-4 flex flex-wrap justify-start pl-3">
-            <span className="mr-4">NC: Not Completed</span>
-            <span className="mr-4">W: Withdrawn</span>
-            <span className="mr-4">P: Pass</span>
-            <span>F: Fail</span>
-          </div> */}
         </div>
-        {/* gpa side */}
         <div className="w-full md:w-1/4 flex flex-col p-4 md:p-8 relative items-center border-t md:border-t-0 md:border-l">
           <button
             onClick={handleDeleteTerm}
@@ -266,14 +194,10 @@ const TermCard: React.FC<TermCardProps> = ({
       )}
       {showForm && (
         <AddCourseForm
-          user_id={user_id}
           onClose={handleCloseForm}
           term={term}
-          accessToken={accessToken}
-          refreshToken={refreshToken}
           isEdit={isEdit}
-          course={course}
-          courseId={courseId}
+          course={selectedCourse}
         />
       )}
     </div>

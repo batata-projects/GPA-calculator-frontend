@@ -1,47 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
+import { useDashboard } from "../hooks/useDashboard.ts";
 import TermCard from "./TermsSectionComponents/TermCard.tsx";
 import TermForm from "./TermsSectionComponents/TermForm.tsx";
 
-interface Terms {
-  [key: string]: {
-    name: string;
-    gpa: number;
-    credits: number;
-    courses: {
-      [key: string]: {
-        subject: string;
-        course_code: string;
-        term: number;
-        credits: number;
-        grade: number;
-        graded: boolean;
-      };
-    };
-  };
-}
-
-interface TermsSectionProps {
-  terms: Terms;
-  userId: string | null;
-  accessToken: string | null;
-  refreshToken: string | number | boolean;
-}
-
-const TermsSection: React.FC<TermsSectionProps> = ({
-  terms,
-  userId,
-  accessToken,
-  refreshToken,
-}) => {
+const TermsSection: React.FC = () => {
+  const { terms } = useDashboard();
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const handleOpenForm = () => {
+  const handleOpenForm = useCallback(() => {
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleCloseForm = () => {
+  const handleCloseForm = useCallback(() => {
     setIsFormOpen(false);
-  };
+  }, []);
 
   return (
     <div className="flex flex-col items-center mt-[5%]">
@@ -74,23 +46,9 @@ const TermsSection: React.FC<TermsSectionProps> = ({
       {Object.entries(terms)
         .sort(([termA], [termB]) => termB.localeCompare(termA))
         .map(([term, termData]) => (
-          <TermCard
-            key={term}
-            term={term}
-            termData={termData}
-            user_id={userId}
-            accessToken={accessToken}
-            refreshToken={refreshToken}
-          />
+          <TermCard key={term} term={term} termData={termData} />
         ))}
-      {isFormOpen && (
-        <TermForm
-          onClose={handleCloseForm}
-          userId={userId}
-          accessToken={accessToken}
-          refreshToken={refreshToken}
-        />
-      )}
+      {/* {isFormOpen && <TermForm onClose={handleCloseForm} />} */}
     </div>
   );
 };

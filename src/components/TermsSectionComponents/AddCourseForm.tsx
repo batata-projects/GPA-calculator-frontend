@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
+import React, { useState, useEffect, useCallback } from "react";
+import { useDashboard } from "../../hooks/useDashboard.ts";
 import httpClient from "../../httpClient.tsx";
 
 interface AddCourseFormProps {
-  user_id: string | null;
-  accessToken: string | null;
-  refreshToken: string | number | boolean;
-  term: string | null;
+  term: string;
   onClose: () => void;
-  isEdit: boolean | null;
+  isEdit: boolean;
   course: Course | null;
-  courseId: string | null;
 }
 
 interface Course {
+  id?: string;
   subject: string;
   course_code: string;
   term: number;
@@ -21,11 +18,6 @@ interface Course {
   grade: number | null;
   graded: boolean;
 }
-
-type ErrorResponse = {
-  message: string;
-  data: Record<string, unknown>;
-};
 
 const letterGrades: { [key: number]: string } = {
   4.3: "A+",
@@ -60,48 +52,28 @@ const gradeValues: { [key: string]: number } = {
 };
 
 const AddCourseForm: React.FC<AddCourseFormProps> = ({
-  user_id,
-  accessToken,
-  refreshToken,
   term,
   onClose,
   isEdit,
   course,
-  courseId,
 }) => {
+  const { fetchDashboardData, accessToken, refreshToken, clearTokens, user } =
+    useDashboard();
   const [subject, setSubject] = useState(course?.subject || "");
   const [courseCode, setCourseCode] = useState(course?.course_code || "");
   const [credits, setCredits] = useState(course?.credits.toString() || "");
-  const [grade, setGrade] = useState(
-    course
-      ? course.graded
-        ? course.grade !== null
-          ? letterGrades[course.grade]
-          : "NOT_COMPLETE"
-        : ""
-      : ""
-  );
+  const [grade, setGrade] = useState("");
   const [graded, setGraded] = useState(course?.graded.toString() || "true");
-  const [pass, setPass] = useState(
-    course?.grade === 1
-      ? "pass"
-      : course?.grade === 0
-      ? "fail"
-      : course?.grade === -1
-      ? "withdraw"
-      : "not_complete"
-  );
+  const [pass, setPass] = useState("not_complete");
   const [error, setError] = useState("");
 
-  // Use Effects
-
   useEffect(() => {
-    setSubject(course?.subject || "");
-    setCourseCode(course?.course_code || "");
-    setCredits(course?.credits.toString() || "");
-    setGraded(course?.graded.toString() || "true");
-
     if (course) {
+      setSubject(course.subject);
+      setCourseCode(course.course_code);
+      setCredits(course.credits.toString());
+      setGraded(course.graded.toString());
+
       if (course.graded) {
         setGrade(
           course.grade !== null ? letterGrades[course.grade] : "NOT_COMPLETE"
@@ -119,152 +91,153 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             : "not_complete"
         );
       }
-    } else {
-      setGrade("");
-      setPass("");
     }
   }, [course]);
-  // Handles
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
+    if (!course?.id) return;
+
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${course?.subject}-${courseCode} from this term?`
+      `Are you sure you want to delete ${course.subject}-${course.course_code} from this term?`
     );
     if (confirmDelete) {
       try {
-        if (courseId) {
-          // Delete the course
-          const response = await httpClient.delete(`/courses/${courseId}`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "refresh-token": refreshToken,
-            },
-          });
-
-          console.log(response.status);
-
-          if (response.status === 200) {
-            onClose();
-            window.location.reload();
-          } else if (response.status === 500) {
-            setError(response.data.message);
-          }
+        if (!accessToken || !refreshToken) {
+          throw new Error("Missing authentication tokens");
         }
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError<ErrorResponse>;
-          if (axiosError.response) {
-            let errorMessage = "An unknown error occurred";
-            try {
-              const parsedError = JSON.parse(
-                axiosError.response.data.message.replace(/'/g, '"')
-              );
-              errorMessage = parsedError.message || "An unknown error occurred";
-            } catch (parseError) {
-              console.error("Error parsing error message:", parseError);
-              errorMessage = axiosError.response.data.message;
-            }
 
-            setError(
-              `Server Error: ${axiosError.response.status} - ${errorMessage}`
-            );
-            console.error("Full error response:", axiosError.response);
-          } else if (axiosError.request) {
-            setError("No response received from server");
-            console.error("Error request:", axiosError.request);
-          } else {
-            setError(`Error: ${axiosError.message}`);
-            console.error("Error:", axiosError.message);
-          }
-        } else {
-          setError(
-            `An unexpected error occurred: ${
-              error instanceof Error ? error.message : String(error)
-            }`
-          );
-          console.error("Unexpected error:", error);
-        }
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const termNumber = term !== null ? parseInt(term, 10) : null;
-      let numericGrade: number | null;
-      if (graded === "true") {
-        numericGrade = grade === "NOT_COMPLETE" ? null : gradeValues[grade];
-      } else {
-        numericGrade =
-          pass === "pass"
-            ? 1
-            : pass === "fail"
-            ? 0
-            : pass === "withdraw"
-            ? -1
-            : null;
-      }
-
-      if (courseId) {
-        // Edit the existing course
-        const response = await httpClient.put(
-          `/courses/${courseId}`,
-          {
-            user_id,
-            subject,
-            course_code: courseCode,
-            term: termNumber,
-            credits,
-            grade: numericGrade,
-            graded,
+        const response = await httpClient.delete(`/courses/${course.id}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "refresh-token": refreshToken,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "refresh-token": refreshToken,
-            },
-          }
-        );
+        });
 
         if (response.status === 200) {
+          await fetchDashboardData();
           onClose();
-          window.location.reload();
-        } else if (response.status === 500) {
-          setError(response.data.message);
+        } else {
+          setError("Failed to delete course. Please try again.");
         }
-      } else {
-        // Add a new course
-        const response = await httpClient.post(
-          "/courses/",
-          {
-            user_id,
-            subject,
-            course_code: courseCode,
-            term: termNumber,
-            credits,
-            grade: numericGrade,
-            graded,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "refresh-token": refreshToken,
-            },
-          }
-        );
-
-        if (response.status === 201) {
-          onClose();
-          window.location.reload();
-        } else if (response.status === 500) {
-          setError(response.data.message);
+      } catch (error) {
+        console.error("Error deleting course:", error);
+        setError("An error occurred while deleting the course.");
+        if (error.response && error.response.status === 401) {
+          clearTokens();
+          // Redirect to login page
         }
       }
-    } catch (error) {
-      setError(`${error.response.data.detail}, Please sign in again.`);
     }
-  };
+  }, [
+    course,
+    fetchDashboardData,
+    onClose,
+    accessToken,
+    refreshToken,
+    clearTokens,
+  ]);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      try {
+        if (!accessToken || !refreshToken) {
+          throw new Error("Missing authentication tokens");
+        }
+
+        if (!user || !user.id) {
+          throw new Error("User information is missing");
+        }
+
+        const termNumber = parseInt(term, 10);
+        let numericGrade: number | null = null;
+
+        if (graded === "true") {
+          numericGrade = grade === "NOT_COMPLETE" ? null : gradeValues[grade];
+        } else {
+          numericGrade =
+            pass === "pass"
+              ? 1
+              : pass === "fail"
+              ? 0
+              : pass === "withdraw"
+              ? -1
+              : null;
+        }
+
+        const courseData = {
+          user_id: user.id,
+          subject,
+          course_code: courseCode,
+          term: termNumber,
+          credits: parseInt(credits, 10),
+          grade: numericGrade,
+          graded: graded === "true",
+        };
+
+        const headers = {
+          Authorization: `Bearer ${accessToken}`,
+          "refresh-token": refreshToken,
+        };
+
+        let response;
+        if (isEdit && course?.id) {
+          response = await httpClient.put(`/courses/${course.id}`, courseData, {
+            headers,
+          });
+        } else {
+          response = await httpClient.post("/courses/", courseData, {
+            headers,
+          });
+        }
+
+        if (response.status === 200 || response.status === 201) {
+          await fetchDashboardData();
+          onClose();
+        } else {
+          throw new Error("Unexpected response status: " + response.status);
+        }
+      } catch (error) {
+        console.error("Error submitting course:", error);
+        if (error.response) {
+          if (error.response.status === 401) {
+            setError("Your session has expired. Please log in again.");
+            clearTokens();
+            // Redirect to login page or show login modal
+          } else if (error.response.data && error.response.data.message) {
+            setError(error.response.data.message);
+          } else {
+            setError(
+              "An error occurred while submitting the course. Please try again."
+            );
+          }
+        } else if (error.request) {
+          setError(
+            "No response received from the server. Please check your internet connection and try again."
+          );
+        } else {
+          setError("An unexpected error occurred. Please try again.");
+        }
+      }
+    },
+    [
+      subject,
+      courseCode,
+      credits,
+      grade,
+      graded,
+      pass,
+      term,
+      isEdit,
+      course,
+      accessToken,
+      refreshToken,
+      fetchDashboardData,
+      onClose,
+      clearTokens,
+      user,
+    ]
+  );
 
   return (
     <div className="py-3 border-t px-5 mt-4">
@@ -275,40 +248,30 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
         onSubmit={handleSubmit}
         className="grid grid-cols-2 gap-y-4 gap-x-[8%] text-black"
       >
-        <div className="col-span-1">
-          <input
-            id="subject"
-            type="text"
-            placeholder="Subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value.toUpperCase())}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          />
-        </div>
-        <div className="col-span-1">
-          <input
-            id="course code"
-            type="text"
-            value={courseCode}
-            placeholder="Course Code"
-            onChange={(e) => setCourseCode(e.target.value.toUpperCase())}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          />
-        </div>
-        <div className="col-span-1">
-          <input
-            id="credits"
-            type="text"
-            value={credits}
-            placeholder="Credits"
-            onChange={(e) => setCredits(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          />
-        </div>
-
+        <input
+          type="text"
+          placeholder="Subject"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value.toUpperCase())}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded"
+        />
+        <input
+          type="text"
+          value={courseCode}
+          placeholder="Course Code"
+          onChange={(e) => setCourseCode(e.target.value.toUpperCase())}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded"
+        />
+        <input
+          type="number"
+          value={credits}
+          placeholder="Credits"
+          onChange={(e) => setCredits(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded"
+        />
         {graded === "true" ? (
           <select
             value={grade}
@@ -317,10 +280,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           >
             <option value="">Select GRADE</option>
             {Object.entries(gradeValues)
-              .sort(
-                ([, numericGradeA], [, numericGradeB]) =>
-                  numericGradeB - numericGradeA
-              )
+              .sort(([, a], [, b]) => b - a)
               .map(([letterGrade, numericGrade]) => (
                 <option key={numericGrade} value={letterGrade}>
                   {letterGrade}
@@ -342,13 +302,13 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           </select>
         )}
         <div className="flex items-center space-x-4 bg-gray-100 py-2 px-3 rounded">
-          <label htmlFor="grade">Graded:</label>
+          <label>Graded:</label>
           <div className="flex items-center">
             <input
               type="radio"
               id="graded-yes"
               value="true"
-              checked={graded === "true" || (!course && graded !== "false")}
+              checked={graded === "true"}
               onChange={() => setGraded("true")}
               className="mr-2"
             />
@@ -379,7 +339,6 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             Delete Course
           </button>
         )}
-
         {error && (
           <div className="col-span-2 px-4 py-2 text-red-500 bg-red-100 border border-red-400 rounded">
             {error}
