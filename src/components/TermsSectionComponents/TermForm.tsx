@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useDashboard } from "../../hooks/useDashboard.ts";
 import httpClient from "../../httpClient.tsx";
 import axios, { AxiosError } from "axios";
+
+interface TermFormProps {
+  onClose: () => void;
+}
 
 interface Course {
   subject: string;
@@ -9,13 +14,6 @@ interface Course {
   grade: number | null | undefined;
   graded: string;
   pass: number | null | undefined;
-}
-
-interface TermFormProps {
-  onClose: () => void;
-  userId: string | null;
-  accessToken: string | null;
-  refreshToken: string | number | boolean;
 }
 
 type ErrorResponse = {
@@ -63,12 +61,9 @@ const notGradedValues: { [key: string]: number | null } = {
   Withdraw: -1,
 };
 
-const TermForm: React.FC<TermFormProps> = ({
-  onClose,
-  userId,
-  accessToken,
-  refreshToken,
-}) => {
+const TermForm: React.FC<TermFormProps> = ({ onClose }) => {
+  const { user, fetchDashboardData, accessToken, refreshToken } =
+    useDashboard();
   const [year, setYear] = useState<number>();
   const [nextYear, setNextYear] = useState<number>();
   const [semester, setSemester] = useState<string>("");
@@ -77,16 +72,15 @@ const TermForm: React.FC<TermFormProps> = ({
       subject: "",
       course_code: "",
       credits: "",
-      grade: undefined, // Change this from null to undefined
+      grade: undefined,
       graded: "true",
-      pass: undefined, // Change this from null to undefined
+      pass: undefined,
     },
   ]);
   const [error, setError] = useState("");
   const formContainerRef = useRef<HTMLDivElement>(null);
   const semesters = ["Fall", "Winter", "Spring", "Summer"];
 
-  // UseEffects
   useEffect(() => {
     if (formContainerRef.current) {
       formContainerRef.current.scrollTo({
@@ -104,7 +98,6 @@ const TermForm: React.FC<TermFormProps> = ({
     }
   }, [year]);
 
-  // Handles
   const handleTermChange = (
     e:
       | React.ChangeEvent<HTMLSelectElement>
@@ -123,7 +116,7 @@ const TermForm: React.FC<TermFormProps> = ({
       setError(
         "Course cannot be removed. A term needs to have at least 1 course."
       );
-      return; // Prevent removal if there is only one course
+      return;
     }
     const updatedCourses = [...courses];
     updatedCourses.splice(index, 1);
@@ -181,8 +174,12 @@ const TermForm: React.FC<TermFormProps> = ({
     const term = parseInt(`${year}${semesterCode}`);
 
     try {
+      if (!user || !user.id) {
+        throw new Error("User information is missing");
+      }
+
       const payload = courses.map((course) => ({
-        user_id: userId,
+        user_id: user.id,
         subject: course.subject.toUpperCase(),
         course_code: course.course_code.toUpperCase(),
         term,
@@ -197,17 +194,21 @@ const TermForm: React.FC<TermFormProps> = ({
             : course.pass,
         graded: course.graded,
       }));
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${accessToken}`,
+      };
+
+      if (refreshToken) {
+        headers["refresh-token"] = refreshToken;
+      }
+
       const response = await httpClient.post("/courses/many", payload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "refresh-token": refreshToken,
-        },
+        headers,
       });
 
-      console.log(`here is the error: ${response}`);
-
       if (response.status === 201) {
-        window.location.reload();
+        await fetchDashboardData();
         onClose();
       } else if (response.status === 500) {
         setError(response.data.message);
@@ -257,8 +258,9 @@ const TermForm: React.FC<TermFormProps> = ({
       >
         <h2 className="text-2xl font-bold mb-6">Add Term</h2>
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="mb-4">
+          {/* Year and Semester inputs */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <div>
               <label htmlFor="semester" className="block mb-1">
                 Semester
               </label>
@@ -271,14 +273,14 @@ const TermForm: React.FC<TermFormProps> = ({
                 required
               >
                 <option value="">Select a semester</option>
-                {semesters.map((semester) => (
-                  <option key={semester} value={semester}>
-                    {semester}
+                {semesters.map((sem) => (
+                  <option key={sem} value={sem}>
+                    {sem}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="mb-4">
+            <div>
               <label htmlFor="year" className="block mb-1">
                 Academic Year
               </label>
@@ -306,103 +308,85 @@ const TermForm: React.FC<TermFormProps> = ({
             </div>
           </div>
 
+          {/* Courses */}
           {courses.map((course, index) => (
             <div key={index} className="mb-6 pt-6 border-t">
-              <div className=" flex flex-row">
+              <div className="flex flex-row">
                 <h3 className="text-lg font-bold mb-2">Course {index + 1}</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="mb-2">
-                  <input
-                    type="text"
-                    id={`subject-${index}`}
-                    name={`subject-${index}`}
-                    value={course.subject}
-                    placeholder="Subject"
-                    onChange={(e) => handleCourseChange(e, index, "subject")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    required
-                  />
-                </div>
-                <div className="mb-2">
-                  <input
-                    type="text"
-                    id={`course_code-${index}`}
-                    name={`course_code-${index}`}
-                    value={course.course_code}
-                    placeholder="Course Code"
-                    onChange={(e) =>
-                      handleCourseChange(e, index, "course_code")
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    required
-                  />
-                </div>
-                <div className="mb-2">
-                  <input
-                    type="number"
-                    id={`credits-${index}`}
-                    name={`credits-${index}`}
-                    value={course.credits}
-                    placeholder="Credits"
-                    onChange={(e) => handleCourseChange(e, index, "credits")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    required
-                  />
-                </div>
+                {/* Course inputs */}
+                <input
+                  type="text"
+                  value={course.subject}
+                  placeholder="Subject"
+                  onChange={(e) => handleCourseChange(e, index, "subject")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  value={course.course_code}
+                  placeholder="Course Code"
+                  onChange={(e) => handleCourseChange(e, index, "course_code")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  required
+                />
+                <input
+                  type="number"
+                  value={course.credits}
+                  placeholder="Credits"
+                  onChange={(e) => handleCourseChange(e, index, "credits")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  required
+                />
 
-                <div className="mb-2">
-                  {course.graded === "true" ? (
-                    <select
-                      id={`grade-${index}`}
-                      name={`grade-${index}`}
-                      value={
-                        course.grade === undefined
-                          ? ""
-                          : course.grade === null
-                          ? "Not Completed"
-                          : letterGrades.find(
-                              (grade) => gradeValues[grade] === course.grade
-                            ) || ""
-                      }
-                      onChange={(e) => handleCourseChange(e, index, "grade")}
-                      className="w-full px-3 py-2 border border-gray-300 rounded"
-                    >
-                      <option value="">Select a grade</option>
-                      {letterGrades.map((letterGrade) => (
-                        <option key={letterGrade} value={letterGrade}>
-                          {letterGrade}
-                        </option>
-                      ))}
-                      <option value="Not Completed">Not Completed</option>
-                    </select>
-                  ) : (
-                    <select
-                      id={`grade-${index}`}
-                      name={`grade-${index}`}
-                      value={
-                        course.pass === undefined
-                          ? ""
-                          : course.pass === null
-                          ? "Not Completed"
-                          : notGradedOptions.find(
-                              (grade) => notGradedValues[grade] === course.pass
-                            ) || ""
-                      }
-                      onChange={(e) => handleCourseChange(e, index, "pass")}
-                      className="w-full px-3 py-2 border border-gray-300 rounded"
-                    >
-                      <option value="">Select pass/fail</option>
-                      {notGradedOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                      <option value="Not Completed">Not Completed</option>
-                    </select>
-                  )}
-                </div>
+                {course.graded === "true" ? (
+                  <select
+                    value={
+                      course.grade === undefined
+                        ? ""
+                        : course.grade === null
+                        ? "Not Completed"
+                        : letterGrades.find(
+                            (grade) => gradeValues[grade] === course.grade
+                          ) || ""
+                    }
+                    onChange={(e) => handleCourseChange(e, index, "grade")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                  >
+                    <option value="">Select a grade</option>
+                    {letterGrades.map((letterGrade) => (
+                      <option key={letterGrade} value={letterGrade}>
+                        {letterGrade}
+                      </option>
+                    ))}
+                    <option value="Not Completed">Not Completed</option>
+                  </select>
+                ) : (
+                  <select
+                    value={
+                      course.pass === undefined
+                        ? ""
+                        : course.pass === null
+                        ? "Not Completed"
+                        : notGradedOptions.find(
+                            (grade) => notGradedValues[grade] === course.pass
+                          ) || ""
+                    }
+                    onChange={(e) => handleCourseChange(e, index, "pass")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                  >
+                    <option value="">Select pass/fail</option>
+                    {notGradedOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                    <option value="Not Completed">Not Completed</option>
+                  </select>
+                )}
 
                 <div className="mb-2">
                   <label className="block mb-1">Graded</label>
@@ -438,17 +422,19 @@ const TermForm: React.FC<TermFormProps> = ({
               <button
                 type="button"
                 onClick={() => handleRemoveCourse(index)}
-                className="px-2 py-1 text-white bg-red-500 rounded"
+                className="px-2 py-1 text-white bg-red-500 rounded mt-2"
               >
                 Remove
               </button>
             </div>
           ))}
+
           {error && (
-            <div className="px-4 py-2 mb-4 text-red-500 bg-red-100 border w-[60%] border-red-400 rounded overflow-y-auto  ">
+            <div className="px-4 py-2 mb-4 text-red-500 bg-red-100 border w-[60%] border-red-400 rounded overflow-y-auto">
               {error}
             </div>
           )}
+
           <button
             type="button"
             onClick={handleAddCourse}
@@ -456,6 +442,7 @@ const TermForm: React.FC<TermFormProps> = ({
           >
             Add Course
           </button>
+
           <div className="flex justify-end">
             <button
               type="button"
