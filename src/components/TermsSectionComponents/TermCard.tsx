@@ -59,6 +59,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -94,46 +95,51 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
         console.error("Error deleting term:", error);
       }
     }
-  }, [termData.courses, fetchDashboardData, accessToken, refreshToken]);
+  }, [
+    termData.courses,
+    fetchDashboardData,
+    accessToken,
+    refreshToken,
+    termData.name,
+  ]);
 
-  const handleAddCourse = useCallback((courseId?: string, course?: Course) => {
-    if (showForm && courseId === selectedCourseId) {
-      setShowForm(false);
-      setIsEdit(false);
-      setCourse(null);
-      setCourseId(null);
-      setSelectedCourseId(null);
-    } else {
-      setIsEdit(course !== undefined);
-      setShowForm(true);
-      setIsFormOpen(course === undefined);
-      setCourse(course || null);
-      setCourseId(courseId || null);
-      setSelectedCourseId(courseId || null);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-    }
-  }, []);
+  const handleAddCourse = useCallback(
+    (courseId?: string, course?: Course) => {
+      if (showForm && courseId === selectedCourseId) {
+        setShowForm(false);
+        setIsEdit(false);
+        setSelectedCourse(null);
+        setSelectedCourseId(null);
+      } else {
+        setIsEdit(course !== undefined);
+        setShowForm(true);
+        setIsFormOpen(course === undefined);
+        setSelectedCourse(course || null);
+        setSelectedCourseId(courseId || null);
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      }
+    },
+    [showForm, selectedCourseId]
+  );
 
   const handleCloseForm = useCallback(() => {
     setShowForm(false);
     setIsEdit(false);
     setSelectedCourse(null);
     setSelectedCourseId(null);
+    setIsFormOpen(false);
   }, []);
 
   const handleAddOrCancel = () => {
     if (isFormOpen) {
-      // If the form is open, close it
       handleCloseForm();
     } else {
-      // If the form is closed, open it
       handleAddCourse();
     }
   };
 
-  // Sorting
   const sortCourses = (courses: { [key: string]: Course }) => {
     return Object.entries(courses).sort(([, courseA], [, courseB]) => {
       if (courseA.grade === null && courseB.grade === null) return 0;

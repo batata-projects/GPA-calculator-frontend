@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useDashboard } from "../../hooks/useDashboard.ts";
 import httpClient from "../../httpClient.tsx";
 import { useNavigate } from "react-router-dom";
+import axios, { AxiosError } from "axios";
 
 interface AddCourseFormProps {
   term: string;
@@ -335,7 +336,9 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           <select
             id="grade"
             value={graded ? grade : pass}
-            onChange={(e) => (graded ? setGrade(e.target.value) : setPass(e.target.value))}
+            onChange={(e) =>
+              graded ? setGrade(e.target.value) : setPass(e.target.value)
+            }
             className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded text-white"
           >
             <option value="">Select {graded ? "Grade" : "Status"}</option>
