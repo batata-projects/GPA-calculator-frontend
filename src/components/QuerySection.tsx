@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import AddCourseForm from "../components/TermsSectionComponents/AddCourseForm.tsx";
+import { useDashboard } from "../hooks/useDashboard.ts";
 
 interface Course {
   subject: string;
@@ -9,24 +10,6 @@ interface Course {
   credits: number;
   grade: number;
   graded: boolean;
-}
-
-interface Terms {
-  [key: string]: {
-    name: string;
-    gpa: number;
-    credits: number;
-    courses: {
-      [key: string]: Course;
-    };
-  };
-}
-
-interface QuerySectionProps {
-  terms: Terms;
-  user_id: string | null;
-  refreshToken: string | number | boolean;
-  accessToken: string | null;
 }
 
 const termMapping: { [key: string]: string } = {
@@ -56,12 +39,7 @@ interface FilteredCourses {
   [key: string]: Course | { [key: string]: Course };
 }
 
-const QuerySection: React.FC<QuerySectionProps> = ({
-  terms,
-  user_id,
-  accessToken,
-  refreshToken,
-}) => {
+const QuerySection: React.FC = () => {
   const resultsCardRef = useRef<HTMLDivElement>(null);
   const editFormRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -73,6 +51,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   const [showResultsCard, setShowResultsCard] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const { terms } = useDashboard();
 
   // useEffects
   useEffect(() => {
@@ -84,6 +63,11 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       editFormRef.current.scrollIntoView(scrollOptions);
     }
   }, [selectedCourse]);
+
+  useEffect(() => {
+    setQuery("");
+    setShowResultsCard(false);
+  }, [terms]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -607,9 +591,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
             <div ref={editFormRef}>
               {selectedCourse && (
                 <AddCourseForm
-                  user_id={user_id}
-                  accessToken={accessToken}
-                  refreshToken={refreshToken}
                   term={String(selectedCourse.term)}
                   onClose={handleCloseForm}
                   isEdit={true}
