@@ -16,18 +16,19 @@ const TermsSection: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center mt-[5%]">
-      <h2 className="text-[36px] font-bold mb-8 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110">
+    <div className="flex flex-col items-center mt-12 max-w-4xl mx-auto">
+      <h2 className="text-3xl font-bold mb-6 focus:outline-none transition duration-300 ease-in-out transform hover:scale-105">
         Terms
       </h2>
       <button
         onClick={handleOpenForm}
-        className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
+        title="Add Term"
+        className="focus:outline-none transition duration-300 ease-in-out transform hover:scale-105 mb-8"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="72"
-          height="69"
+          width="60"
+          height="57"
           viewBox="0 0 72 69"
           fill="none"
         >
@@ -43,12 +44,15 @@ const TermsSection: React.FC = () => {
           />
         </svg>
       </button>
-      {Object.entries(terms)
+      <div className="space-y-6 w-full">
+         {Object.entries(terms)
         .sort(([termA], [termB]) => termB.localeCompare(termA))
         .map(([term, termData]) => (
           <TermCard key={term} term={term} termData={termData} />
         ))}
-      {isFormOpen && <TermForm onClose={handleCloseForm} />}
+      </div>
+            {isFormOpen && <TermForm onClose={handleCloseForm} />}
+
     </div>
   );
 };

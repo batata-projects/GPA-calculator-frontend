@@ -11,7 +11,7 @@ const OverallSection: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center mt-[70px]">
+    <div className="flex flex-col items-center justify-center mt-12">
       <GPAKnob value={user.gpa} />
     </div>
   );
