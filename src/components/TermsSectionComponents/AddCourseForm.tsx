@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDashboard } from "../../hooks/useDashboard.ts";
 import httpClient from "../../httpClient.tsx";
+import { useNavigate } from "react-router-dom";
 
 interface AddCourseFormProps {
   term: string;
   onClose: () => void;
   isEdit: boolean;
   course: Course | null;
+  courseId: string | null;
 }
 
 interface Course {
-  id?: string;
   subject: string;
   course_code: string;
   term: number;
@@ -56,29 +57,32 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   onClose,
   isEdit,
   course,
+  courseId,
 }) => {
   const { fetchDashboardData, accessToken, refreshToken, clearTokens, user } =
     useDashboard();
   const [subject, setSubject] = useState(course?.subject || "");
   const [courseCode, setCourseCode] = useState(course?.course_code || "");
   const [credits, setCredits] = useState(course?.credits.toString() || "");
-  const [grade, setGrade] = useState("");
-  const [graded, setGraded] = useState(course?.graded.toString() || "true");
-  const [pass, setPass] = useState("not_complete");
+  const [grade, setGrade] = useState<string>("");
+  const [graded, setGraded] = useState(course?.graded ?? true);
+  const [pass, setPass] = useState<string>("not_complete");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (course) {
       setSubject(course.subject);
       setCourseCode(course.course_code);
       setCredits(course.credits.toString());
-      setGraded(course.graded.toString());
+      setGraded(course.graded);
 
       if (course.graded) {
         setGrade(
-          course.grade !== null ? letterGrades[course.grade] : "NOT_COMPLETE"
+          course.grade !== null
+            ? letterGrades[course.grade] || "NOT_COMPLETE"
+            : "NOT_COMPLETE"
         );
-        setPass("");
       } else {
         setGrade("");
         setPass(
@@ -95,10 +99,10 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   }, [course]);
 
   const handleDelete = useCallback(async () => {
-    if (!course?.id) return;
+    if (!courseId) return;
 
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${course.subject}-${course.course_code} from this term?`
+      `Are you sure you want to delete ${subject}-${courseCode} from this term?`
     );
     if (confirmDelete) {
       try {
@@ -106,7 +110,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           throw new Error("Missing authentication tokens");
         }
 
-        const response = await httpClient.delete(`/courses/${course.id}`, {
+        const response = await httpClient.delete(`/courses/${courseId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "refresh-token": refreshToken,
@@ -124,17 +128,20 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
         setError("An error occurred while deleting the course.");
         if (error.response && error.response.status === 401) {
           clearTokens();
-          // Redirect to login page
+          navigate("/");
         }
       }
     }
   }, [
-    course,
-    fetchDashboardData,
-    onClose,
+    courseId,
+    subject,
+    courseCode,
     accessToken,
     refreshToken,
+    fetchDashboardData,
+    onClose,
     clearTokens,
+    navigate,
   ]);
 
   const handleSubmit = useCallback(
@@ -152,7 +159,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
         const termNumber = parseInt(term, 10);
         let numericGrade: number | null = null;
 
-        if (graded === "true") {
+        if (graded) {
           numericGrade = grade === "NOT_COMPLETE" ? null : gradeValues[grade];
         } else {
           numericGrade =
@@ -172,7 +179,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           term: termNumber,
           credits: parseInt(credits, 10),
           grade: numericGrade,
-          graded: graded === "true",
+          graded,
         };
 
         const headers = {
@@ -181,8 +188,8 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
         };
 
         let response;
-        if (isEdit && course?.id) {
-          response = await httpClient.put(`/courses/${course.id}`, courseData, {
+        if (isEdit && courseId) {
+          response = await httpClient.put(`/courses/${courseId}`, courseData, {
             headers,
           });
         } else {
@@ -203,7 +210,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           if (error.response.status === 401) {
             setError("Your session has expired. Please log in again.");
             clearTokens();
-            // Redirect to login page or show login modal
+            navigate("/");
           } else if (error.response.data && error.response.data.message) {
             setError(error.response.data.message);
           } else {
@@ -229,13 +236,14 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
       pass,
       term,
       isEdit,
-      course,
+      courseId,
       accessToken,
       refreshToken,
       fetchDashboardData,
       onClose,
       clearTokens,
       user,
+      navigate,
     ]
   );
 
@@ -272,7 +280,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
           required
           className="w-full px-3 py-2 border border-gray-300 rounded"
         />
-        {graded === "true" ? (
+        {graded ? (
           <select
             value={grade}
             onChange={(e) => setGrade(e.target.value)}
@@ -307,9 +315,8 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             <input
               type="radio"
               id="graded-yes"
-              value="true"
-              checked={graded === "true"}
-              onChange={() => setGraded("true")}
+              checked={graded}
+              onChange={() => setGraded(true)}
               className="mr-2"
             />
             <label htmlFor="graded-yes" className="text-gray-800">
@@ -320,9 +327,8 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             <input
               type="radio"
               id="graded-no"
-              value="false"
-              checked={graded === "false"}
-              onChange={() => setGraded("false")}
+              checked={!graded}
+              onChange={() => setGraded(false)}
               className="mr-2"
             />
             <label htmlFor="graded-no" className="text-gray-800">
