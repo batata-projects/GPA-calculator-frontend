@@ -48,7 +48,7 @@ const TermsSection: React.FC = () => {
         .map(([term, termData]) => (
           <TermCard key={term} term={term} termData={termData} />
         ))}
-      {/* {isFormOpen && <TermForm onClose={handleCloseForm} />} */}
+      {isFormOpen && <TermForm onClose={handleCloseForm} />}
     </div>
   );
 };
