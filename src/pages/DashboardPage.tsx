@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import OverallSection from "../components/OverallSection.tsx";
 import TermsSection from "../components/TermsSection.tsx";
 import QuerySection from "../components/QuerySection.tsx";
@@ -7,19 +8,21 @@ import Loader from "../components/Loader.tsx";
 import { useDashboard } from "../hooks/useDashboard.ts";
 
 const DashboardPage: React.FC = () => {
-  const { user, terms, fetchDashboardData } = useDashboard();
-  const userId = localStorage.getItem("user_id");
-  const accessToken = localStorage.getItem("access_token");
-  const refreshToken = localStorage.getItem("refresh_token");
-
+  const { user, fetchDashboardData, accessToken, refreshToken } =
+    useDashboard();
+  const navigate = useNavigate();
   const [showToTop, setShowToTop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isButtonLeaving, setIsButtonLeaving] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    if (!accessToken || !refreshToken) {
+      navigate("/");
+    } else {
+      fetchDashboardData();
+    }
+  }, [fetchDashboardData, accessToken, refreshToken, navigate]);
 
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -103,12 +106,7 @@ const DashboardPage: React.FC = () => {
         <div className="flex flex-col">
           <OverallSection />
           <TermsSection />
-          <QuerySection
-            terms={terms}
-            user_id={userId || ""}
-            accessToken={accessToken || ""}
-            refreshToken={refreshToken || ""}
-          />
+          <QuerySection />
         </div>
       </div>
       {showToTop && (
