@@ -51,11 +51,12 @@ const getGradeDisplay = (grade: number | null, graded: boolean): string => {
 };
 
 const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
-  const { fetchDashboardData } = useDashboard();
+  const { fetchDashboardData, accessToken, refreshToken } = useDashboard();
   const cardRef = useRef<HTMLDivElement>(null);
   const [showForm, setShowForm] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const handleDeleteTerm = useCallback(async () => {
@@ -66,8 +67,13 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
     if (confirmDelete) {
       try {
         await Promise.all(
-          Object.values(termData.courses).map((course) =>
-            httpClient.delete(`courses/${course.id}`)
+          Object.entries(termData.courses).map(([courseId, course]) =>
+            httpClient.delete(`courses/${courseId}`, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                ...(refreshToken && { "refresh-token": refreshToken }),
+              },
+            })
           )
         );
         await fetchDashboardData();
@@ -76,12 +82,13 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
         console.error("Error deleting term:", error);
       }
     }
-  }, [termData.courses, fetchDashboardData]);
+  }, [termData.courses, fetchDashboardData, accessToken, refreshToken]);
 
-  const handleAddCourse = useCallback((course?: Course) => {
+  const handleAddCourse = useCallback((courseId?: string, course?: Course) => {
     setIsEdit(!!course);
     setShowForm(true);
     setSelectedCourse(course || null);
+    setSelectedCourseId(courseId || null);
     setTimeout(() => {
       cardRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }, 100);
@@ -91,6 +98,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
     setShowForm(false);
     setIsEdit(false);
     setSelectedCourse(null);
+    setSelectedCourseId(null);
   }, []);
 
   const sortCourses = useCallback((courses: { [key: string]: Course }) => {
@@ -121,13 +129,13 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
                 className="flex flex-row items-center md:items-center space-x-2 focus:outline-none transition duration-300 ease-in-out transform hover:scale-110"
               >
                 <button
-                  onClick={() => handleAddCourse(course)}
+                  onClick={() => handleAddCourse(courseId, course)}
                   className="bg-white text-black rounded-[40px] py-1 px-5 flex justify-center items-center text-[17px] min-w-[150px] h-[45px]"
                 >
                   {course.subject} {course.course_code}
                 </button>
                 <button
-                  onClick={() => handleAddCourse(course)}
+                  onClick={() => handleAddCourse(courseId, course)}
                   className={`bg-white text-black rounded-full w-[60px] px-2 h-[45px] flex justify-center items-center text-[17px] ${
                     course.grade === null ? "not-completed" : ""
                   }`}
@@ -198,6 +206,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
           term={term}
           isEdit={isEdit}
           course={selectedCourse}
+          courseId={selectedCourseId}
         />
       )}
     </div>
