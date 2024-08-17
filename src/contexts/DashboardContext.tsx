@@ -57,6 +57,7 @@ interface DashboardContextType {
     email: string,
     password: string
   ) => Promise<void>;
+  forgetPassword: (email: string) => Promise<void>;
 }
 
 export const DashboardContext = createContext<DashboardContextType | undefined>(
@@ -188,6 +189,15 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
     []
   );
 
+  const forgetPassword = useCallback(async (email: string) => {
+    try {
+      await httpClient.post("/auth/forget-password", { email });
+    } catch (error) {
+      console.error("Forget password error:", error);
+      throw error;
+    }
+  }, []);
+
   return (
     <DashboardContext.Provider
       value={{
@@ -201,6 +211,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
         clearTokens,
         login,
         register,
+        forgetPassword,
       }}
     >
       {children}

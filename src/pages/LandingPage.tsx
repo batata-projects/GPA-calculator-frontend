@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from "react";
 import LoginForm from "../components/landing-page/LoginForm.tsx";
 import RegisterForm from "../components/landing-page/RegisterForm.tsx";
+import ForgetPasswordForm from "../components/landing-page/ForgetPassForm.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 import ReadMore from "../components/landing-page/ReadMore.tsx";
 import { useDashboard } from "../hooks/useDashboard.ts";
 
 const LandingPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [formType, setFormType] = useState<
+    "login" | "register" | "forgetPassword"
+  >("login");
   const [error, setError] = useState<string | null>(null);
-  const { login, register } = useDashboard();
+  const { login, register, forgetPassword } = useDashboard();
 
   useEffect(() => {
-    document.title = isLogin
-      ? "Login - GPA Calculator"
-      : "Register - GPA Calculator";
-  }, [isLogin]);
+    document.title =
+      formType === "login"
+        ? "Login - GPA Calculator"
+        : formType === "register"
+        ? "Register - GPA Calculator"
+        : "Forget Password - GPA Calculator";
+  }, [formType]);
 
-  const handleToggleForm = () => {
-    setIsLogin(!isLogin);
+  const handleToggleForm = (type: "login" | "register" | "forgetPassword") => {
+    setFormType(type);
     setError(null);
   };
 
@@ -61,7 +67,16 @@ const LandingPage = () => {
         formData.email,
         formData.password
       );
-      setIsLogin(true);
+      setFormType("login");
+    } catch (error: any) {
+      handleError(error);
+    }
+  };
+
+  const handleForgetPassword = async (email: string): Promise<void> => {
+    try {
+      await forgetPassword(email);
+      setError("Password reset instructions sent to your email.");
     } catch (error: any) {
       handleError(error);
     }
@@ -108,8 +123,7 @@ const LandingPage = () => {
       <div className="lg:w-5/12 w-full flex min-h-screen justify-center">
         <div className="w-[80%] max-w-md relative mt-[120px]">
           <AnimatePresence>
-            {isLogin ? (
-              // login
+            {formType === "login" && (
               <motion.div
                 key="login"
                 initial={{ opacity: 0, x: 100 }}
@@ -119,9 +133,11 @@ const LandingPage = () => {
                 className="absolute inset-0"
               >
                 <LoginForm onSubmit={handleLogin} error={error} />
-                {error && <p className="text-red-500 text-sm">{error}</p>}
                 <div className="text-center mt-2">
-                  <div className="mb-2 cursor-pointer underline">
+                  <div
+                    className="mb-2 cursor-pointer underline"
+                    onClick={() => handleToggleForm("forgetPassword")}
+                  >
                     Forget Password?
                   </div>
                   <div className="text-xs mb-2">
@@ -132,15 +148,15 @@ const LandingPage = () => {
                     Don't have an account?
                   </div>
                   <button
-                    onClick={handleToggleForm}
+                    onClick={() => handleToggleForm("register")}
                     className="text-blue-400 hover:cursor-pointer underline transition duration-300 mb-3"
                   >
                     Register
                   </button>
                 </div>
               </motion.div>
-            ) : (
-              // register
+            )}
+            {formType === "register" && (
               <motion.div
                 key="register"
                 initial={{ opacity: 0, x: 100 }}
@@ -149,9 +165,8 @@ const LandingPage = () => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0"
               >
-                <div className=" flex flex-shrink flex-col">
+                <div className="flex flex-shrink flex-col">
                   <RegisterForm onSubmit={handleRegister} error={error} />
-                  {error && <p className="text-red-500 text-xs">{error}</p>}
                   <div className="text-center mt-2">
                     <div className="text-sm mb-2">
                       Please verify your account after registering to be able to
@@ -161,12 +176,38 @@ const LandingPage = () => {
                       Have an Account?
                     </div>
                     <button
-                      onClick={handleToggleForm}
+                      onClick={() => handleToggleForm("login")}
                       className="text-blue-400 hover:cursor-pointer underline transition duration-300 mb-3"
                     >
                       Login
                     </button>
                   </div>
+                </div>
+              </motion.div>
+            )}
+            {formType === "forgetPassword" && (
+              <motion.div
+                key="forgetPassword"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0"
+              >
+                <ForgetPasswordForm
+                  onSubmit={handleForgetPassword}
+                  error={error}
+                />
+                <div className="text-center mt-2">
+                  <div className="text-sm text-gray-400 mb-1">
+                    Remember your password?
+                  </div>
+                  <button
+                    onClick={() => handleToggleForm("login")}
+                    className="text-blue-400 hover:cursor-pointer underline transition duration-300 mb-3"
+                  >
+                    Back to Login
+                  </button>
                 </div>
               </motion.div>
             )}
