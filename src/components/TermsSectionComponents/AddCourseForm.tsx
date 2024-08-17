@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
+import React, { useState, useEffect, useCallback } from "react";
+import { useDashboard } from "../../hooks/useDashboard.ts";
 import httpClient from "../../httpClient.tsx";
+import { useNavigate } from "react-router-dom";
+import axios, { AxiosError } from "axios";
 
 interface AddCourseFormProps {
-  user_id: string | null;
-  accessToken: string | null;
-  refreshToken: string | number | boolean;
-  term: string | null;
+  term: string;
   onClose: () => void;
-  isEdit: boolean | null;
+  isEdit: boolean;
   course: Course | null;
   courseId: string | null;
 }
@@ -55,58 +54,39 @@ const gradeValues: { [key: string]: number } = {
 };
 
 const AddCourseForm: React.FC<AddCourseFormProps> = ({
-  user_id,
-  accessToken,
-  refreshToken,
   term,
   onClose,
   isEdit,
   course,
   courseId,
 }) => {
+  const { fetchDashboardData, accessToken, refreshToken, clearTokens, user } =
+    useDashboard();
   const [subject, setSubject] = useState(course?.subject || "");
   const [courseCode, setCourseCode] = useState(course?.course_code || "");
   const [credits, setCredits] = useState(course?.credits.toString() || "");
-  const [grade, setGrade] = useState(
-    course
-      ? course.graded
-        ? course.grade !== null
-          ? letterGrades[course.grade] || "NOT_COMPLETE"
-          : "NOT_COMPLETE"
-        : ""
-      : ""
-  );
-  const [graded, setGraded] = useState(course?.graded.toString() || "true");
-  const [status, setStatus] = useState(
-    course?.graded
-      ? ""
-      : course?.grade === 1
-      ? "pass"
-      : course?.grade === 0
-      ? "fail"
-      : course?.grade === -1
-      ? "withdraw"
-      : "not_complete"
-  );
+  const [grade, setGrade] = useState<string>("");
+  const [graded, setGraded] = useState(course?.graded ?? true);
+  const [pass, setPass] = useState<string>("not_complete");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setSubject(course?.subject || "");
-    setCourseCode(course?.course_code || "");
-    setCredits(course?.credits.toString() || "");
-    setGraded(course?.graded.toString() || "true");
-
     if (course) {
+      setSubject(course.subject);
+      setCourseCode(course.course_code);
+      setCredits(course.credits.toString());
+      setGraded(course.graded);
+
       if (course.graded) {
         setGrade(
           course.grade !== null
             ? letterGrades[course.grade] || "NOT_COMPLETE"
             : "NOT_COMPLETE"
         );
-        setStatus("");
       } else {
         setGrade("");
-        setStatus(
+        setPass(
           course.grade === 1
             ? "pass"
             : course.grade === 0
@@ -116,9 +96,6 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
             : "not_complete"
         );
       }
-    } else {
-      setGrade("");
-      setStatus("");
     }
   }, [course]);
 
@@ -130,18 +107,15 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<any>;
       if (axiosError.response) {
-        // Server responded with a status code outside of 2xx range
         errorMessage =
           axiosError.response.data?.detail ||
           axiosError.response.data?.message ||
           axiosError.response.data ||
           "An error occurred while processing your request.";
       } else if (axiosError.request) {
-        // Request was made but no response was received
         errorMessage =
           "No response received from server. Please check your connection.";
       } else {
-        // Something happened in setting up the request that triggered an Error
         errorMessage =
           axiosError.message || "An error occurred while sending the request.";
       }
@@ -152,94 +126,133 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
     setError(errorMessage);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
+    if (!courseId) return;
+
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${course?.subject}-${courseCode} from this term?`
+      `Are you sure you want to delete ${subject}-${courseCode} from this term?`
     );
     if (confirmDelete) {
       try {
-        if (courseId) {
-          const response = await httpClient.delete(`/courses/${courseId}`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "refresh-token": refreshToken,
-            },
-          });
+        if (!accessToken || !refreshToken) {
+          throw new Error("Missing authentication tokens");
+        }
 
-          if (response.status === 200) {
-            onClose();
-            window.location.reload();
-          } else {
-            setError(
-              response.data.message ||
-                "An error occurred while deleting the course."
-            );
-          }
+        const response = await httpClient.delete(`/courses/${courseId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "refresh-token": refreshToken,
+          },
+        });
+
+        if (response.status === 200) {
+          await fetchDashboardData();
+          onClose();
+        } else {
+          setError("Failed to delete course. Please try again.");
         }
       } catch (error) {
         handleError(error);
       }
     }
-  };
+  }, [
+    courseId,
+    subject,
+    courseCode,
+    accessToken,
+    refreshToken,
+    fetchDashboardData,
+    onClose,
+  ]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(""); // Clear any existing errors
-    try {
-      const termNumber = term !== null ? parseInt(term, 10) : null;
-      let numericGrade: number | null = null;
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(""); // Clear any existing errors
+      try {
+        if (!accessToken || !refreshToken) {
+          throw new Error("Missing authentication tokens");
+        }
 
-      if (graded === "true") {
-        numericGrade = grade === "NOT_COMPLETE" ? null : gradeValues[grade];
-      } else {
-        numericGrade =
-          status === "pass"
-            ? 1
-            : status === "fail"
-            ? 0
-            : status === "withdraw"
-            ? -1
-            : null;
+        if (!user || !user.id) {
+          throw new Error("User information is missing");
+        }
+
+        const termNumber = parseInt(term, 10);
+        let numericGrade: number | null = null;
+
+        if (graded) {
+          numericGrade = grade === "NOT_COMPLETE" ? null : gradeValues[grade];
+        } else {
+          numericGrade =
+            pass === "pass"
+              ? 1
+              : pass === "fail"
+              ? 0
+              : pass === "withdraw"
+              ? -1
+              : null;
+        }
+
+        const courseData = {
+          user_id: user.id,
+          subject,
+          course_code: courseCode,
+          term: termNumber,
+          credits: parseInt(credits, 10),
+          grade: numericGrade,
+          graded,
+        };
+
+        const headers = {
+          Authorization: `Bearer ${accessToken}`,
+          "refresh-token": refreshToken,
+        };
+
+        let response;
+        if (isEdit && courseId) {
+          response = await httpClient.put(`/courses/${courseId}`, courseData, {
+            headers,
+          });
+        } else {
+          response = await httpClient.post("/courses/", courseData, {
+            headers,
+          });
+        }
+
+        if (response.status === 200 || response.status === 201) {
+          await fetchDashboardData();
+          onClose();
+        } else {
+          throw new Error("Unexpected response status: " + response.status);
+        }
+      } catch (error) {
+        handleError(error);
+        if (error.response && error.response.status === 401) {
+          clearTokens();
+          navigate("/");
+        }
       }
-
-      const courseData = {
-        user_id,
-        subject,
-        course_code: courseCode,
-        term: termNumber,
-        credits: parseFloat(credits),
-        grade: numericGrade,
-        graded: graded === "true",
-      };
-
-      let response;
-      if (isEdit && courseId) {
-        response = await httpClient.put(`/courses/${courseId}`, courseData, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "refresh-token": refreshToken,
-          },
-        });
-      } else {
-        response = await httpClient.post("/courses/", courseData, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "refresh-token": refreshToken,
-          },
-        });
-      }
-
-      if (response.status === 200 || response.status === 201) {
-        onClose();
-        window.location.reload();
-      } else {
-        // This block will likely not be reached due to Axios throwing an error for non-2xx responses
-        setError(response.data?.message || "An unexpected error occurred.");
-      }
-    } catch (error) {
-      handleError(error);
-    }
-  };
+    },
+    [
+      subject,
+      courseCode,
+      credits,
+      grade,
+      graded,
+      pass,
+      term,
+      isEdit,
+      courseId,
+      accessToken,
+      refreshToken,
+      fetchDashboardData,
+      onClose,
+      clearTokens,
+      user,
+      navigate,
+    ]
+  );
 
   return (
     <div className="bg-white/10 rounded-lg p-4 mt-4 text-white">
@@ -298,9 +311,8 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
                 type="radio"
                 className="form-radio text-blue-500"
                 name="gradingType"
-                value="true"
-                checked={graded === "true"}
-                onChange={() => setGraded("true")}
+                checked={graded}
+                onChange={() => setGraded(true)}
               />
               <span className="ml-2">Graded</span>
             </label>
@@ -309,9 +321,8 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
                 type="radio"
                 className="form-radio text-blue-500"
                 name="gradingType"
-                value="false"
-                checked={graded === "false"}
-                onChange={() => setGraded("false")}
+                checked={!graded}
+                onChange={() => setGraded(false)}
               />
               <span className="ml-2">Pass/Fail</span>
             </label>
@@ -320,22 +331,18 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
 
         <div>
           <label htmlFor="grade" className="block text-sm font-medium mb-1">
-            {graded === "true" ? "Grade" : "Status"}
+            {graded ? "Grade" : "Status"}
           </label>
           <select
             id="grade"
-            value={graded === "true" ? grade : status}
+            value={graded ? grade : pass}
             onChange={(e) =>
-              graded === "true"
-                ? setGrade(e.target.value)
-                : setStatus(e.target.value)
+              graded ? setGrade(e.target.value) : setPass(e.target.value)
             }
             className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded text-white"
           >
-            <option value="">
-              Select {graded === "true" ? "Grade" : "Status"}
-            </option>
-            {graded === "true" ? (
+            <option value="">Select {graded ? "Grade" : "Status"}</option>
+            {graded ? (
               Object.entries(gradeValues)
                 .sort(([, a], [, b]) => b - a)
                 .map(([letterGrade]) => (

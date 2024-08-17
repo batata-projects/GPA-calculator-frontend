@@ -1,21 +1,15 @@
 import React from "react";
+import { useDashboard } from "../hooks/useDashboard.ts";
 import GPAKnob from "./OverallSectionComponents/GPAKnob.tsx";
+import Loader from "./Loader.tsx";
 
-interface User {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  credits: number;
-  grade: number;
-  gpa: number;
-}
+const OverallSection: React.FC = () => {
+  const { user } = useDashboard();
 
-interface OverallSectionProps {
-  user: User;
-}
+  if (!user) {
+    return <Loader />;
+  }
 
-const OverallSection: React.FC<OverallSectionProps> = ({ user }) => {
   return (
     <div className="flex flex-col items-center justify-center mt-12">
       <GPAKnob value={user.gpa} />

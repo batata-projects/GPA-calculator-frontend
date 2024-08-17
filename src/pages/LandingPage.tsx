@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import LoginForm from "../components/landing-page/LoginForm.tsx";
 import RegisterForm from "../components/landing-page/RegisterForm.tsx";
-import httpClient from "../httpClient.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 import ReadMore from "../components/landing-page/ReadMore.tsx";
+import { useDashboard } from "../hooks/useDashboard.ts";
 
 const LandingPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const { login, register } = useDashboard();
 
   useEffect(() => {
     document.title = isLogin
@@ -22,36 +21,30 @@ const LandingPage = () => {
     setError(null);
   };
 
+  const handleError = (error: any) => {
+    if (error.response) {
+      if (error.response.status === 400) {
+        setError(error.response.data.detail);
+      } else if (error.response.status === 422) {
+        setError(error.response.data.detail[0].msg);
+      } else {
+        setError("An error occurred. Please try again.");
+      }
+    } else if (error.request) {
+      setError("No response from the server. Please try again.");
+    } else {
+      setError("An error occurred. Please try again.");
+    }
+  };
+
   const handleLogin = async (formData: {
     email: string;
     password: string;
   }): Promise<void> => {
     try {
-      const response = await httpClient.post("/auth/login", formData);
-
-      const access_token = response.data.data.session.access_token;
-      const refresh_token = response.data.data.session.refresh_token;
-      const user_id = response.data.data.user.id;
-
-      localStorage.setItem("access_token", access_token);
-      localStorage.setItem("refresh_token", refresh_token);
-      localStorage.setItem("user_id", user_id);
-
-      navigate("/dashboard", { state: { user_id } });
+      await login(formData.email, formData.password);
     } catch (error: any) {
-      if (error.response) {
-        if (error.response.status === 400) {
-          setError(error.response.data.detail);
-        } else if (error.response.status === 422) {
-          setError(error.response.data.detail[0].msg);
-        } else {
-          setError("An error occurred. Please try again.");
-        }
-      } else if (error.request) {
-        setError("No response from the server. Please try again.");
-      } else {
-        setError("An error occurred. Please try again.");
-      }
+      handleError(error);
     }
   };
 
@@ -62,23 +55,15 @@ const LandingPage = () => {
     password: string;
   }): Promise<void> => {
     try {
-      await httpClient.post("/auth/register", formData);
-
-      navigate("/");
+      await register(
+        formData.first_name,
+        formData.last_name,
+        formData.email,
+        formData.password
+      );
+      setIsLogin(true);
     } catch (error: any) {
-      if (error.response) {
-        if (error.response.status === 400) {
-          setError(error.response.data.detail);
-        } else if (error.response.status === 422) {
-          setError(error.response.data.detail[0].msg);
-        } else {
-          setError("An error occurred. Please try again.");
-        }
-      } else if (error.request) {
-        setError("No response from the server. Please try again.");
-      } else {
-        setError("An error occurred. Please try again.");
-      }
+      handleError(error);
     }
   };
 

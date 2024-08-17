@@ -1,32 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AddCourseForm from "../components/TermsSectionComponents/AddCourseForm.tsx";
+import { useDashboard } from "../hooks/useDashboard.ts";
 
 interface Course {
   subject: string;
   course_code: string;
   term: number;
   credits: number;
-  grade: number;
+  grade: number | null;
   graded: boolean;
-}
-
-interface Terms {
-  [key: string]: {
-    name: string;
-    gpa: number;
-    credits: number;
-    courses: {
-      [key: string]: Course;
-    };
-  };
-}
-
-interface QuerySectionProps {
-  terms: Terms;
-  user_id: string | null;
-  refreshToken: string | number | boolean;
-  accessToken: string | null;
 }
 
 const termMapping: { [key: string]: string } = {
@@ -52,31 +35,28 @@ const gradeMapping: { [key: number]: string } = {
   "-1": "W",
 };
 
+const gradeOrder = [
+  "A+",
+  "A",
+  "A-",
+  "B+",
+  "B",
+  "B-",
+  "C+",
+  "C",
+  "C-",
+  "D+",
+  "D",
+  "F",
+  "W",
+  "NC",
+];
+
 interface FilteredCourses {
   [key: string]: Course | { [key: string]: Course };
 }
 
-const gradeOrder = [
-  "F",
-  "D",
-  "D+",
-  "C-",
-  "C",
-  "C+",
-  "B-",
-  "B",
-  "B+",
-  "A-",
-  "A",
-  "A+",
-];
-
-const QuerySection: React.FC<QuerySectionProps> = ({
-  terms,
-  user_id,
-  accessToken,
-  refreshToken,
-}) => {
+const QuerySection: React.FC = () => {
   const resultsCardRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [filteredCourses, setFilteredCourses] = useState<FilteredCourses>({});
@@ -85,6 +65,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
   const [showResultsCard, setShowResultsCard] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const { terms } = useDashboard();
   const [isClearing, setIsClearing] = useState(false);
 
   const courseVariants = {
@@ -120,7 +101,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     },
   };
 
-  // useEffect for scrolling to results
   useEffect(() => {
     if (showResultsCard && resultsCardRef.current) {
       const timer = setTimeout(() => {
@@ -128,7 +108,7 @@ const QuerySection: React.FC<QuerySectionProps> = ({
           behavior: "smooth",
           block: "end",
         });
-      }, 100); // Short delay to ensure the content is rendered
+      }, 100);
 
       return () => clearTimeout(timer);
     }
@@ -142,6 +122,11 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       });
     }
   };
+
+  useEffect(() => {
+    setQuery("");
+    setShowResultsCard(false);
+  }, [terms]);
 
   useEffect(() => {
     if (!selectedCourse) {
@@ -283,7 +268,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
     const normalizedQuery = searchQuery.toLowerCase().trim();
     const gradeFilter = parseGradeQuery(normalizedQuery);
 
-    // Check if the query matches the full course name pattern (subject + code)
     const fullCourseNameRegex = /^([a-z]+)\s*(\d+)$/i;
     const fullCourseNameMatch = normalizedQuery.match(fullCourseNameRegex);
 
@@ -303,29 +287,27 @@ const QuerySection: React.FC<QuerySectionProps> = ({
 
           switch (gradeFilter.type) {
             case "gt":
-              matches = courseGradeIndex > filterGradeIndex;
-              break;
-            case "gte":
-              matches = courseGradeIndex >= filterGradeIndex;
-              break;
-            case "lt":
               matches = courseGradeIndex < filterGradeIndex;
               break;
-            case "lte":
+            case "gte":
               matches = courseGradeIndex <= filterGradeIndex;
+              break;
+            case "lt":
+              matches = courseGradeIndex > filterGradeIndex;
+              break;
+            case "lte":
+              matches = courseGradeIndex >= filterGradeIndex;
               break;
             case "exact":
               matches = gradeDisplay === gradeFilter.value;
               break;
           }
         } else if (fullCourseNameMatch) {
-          // If we have a full course name match, compare it directly
           const [, querySubject, queryCourseCode] = fullCourseNameMatch;
           matches =
             subject.toLowerCase() === querySubject.toLowerCase() &&
             course_code.toLowerCase() === queryCourseCode.toLowerCase();
         } else {
-          // If it's not a grade filter or full course name, use the existing logic
           matches =
             subject.toLowerCase() === normalizedQuery ||
             course_code.toLowerCase() === normalizedQuery ||
@@ -338,7 +320,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       });
     });
 
-    // Apply sorting if necessary
     if (filters.includes("gradeAscending")) {
       filteredCourses = Object.fromEntries(
         Object.entries(filteredCourses).sort((a, b) => {
@@ -357,7 +338,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
       );
     }
 
-    // Apply grouping if necessary
     if (filters.includes("term")) {
       const groupedCourses: { [key: string]: { [key: string]: Course } } = {};
       Object.entries(filteredCourses).forEach(([courseKey, course]) => {
@@ -680,9 +660,6 @@ const QuerySection: React.FC<QuerySectionProps> = ({
                       transition={{ duration: 0.3 }}
                     >
                       <AddCourseForm
-                        user_id={user_id}
-                        accessToken={accessToken}
-                        refreshToken={refreshToken}
                         term={String(selectedCourse.term)}
                         onClose={handleCloseForm}
                         isEdit={true}

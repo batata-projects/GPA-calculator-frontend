@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useDashboard } from "../../hooks/useDashboard.ts";
 import AddCourseForm from "./AddCourseForm.tsx";
 import httpClient from "../../httpClient.tsx";
 
 interface Course {
+  id: string;
   subject: string;
   course_code: string;
   term: number;
@@ -11,21 +13,16 @@ interface Course {
   graded: boolean;
 }
 
-interface TermData {
-  name: string;
-  gpa: number;
-  credits: number;
-  courses: {
-    [key: string]: Course;
-  };
-}
-
 interface TermCardProps {
   term: string;
-  termData: TermData;
-  user_id: string | null;
-  accessToken: string | null;
-  refreshToken: string | number | boolean;
+  termData: {
+    name: string;
+    gpa: number;
+    credits: number;
+    courses: {
+      [key: string]: Course;
+    };
+  };
 }
 
 const gradeMapping: { [key: number]: string } = {
@@ -53,22 +50,16 @@ const getGradeDisplay = (grade: number | null, graded: boolean): string => {
   return "NC";
 };
 
-const TermCard: React.FC<TermCardProps> = ({
-  termData,
-  user_id,
-  accessToken,
-  refreshToken,
-  term,
-}) => {
+const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
+  const { fetchDashboardData, accessToken, refreshToken } = useDashboard();
   const cardRef = useRef<HTMLDivElement>(null);
   const [showForm, setShowForm] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [course, setCourse] = useState<Course | null>(null);
-  const [courseId, setCourseId] = useState<string | null>(null);
-  const [error, setError] = useState("");
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -81,77 +72,74 @@ const TermCard: React.FC<TermCardProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Handles
-  const handleDeleteTerm = async () => {
+  const handleDeleteTerm = useCallback(async () => {
     const confirmDelete = window.confirm(
       `Are you sure you want to delete the ${termData.name} term and all its associated courses?`
     );
 
     if (confirmDelete) {
       try {
-        // Delete each course in the term
         await Promise.all(
-          Object.entries(termData.courses).map(async ([courseId, course]) => {
-            await httpClient.delete(`courses/${courseId}`, {
+          Object.entries(termData.courses).map(([courseId, course]) =>
+            httpClient.delete(`courses/${courseId}`, {
               headers: {
                 Authorization: `Bearer ${accessToken}`,
-                "refresh-token": refreshToken,
+                ...(refreshToken && { "refresh-token": refreshToken }),
               },
-            });
-          })
+            })
+          )
         );
-
-        // Reload the page after successful deletion of courses
-        window.location.reload();
+        await fetchDashboardData();
       } catch (error) {
-        setError(`${error.response.data.detail}, Please sign in again.`);
+        setError("Failed to delete term. Please try again.");
+        console.error("Error deleting term:", error);
       }
     }
-  };
+  }, [
+    termData.courses,
+    fetchDashboardData,
+    accessToken,
+    refreshToken,
+    termData.name,
+  ]);
 
-  const handleAddCourse = (
-    courseId?: string | null,
-    course?: Course | null
-  ) => {
-    if (showForm && courseId === selectedCourseId) {
-      setShowForm(false);
-      setIsEdit(false);
-      setCourse(null);
-      setCourseId(null);
-      setSelectedCourseId(null);
-    } else {
-      setIsEdit(course !== undefined);
-      setShowForm(true);
-      setIsFormOpen(course === undefined);
-      setCourse(course || null);
-      setCourseId(courseId || null);
-      setSelectedCourseId(courseId || null);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-    }
-  };
+  const handleAddCourse = useCallback(
+    (courseId?: string, course?: Course) => {
+      if (showForm && courseId === selectedCourseId) {
+        setShowForm(false);
+        setIsEdit(false);
+        setSelectedCourse(null);
+        setSelectedCourseId(null);
+      } else {
+        setIsEdit(course !== undefined);
+        setShowForm(true);
+        setIsFormOpen(course === undefined);
+        setSelectedCourse(course || null);
+        setSelectedCourseId(courseId || null);
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      }
+    },
+    [showForm, selectedCourseId]
+  );
 
-  const handleCloseForm = () => {
+  const handleCloseForm = useCallback(() => {
     setShowForm(false);
-    setIsFormOpen(false);
     setIsEdit(false);
-    setCourse(null);
-    setCourseId(null);
+    setSelectedCourse(null);
     setSelectedCourseId(null);
-  };
+    setIsFormOpen(false);
+  }, []);
 
   const handleAddOrCancel = () => {
     if (isFormOpen) {
-      // If the form is open, close it
       handleCloseForm();
     } else {
-      // If the form is closed, open it
       handleAddCourse();
     }
   };
 
-  // Sorting
   const sortCourses = (courses: { [key: string]: Course }) => {
     return Object.entries(courses).sort(([, courseA], [, courseB]) => {
       if (courseA.grade === null && courseB.grade === null) return 0;
@@ -364,14 +352,11 @@ const TermCard: React.FC<TermCardProps> = ({
       )}
       {showForm && (
         <AddCourseForm
-          user_id={user_id}
           onClose={handleCloseForm}
           term={term}
-          accessToken={accessToken}
-          refreshToken={refreshToken}
           isEdit={isEdit}
-          course={course}
-          courseId={courseId}
+          course={selectedCourse}
+          courseId={selectedCourseId}
         />
       )}
     </div>

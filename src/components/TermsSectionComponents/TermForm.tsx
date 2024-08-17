@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useDashboard } from "../../hooks/useDashboard.ts";
 import httpClient from "../../httpClient.tsx";
 import axios, { AxiosError } from "axios";
+
+interface TermFormProps {
+  onClose: () => void;
+}
 
 interface Course {
   subject: string;
@@ -9,13 +14,6 @@ interface Course {
   grade: number | null | undefined;
   graded: string;
   pass: number | null | undefined;
-}
-
-interface TermFormProps {
-  onClose: () => void;
-  userId: string | null;
-  accessToken: string | null;
-  refreshToken: string | number | boolean;
 }
 
 type ErrorResponse = {
@@ -63,12 +61,9 @@ const notGradedValues: { [key: string]: number | null } = {
   Withdraw: -1,
 };
 
-const TermForm: React.FC<TermFormProps> = ({
-  onClose,
-  userId,
-  accessToken,
-  refreshToken,
-}) => {
+const TermForm: React.FC<TermFormProps> = ({ onClose }) => {
+  const { user, fetchDashboardData, accessToken, refreshToken } =
+    useDashboard();
   const [year, setYear] = useState<number>();
   const [nextYear, setNextYear] = useState<number>();
   const [semester, setSemester] = useState<string>("");
@@ -179,8 +174,12 @@ const TermForm: React.FC<TermFormProps> = ({
     const term = parseInt(`${year}${semesterCode}`);
 
     try {
+      if (!user || !user.id) {
+        throw new Error("User information is missing");
+      }
+
       const payload = courses.map((course) => ({
-        user_id: userId,
+        user_id: user.id,
         subject: course.subject.toUpperCase(),
         course_code: course.course_code.toUpperCase(),
         term,
@@ -195,15 +194,21 @@ const TermForm: React.FC<TermFormProps> = ({
             : course.pass,
         graded: course.graded,
       }));
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${accessToken}`,
+      };
+
+      if (refreshToken) {
+        headers["refresh-token"] = refreshToken;
+      }
+
       const response = await httpClient.post("/courses/many", payload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "refresh-token": refreshToken,
-        },
+        headers,
       });
 
       if (response.status === 201) {
-        window.location.reload();
+        await fetchDashboardData();
         onClose();
       } else if (response.status === 500) {
         setError(response.data.message);
@@ -302,6 +307,7 @@ const TermForm: React.FC<TermFormProps> = ({
             </div>
           </div>
 
+          {/* Courses */}
           {courses.map((course, index) => (
             <div key={index} className="bg-white/10 p-6 rounded-2xl space-y-4">
               <div className="flex justify-between items-center mb-4">
