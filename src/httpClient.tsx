@@ -1,7 +1,7 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from "axios";
 
 const httpClient: AxiosInstance = axios.create({
-  baseURL: 'http://127.0.0.1:8000',
+  baseURL: "http://127.0.0.1:8000",
   withCredentials: true,
 });
 

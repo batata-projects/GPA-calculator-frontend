@@ -1,23 +1,25 @@
 import React, { useState } from "react";
 
-interface ForgetPasswordFormProps {
-  onSubmit: (email: string) => Promise<void>;
+interface VerifyOTPFormProps {
+  email: string;
+  onSubmit: (otp: string) => Promise<void>;
   error: string | null;
   isLoading: boolean;
 }
 
-const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
+const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
+  email,
   onSubmit,
   error,
 }) => {
-  const [email, setEmail] = useState("");
+  const [otp, setOTP] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
     try {
-      await onSubmit(email);
+      await onSubmit(otp);
     } finally {
       setIsLoading(false);
     }
@@ -25,9 +27,9 @@ const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
 
   return (
     <div className="flex flex-col justify-center flex-1">
-      <div className="text-[25px] text-[#333] font-bold">Forgot Password?</div>
+      <div className="text-[25px] text-[#333] font-bold">Verify OTP</div>
       <div className="text-[20px] text-[#333] mb-[20px]">
-        No worries, we'll send you an OTP to reset your password.
+        Enter the OTP sent to {email}
       </div>
       <form onSubmit={handleSubmit} className="text-md">
         <div className="flex mb-4 border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2">
@@ -42,15 +44,15 @@ const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+              d="M7.864 4.243A7.5 7.5 0 0119.5 10.5c0 2.92-.556 5.709-1.568 8.268M5.742 6.364A7.465 7.465 0 004.5 10.5a7.464 7.464 0 01-1.15 3.993m1.989 3.559A11.209 11.209 0 008.25 10.5a3.75 3.75 0 117.5 0c0 .527-.021 1.049-.064 1.565M12 10.5a14.94 14.94 0 01-3.6 9.75m6.633-4.596a18.666 18.666 0 01-2.485 5.33"
             />
           </svg>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            id="email"
-            placeholder="Email Address"
+            type="text"
+            value={otp}
+            onChange={(e) => setOTP(e.target.value)}
+            id="otp"
+            placeholder="Enter OTP"
             className="ml-4 w-full"
             style={{ outline: "none" }}
             required
@@ -78,7 +80,7 @@ const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
               ></path>
             </svg>
           ) : null}
-          {isLoading ? "Sending OTP..." : "Request OTP"}
+          {isLoading ? "Verifying..." : "Verify OTP"}
         </button>
       </form>
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
@@ -86,4 +88,4 @@ const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
   );
 };
 
-export default ForgetPasswordForm;
+export default VerifyOTPForm;

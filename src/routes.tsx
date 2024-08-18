@@ -16,7 +16,8 @@ function Routes(): JSX.Element {
   useEffect(() => {
     const access_token = localStorage.getItem("access_token");
     const refresh_token = localStorage.getItem("refresh_token");
-    setIsAuthenticated(!!access_token && !!refresh_token);
+    const user_id = localStorage.getItem("user_id");
+    setIsAuthenticated(!!access_token && !!refresh_token && !!user_id);
 
     const getPageTitle = () => {
       switch (location.pathname) {
@@ -29,7 +30,7 @@ function Routes(): JSX.Element {
       }
     };
     document.title = getPageTitle();
-  }, [location]);
+  }, [location, isAuthenticated]);
 
   return (
     <ReactRouterRoutes>

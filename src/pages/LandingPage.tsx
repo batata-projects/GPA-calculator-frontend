@@ -2,16 +2,25 @@ import React, { useState, useEffect } from "react";
 import LoginForm from "../components/landing-page/LoginForm.tsx";
 import RegisterForm from "../components/landing-page/RegisterForm.tsx";
 import ForgetPasswordForm from "../components/landing-page/ForgetPassForm.tsx";
+import VerifyOTPForm from "../components/landing-page/VerifyOTPForm.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 import ReadMore from "../components/landing-page/ReadMore.tsx";
 import { useDashboard } from "../hooks/useDashboard.ts";
 
 const LandingPage = () => {
   const [formType, setFormType] = useState<
-    "login" | "register" | "forgetPassword"
+    "login" | "register" | "forgetPassword" | "verifyOTP"
   >("login");
-  const [error, setError] = useState<string | null>(null);
-  const { login, register, forgetPassword } = useDashboard();
+  const [email, setEmail] = useState<string>("");
+  const {
+    login,
+    register,
+    requestOTP,
+    verifyOTP,
+    isLoading,
+    error,
+    clearError,
+  } = useDashboard();
 
   useEffect(() => {
     document.title =
@@ -19,39 +28,19 @@ const LandingPage = () => {
         ? "Login - GPA Calculator"
         : formType === "register"
         ? "Register - GPA Calculator"
-        : "Forget Password - GPA Calculator";
+        : "Password Reset - GPA Calculator";
   }, [formType]);
 
   const handleToggleForm = (type: "login" | "register" | "forgetPassword") => {
     setFormType(type);
-    setError(null);
-  };
-
-  const handleError = (error: any) => {
-    if (error.response) {
-      if (error.response.status === 400) {
-        setError(error.response.data.detail);
-      } else if (error.response.status === 422) {
-        setError(error.response.data.detail[0].msg);
-      } else {
-        setError("An error occurred. Please try again.");
-      }
-    } else if (error.request) {
-      setError("No response from the server. Please try again.");
-    } else {
-      setError("An error occurred. Please try again.");
-    }
+    clearError();
   };
 
   const handleLogin = async (formData: {
     email: string;
     password: string;
   }): Promise<void> => {
-    try {
-      await login(formData.email, formData.password);
-    } catch (error: any) {
-      handleError(error);
-    }
+    await login(formData.email, formData.password);
   };
 
   const handleRegister = async (formData: {
@@ -60,25 +49,27 @@ const LandingPage = () => {
     email: string;
     password: string;
   }): Promise<void> => {
-    try {
-      await register(
-        formData.first_name,
-        formData.last_name,
-        formData.email,
-        formData.password
-      );
-      setFormType("login");
-    } catch (error: any) {
-      handleError(error);
-    }
+    await register(
+      formData.first_name,
+      formData.last_name,
+      formData.email,
+      formData.password
+    );
+    setFormType("login");
   };
 
-  const handleForgetPassword = async (email: string): Promise<void> => {
+  const handleForgetPassword = async (userEmail: string): Promise<void> => {
+    await requestOTP(userEmail);
+    setEmail(userEmail);
+    setFormType("verifyOTP");
+  };
+
+  const handleVerifyOTP = async (userOTP: string): Promise<void> => {
     try {
-      await forgetPassword(email);
-      setError("Password reset instructions sent to your email.");
-    } catch (error: any) {
-      handleError(error);
+      await verifyOTP(email, userOTP);
+    } catch (error) {
+      // Handle error, maybe show an error message to the user
+      console.error("OTP verification failed:", error);
     }
   };
 
@@ -197,6 +188,7 @@ const LandingPage = () => {
                 <ForgetPasswordForm
                   onSubmit={handleForgetPassword}
                   error={error}
+                  isLoading={isLoading}
                 />
                 <div className="text-center mt-2">
                   <div className="text-sm text-gray-400 mb-1">
@@ -209,6 +201,23 @@ const LandingPage = () => {
                     Back to Login
                   </button>
                 </div>
+              </motion.div>
+            )}
+            {formType === "verifyOTP" && (
+              <motion.div
+                key="verifyOTP"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0"
+              >
+                <VerifyOTPForm
+                  email={email}
+                  onSubmit={handleVerifyOTP}
+                  error={error}
+                  isLoading={isLoading}
+                />
               </motion.div>
             )}
           </AnimatePresence>
