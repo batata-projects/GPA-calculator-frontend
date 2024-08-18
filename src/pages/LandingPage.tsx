@@ -36,6 +36,22 @@ const LandingPage = () => {
     clearError();
   };
 
+  const handleError = (error: any) => {
+    if (error.response) {
+      if (error.response.status === 400) {
+        setError(error.response.data.detail);
+      } else if (error.response.status === 422) {
+        setError(error.response.data.detail[0].msg);
+      } else {
+        setError("An error occurred. Please try again.");
+      }
+    } else if (error.request) {
+      setError("No response from the server. Please try again.");
+    } else {
+      setError("An error occurred. Please try again.");
+    }
+  };
+
   const handleLogin = async (formData: {
     email: string;
     password: string;
