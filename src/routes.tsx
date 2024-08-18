@@ -8,6 +8,7 @@ import {
 import NotFoundPage from "./pages/NotFoundPage.tsx";
 import DashboardPage from "./pages/DashboardPage.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
+import SettingsPage from "./pages/Settings.tsx";
 
 function Routes(): JSX.Element {
   const location = useLocation();
@@ -45,6 +46,7 @@ function Routes(): JSX.Element {
         element={isAuthenticated ? <DashboardPage /> : <Navigate to="/" />}
       />
       <Route path="*" element={<NotFoundPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
     </ReactRouterRoutes>
   );
 }

@@ -13,14 +13,14 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   // Animation for the GPA value
-  const animatedProps = useSpring({
-    number: value,
+  const { number } = useSpring({
     from: { number: 0 },
+    to: { number: value },
     config: { duration: 1000 },
   });
 
   // Animation for the comment
-  const [{ textLength }, setTextLength] = useSpring(() => ({ textLength: 0 }));
+  const [textSpring, textApi] = useSpring(() => ({ textLength: 0 }));
 
   // This is done to prevent knob from getting bigger for values above 4
   const valueKnob = Math.min(value, 4);
@@ -57,8 +57,8 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
     setComment(newComment);
 
     // Animate the text length
-    setTextLength({ textLength: newComment.length, config: config.molasses });
-  }, [value, setTextLength]);
+    textApi.start({ textLength: newComment.length, config: config.molasses });
+  }, [value, textApi]);
 
   const scaleProps = useSpring({
     transform: isHovered
@@ -100,9 +100,7 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
           <div
             className={`mb-2 bg-orange-500 text-white px-5 py-1 rounded-3xl text-3xl transition-colors duration-300`}
           >
-            <animated.span>
-              {animatedProps.number.to((n) => formatGPA(n))}
-            </animated.span>
+            <animated.span>{number.to(formatGPA)}</animated.span>
           </div>
         </div>
         <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center text-2xl">
@@ -132,7 +130,7 @@ const GPAKnob: React.FC<GPAKnobProps> = ({ value }) => {
       )}
       <div className="mt-[5%] text-center max-w-md h-6">
         <animated.p className="text-lg font-semibold text-gray-700">
-          {textLength.to((len) => comment.slice(0, Math.floor(len)))}
+          {textSpring.textLength.to((len) => comment.slice(0, Math.floor(len)))}
         </animated.p>
       </div>
     </div>

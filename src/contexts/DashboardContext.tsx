@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import httpClient from "../httpClient.tsx";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 interface User {
   id: string;
@@ -62,6 +63,7 @@ interface DashboardContextType {
   requestOTP: (email: string) => Promise<void>;
   verifyOTP: (email: string, otp: string) => Promise<void>;
   clearError: () => void;
+  resetPassword: (newPassword: string) => Promise<void>;
 }
 
 export const DashboardContext = createContext<DashboardContextType | undefined>(
@@ -279,6 +281,75 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
     [clearError, handleError, updateTokens, fetchDashboardData, navigate]
   );
 
+  const resetPassword = useCallback(
+    async (newPassword: string) => {
+      setIsLoading(true);
+      clearError();
+      try {
+        const currentAccessToken =
+          accessToken || localStorage.getItem("access_token");
+        const currentRefreshToken =
+          refreshToken || localStorage.getItem("refresh_token");
+
+        if (!currentAccessToken || !currentRefreshToken) {
+          throw new Error("Missing authentication information");
+        }
+
+        const response = await httpClient.post(
+          "/auth/reset-password",
+          { password: newPassword }, // Make sure this matches your API expectation
+          {
+            headers: {
+              Authorization: `Bearer ${currentAccessToken}`,
+              "refresh-token": currentRefreshToken,
+            },
+          }
+        );
+
+        console.log("Password reset successful", response);
+        // You might want to handle successful reset here (e.g., show a success message)
+      } catch (error) {
+        let errorMessage = "An unexpected error occurred. Please try again.";
+
+        if (axios.isAxiosError(error)) {
+          if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            if (
+              typeof error.response.data === "object" &&
+              error.response.data !== null
+            ) {
+              if (
+                "detail" in error.response.data &&
+                typeof error.response.data.detail === "string"
+              ) {
+                errorMessage = error.response.data.detail;
+              } else {
+                errorMessage = JSON.stringify(error.response.data);
+              }
+            } else {
+              errorMessage = `An error occurred: ${error.response.status}`;
+            }
+          } else if (error.request) {
+            // The request was made but no response was received
+            errorMessage =
+              "No response from the server. Please try again later.";
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            errorMessage = `Error: ${error.message}`;
+          }
+        }
+
+        setError(errorMessage);
+        console.error("Failed to reset password", error);
+        throw error; // Re-throw the error so the component can handle it if needed
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [accessToken, refreshToken, clearError]
+  );
+
   return (
     <DashboardContext.Provider
       value={{
@@ -297,6 +368,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
         requestOTP,
         verifyOTP,
         clearError,
+        resetPassword,
       }}
     >
       {children}
