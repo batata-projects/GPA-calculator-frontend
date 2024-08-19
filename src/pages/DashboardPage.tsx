@@ -9,21 +9,42 @@ import { useDashboard } from "../hooks/useDashboard.ts";
 import GradingScaleButton from "../components/GradeScale.tsx";
 
 const DashboardPage: React.FC = () => {
-  const { user, fetchDashboardData, accessToken, refreshToken } =
+  const { user, fetchDashboardData, accessToken, refreshToken, login } =
     useDashboard();
   const navigate = useNavigate();
   const [showToTop, setShowToTop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isButtonLeaving, setIsButtonLeaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!accessToken || !refreshToken) {
-      navigate("/");
-    } else {
-      fetchDashboardData();
-    }
-  }, [fetchDashboardData, accessToken, refreshToken, navigate]);
+    const checkTokensAndFetchData = async () => {
+      const storedAccessToken = localStorage.getItem("accessToken");
+      const storedRefreshToken = localStorage.getItem("refreshToken");
+      const storedUserId = localStorage.getItem("user_id");
+
+      if (storedAccessToken && storedRefreshToken && storedUserId) {
+        try {
+          await fetchDashboardData();
+        } catch (error) {
+          console.error("Error logging in with stored tokens:", error);
+          // Clear local storage on login failure
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("user_id");
+          navigate("/");
+        }
+      } else if (!accessToken || !refreshToken) {
+        navigate("/");
+      } else {
+        await fetchDashboardData();
+      }
+      setIsLoading(false);
+    };
+
+    checkTokensAndFetchData();
+  }, [fetchDashboardData, accessToken, refreshToken, navigate, login]);
 
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -65,10 +86,18 @@ const DashboardPage: React.FC = () => {
     };
   }, []);
 
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p>Unable to load user data. Please try logging in again.</p>
       </div>
     );
   }
@@ -110,9 +139,9 @@ const DashboardPage: React.FC = () => {
               Hello, {user.first_name}
             </div>
             <div className="w-full max-w-4xl">
-               <OverallSection />
-          <TermsSection />
-          <QuerySection />
+              <OverallSection />
+              <TermsSection />
+              <QuerySection />
             </div>
 
             <div

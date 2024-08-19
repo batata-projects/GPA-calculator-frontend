@@ -1,51 +1,46 @@
 import React, { useState, useEffect } from "react";
 import LoginForm from "../components/landing-page/LoginForm.tsx";
 import RegisterForm from "../components/landing-page/RegisterForm.tsx";
+import ForgetPasswordForm from "../components/landing-page/ForgetPassForm.tsx";
+import VerifyOTPForm from "../components/landing-page/VerifyOTPForm.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 import ReadMore from "../components/landing-page/ReadMore.tsx";
 import { useDashboard } from "../hooks/useDashboard.ts";
 
 const LandingPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { login, register } = useDashboard();
+  const [formType, setFormType] = useState<
+    "login" | "register" | "forgetPassword" | "verifyOTP"
+  >("login");
+  const [email, setEmail] = useState<string>("");
+  const {
+    login,
+    register,
+    requestOTP,
+    verifyOTP,
+    isLoading,
+    error,
+    clearError,
+  } = useDashboard();
 
   useEffect(() => {
-    document.title = isLogin
-      ? "Login - GPA Calculator"
-      : "Register - GPA Calculator";
-  }, [isLogin]);
+    document.title =
+      formType === "login"
+        ? "Login - GPA Calculator"
+        : formType === "register"
+        ? "Register - GPA Calculator"
+        : "Password Reset - GPA Calculator";
+  }, [formType]);
 
-  const handleToggleForm = () => {
-    setIsLogin(!isLogin);
-    setError(null);
-  };
-
-  const handleError = (error: any) => {
-    if (error.response) {
-      if (error.response.status === 400) {
-        setError(error.response.data.detail);
-      } else if (error.response.status === 422) {
-        setError(error.response.data.detail[0].msg);
-      } else {
-        setError("An error occurred. Please try again.");
-      }
-    } else if (error.request) {
-      setError("No response from the server. Please try again.");
-    } else {
-      setError("An error occurred. Please try again.");
-    }
+  const handleToggleForm = (type: "login" | "register" | "forgetPassword") => {
+    setFormType(type);
+    clearError();
   };
 
   const handleLogin = async (formData: {
     email: string;
     password: string;
   }): Promise<void> => {
-    try {
-      await login(formData.email, formData.password);
-    } catch (error: any) {
-      handleError(error);
-    }
+    await login(formData.email, formData.password);
   };
 
   const handleRegister = async (formData: {
@@ -54,16 +49,27 @@ const LandingPage = () => {
     email: string;
     password: string;
   }): Promise<void> => {
+    await register(
+      formData.first_name,
+      formData.last_name,
+      formData.email,
+      formData.password
+    );
+    setFormType("login");
+  };
+
+  const handleForgetPassword = async (userEmail: string): Promise<void> => {
+    await requestOTP(userEmail);
+    setEmail(userEmail);
+    setFormType("verifyOTP");
+  };
+
+  const handleVerifyOTP = async (userOTP: string): Promise<void> => {
     try {
-      await register(
-        formData.first_name,
-        formData.last_name,
-        formData.email,
-        formData.password
-      );
-      setIsLogin(true);
-    } catch (error: any) {
-      handleError(error);
+      await verifyOTP(email, userOTP);
+    } catch (error) {
+      // Handle error, maybe show an error message to the user
+      console.error("OTP verification failed:", error);
     }
   };
 
@@ -108,8 +114,7 @@ const LandingPage = () => {
       <div className="lg:w-5/12 w-full flex min-h-screen justify-center">
         <div className="w-[80%] max-w-md relative mt-[120px]">
           <AnimatePresence>
-            {isLogin ? (
-              // login
+            {formType === "login" && (
               <motion.div
                 key="login"
                 initial={{ opacity: 0, x: 100 }}
@@ -119,9 +124,11 @@ const LandingPage = () => {
                 className="absolute inset-0"
               >
                 <LoginForm onSubmit={handleLogin} error={error} />
-                {error && <p className="text-red-500 text-sm">{error}</p>}
                 <div className="text-center mt-2">
-                  <div className="mb-2 cursor-pointer underline">
+                  <div
+                    className="mb-2 cursor-pointer underline"
+                    onClick={() => handleToggleForm("forgetPassword")}
+                  >
                     Forget Password?
                   </div>
                   <div className="text-xs mb-2">
@@ -132,15 +139,15 @@ const LandingPage = () => {
                     Don't have an account?
                   </div>
                   <button
-                    onClick={handleToggleForm}
+                    onClick={() => handleToggleForm("register")}
                     className="text-blue-400 hover:cursor-pointer underline transition duration-300 mb-3"
                   >
                     Register
                   </button>
                 </div>
               </motion.div>
-            ) : (
-              // register
+            )}
+            {formType === "register" && (
               <motion.div
                 key="register"
                 initial={{ opacity: 0, x: 100 }}
@@ -149,9 +156,8 @@ const LandingPage = () => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0"
               >
-                <div className=" flex flex-shrink flex-col">
+                <div className="flex flex-shrink flex-col">
                   <RegisterForm onSubmit={handleRegister} error={error} />
-                  {error && <p className="text-red-500 text-xs">{error}</p>}
                   <div className="text-center mt-2">
                     <div className="text-sm mb-2">
                       Please verify your account after registering to be able to
@@ -161,13 +167,57 @@ const LandingPage = () => {
                       Have an Account?
                     </div>
                     <button
-                      onClick={handleToggleForm}
+                      onClick={() => handleToggleForm("login")}
                       className="text-blue-400 hover:cursor-pointer underline transition duration-300 mb-3"
                     >
                       Login
                     </button>
                   </div>
                 </div>
+              </motion.div>
+            )}
+            {formType === "forgetPassword" && (
+              <motion.div
+                key="forgetPassword"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0"
+              >
+                <ForgetPasswordForm
+                  onSubmit={handleForgetPassword}
+                  error={error}
+                  isLoading={isLoading}
+                />
+                <div className="text-center mt-2">
+                  <div className="text-sm text-gray-400 mb-1">
+                    Remember your password?
+                  </div>
+                  <button
+                    onClick={() => handleToggleForm("login")}
+                    className="text-blue-400 hover:cursor-pointer underline transition duration-300 mb-3"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </motion.div>
+            )}
+            {formType === "verifyOTP" && (
+              <motion.div
+                key="verifyOTP"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0"
+              >
+                <VerifyOTPForm
+                  email={email}
+                  onSubmit={handleVerifyOTP}
+                  error={error}
+                  isLoading={isLoading}
+                />
               </motion.div>
             )}
           </AnimatePresence>

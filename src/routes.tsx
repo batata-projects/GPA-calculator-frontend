@@ -8,6 +8,7 @@ import {
 import NotFoundPage from "./pages/NotFoundPage.tsx";
 import DashboardPage from "./pages/DashboardPage.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
+import SettingsPage from "./pages/Settings.tsx";
 
 function Routes(): JSX.Element {
   const location = useLocation();
@@ -16,7 +17,8 @@ function Routes(): JSX.Element {
   useEffect(() => {
     const access_token = localStorage.getItem("access_token");
     const refresh_token = localStorage.getItem("refresh_token");
-    setIsAuthenticated(!!access_token && !!refresh_token);
+    const user_id = localStorage.getItem("user_id");
+    setIsAuthenticated(!!access_token && !!refresh_token && !!user_id);
 
     const getPageTitle = () => {
       switch (location.pathname) {
@@ -29,7 +31,7 @@ function Routes(): JSX.Element {
       }
     };
     document.title = getPageTitle();
-  }, [location]);
+  }, [location, isAuthenticated]);
 
   return (
     <ReactRouterRoutes>
@@ -44,6 +46,7 @@ function Routes(): JSX.Element {
         element={isAuthenticated ? <DashboardPage /> : <Navigate to="/" />}
       />
       <Route path="*" element={<NotFoundPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
     </ReactRouterRoutes>
   );
 }
