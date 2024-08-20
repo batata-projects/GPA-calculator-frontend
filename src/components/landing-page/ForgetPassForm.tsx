@@ -1,14 +1,16 @@
 import React, { useState } from "react";
+import ErrorMessage from "../ErrorMessage.tsx";
 
 interface ForgetPasswordFormProps {
   onSubmit: (email: string) => Promise<void>;
   error: string | null;
-  isLoading: boolean;
+  clearError: () => void;
 }
 
 const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
   onSubmit,
   error,
+  clearError,
 }) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -81,7 +83,7 @@ const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
           {isLoading ? "Sending OTP..." : "Request OTP"}
         </button>
       </form>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {error && <ErrorMessage error={error} />}
     </div>
   );
 };
