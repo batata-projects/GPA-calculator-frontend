@@ -12,15 +12,9 @@ const LandingPage = () => {
     "login" | "register" | "forgetPassword" | "verifyOTP"
   >("login");
   const [email, setEmail] = useState<string>("");
-  const {
-    login,
-    register,
-    requestOTP,
-    verifyOTP,
-    isLoading,
-    error,
-    clearError,
-  } = useDashboard();
+  const [isOtpRequested, setIsOtpRequested] = useState(false);
+  const { login, register, requestOTP, verifyOTP, error, clearError } =
+    useDashboard();
 
   useEffect(() => {
     document.title =
@@ -31,8 +25,17 @@ const LandingPage = () => {
         : "Password Reset - GPA Calculator";
   }, [formType]);
 
+  useEffect(() => {
+    if (isOtpRequested && !error && formType === "forgetPassword") {
+      setFormType("verifyOTP");
+      setIsOtpRequested(false);
+    }
+  }, [error, isOtpRequested, formType]);
+
   const handleToggleForm = (type: "login" | "register" | "forgetPassword") => {
     setFormType(type);
+    setIsOtpRequested(false);
+    setEmail("");
     clearError();
   };
 
@@ -55,22 +58,30 @@ const LandingPage = () => {
       formData.email,
       formData.password
     );
-    setFormType("login");
   };
 
   const handleForgetPassword = async (userEmail: string): Promise<void> => {
-    await requestOTP(userEmail);
+    clearError();
     setEmail(userEmail);
-    setFormType("verifyOTP");
+    try {
+      await requestOTP(userEmail);
+      setIsOtpRequested(true);
+    } catch (err) {}
   };
 
   const handleVerifyOTP = async (userOTP: string): Promise<void> => {
-    try {
-      await verifyOTP(email, userOTP);
-    } catch (error) {
-      // Handle error, maybe show an error message to the user
-      console.error("OTP verification failed:", error);
-    }
+    await verifyOTP(email, userOTP);
+  };
+
+  const handleResendCode = async (): Promise<void> => {
+    clearError();
+    await handleForgetPassword(email);
+  };
+
+  const handleBackToForgetPassword = () => {
+    setFormType("forgetPassword");
+    setIsOtpRequested(false);
+    clearError();
   };
 
   return (
@@ -123,7 +134,11 @@ const LandingPage = () => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0"
               >
-                <LoginForm onSubmit={handleLogin} error={error} />
+                <LoginForm
+                  onSubmit={handleLogin}
+                  error={error}
+                  clearError={clearError}
+                />
                 <div className="text-center mt-2">
                   <div
                     className="mb-2 cursor-pointer underline"
@@ -157,7 +172,11 @@ const LandingPage = () => {
                 className="absolute inset-0"
               >
                 <div className="flex flex-shrink flex-col">
-                  <RegisterForm onSubmit={handleRegister} error={error} />
+                  <RegisterForm
+                    onSubmit={handleRegister}
+                    error={error}
+                    clearError={clearError}
+                  />
                   <div className="text-center mt-2">
                     <div className="text-sm mb-2">
                       Please verify your account after registering to be able to
@@ -188,7 +207,7 @@ const LandingPage = () => {
                 <ForgetPasswordForm
                   onSubmit={handleForgetPassword}
                   error={error}
-                  isLoading={isLoading}
+                  clearError={clearError}
                 />
                 <div className="text-center mt-2">
                   <div className="text-sm text-gray-400 mb-1">
@@ -215,8 +234,10 @@ const LandingPage = () => {
                 <VerifyOTPForm
                   email={email}
                   onSubmit={handleVerifyOTP}
+                  onResendCode={handleResendCode}
+                  onBackToForgetPassword={handleBackToForgetPassword}
                   error={error}
-                  isLoading={isLoading}
+                  clearError={clearError}
                 />
               </motion.div>
             )}
