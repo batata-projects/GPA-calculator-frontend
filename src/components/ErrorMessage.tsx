@@ -9,7 +9,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ error }) => {
 
   return (
     <div
-      className="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50"
+      className="flex items-center p-4 mb-4 mt-2 text-sm text-red-800 rounded-lg bg-red-50"
       role="alert"
     >
       <svg
