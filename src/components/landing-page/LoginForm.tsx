@@ -1,11 +1,17 @@
 import React, { useState } from "react";
+import ErrorMessage from "../ErrorMessage.tsx";
 
 interface LoginFormProps {
   onSubmit: (formData: { email: string; password: string }) => Promise<void>;
   error: string | null;
+  clearError: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
+const LoginForm: React.FC<LoginFormProps> = ({
+  onSubmit,
+  error,
+  clearError,
+}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -13,6 +19,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
+    clearError(); // Clear any existing errors before submitting
     try {
       await onSubmit({ email, password });
     } finally {
@@ -77,6 +84,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
             required
           />
         </div>
+        {error && <ErrorMessage error={error} />}
         <button
           type="submit"
           className="bg-[#0575E6] text-white text-center w-full rounded-[30px] py-4 mb-1 hover:bg-[#35649b] transition duration-300 flex items-center justify-center"

@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import httpClient from "../httpClient.tsx";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 interface User {
   id: string;
@@ -148,11 +147,32 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
         throw new Error("Invalid API response format");
       }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
       clearTokens();
       navigate("/");
     }
   }, [accessToken, refreshToken, userId, navigate, clearTokens]);
+
+  const handleError = useCallback((error: any) => {
+    if (error.response) {
+      if (error.response.status === 400) {
+        setError(error.response.data.detail);
+      } else if (error.response.status === 422) {
+        setError(error.response.data.detail[0].msg);
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
+    } else if (error.request) {
+      setError(
+        "No response from the server. Please check your connection and try again."
+      );
+    } else {
+      setError("An unexpected error occurred. Please try again.");
+    }
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -167,12 +187,12 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
         updateTokens(newAccessToken, newRefreshToken, newUserId);
         await fetchDashboardData();
         navigate("/dashboard");
-      } catch (error) {
-        console.error("Login error:", error);
-        throw error;
+      } catch (error: any) {
+        clearError();
+        handleError(error);
       }
     },
-    [updateTokens, fetchDashboardData, navigate]
+    [updateTokens, fetchDashboardData, navigate, handleError, clearError]
   );
 
   const register = useCallback(
@@ -189,34 +209,13 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
           email,
           password,
         });
-      } catch (error) {
-        console.error("Registration error:", error);
-        throw error;
+      } catch (error: any) {
+        clearError();
+        handleError(error);
       }
     },
-    []
+    [handleError, clearError]
   );
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  const handleError = useCallback((error: any) => {
-    if (error.response) {
-      if (error.response.status === 400 || error.response.status === 422) {
-        setError(error.response.data.detail);
-      } else {
-        setError("An unexpected error occurred. Please try again.");
-      }
-    } else if (error.request) {
-      setError(
-        "No response from the server. Please check your connection and try again."
-      );
-    } else {
-      setError("An unexpected error occurred. Please try again.");
-    }
-    console.error("Error:", error);
-  }, []);
 
   const requestOTP = useCallback(
     async (email: string) => {
@@ -224,9 +223,8 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
       clearError();
       try {
         await httpClient.post("/auth/request-otp", { email });
-      } catch (error) {
-        handleError(error);
-        throw error;
+      } catch (error: any) {
+        handleError(error); // Set the error state if there's an error
       } finally {
         setIsLoading(false);
       }
@@ -271,9 +269,9 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
         } else {
           throw new Error("Invalid response structure from OTP verification");
         }
-      } catch (error) {
+      } catch (error: any) {
+        clearError();
         handleError(error);
-        throw error;
       } finally {
         setIsLoading(false);
       }
@@ -295,7 +293,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
           throw new Error("Missing authentication information");
         }
 
-        const response = await httpClient.post(
+        await httpClient.post(
           "/auth/reset-password",
           { password: newPassword }, // Make sure this matches your API expectation
           {
@@ -305,49 +303,14 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
             },
           }
         );
-
-        console.log("Password reset successful", response);
-        // You might want to handle successful reset here (e.g., show a success message)
-      } catch (error) {
-        let errorMessage = "An unexpected error occurred. Please try again.";
-
-        if (axios.isAxiosError(error)) {
-          if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            if (
-              typeof error.response.data === "object" &&
-              error.response.data !== null
-            ) {
-              if (
-                "detail" in error.response.data &&
-                typeof error.response.data.detail === "string"
-              ) {
-                errorMessage = error.response.data.detail;
-              } else {
-                errorMessage = JSON.stringify(error.response.data);
-              }
-            } else {
-              errorMessage = `An error occurred: ${error.response.status}`;
-            }
-          } else if (error.request) {
-            // The request was made but no response was received
-            errorMessage =
-              "No response from the server. Please try again later.";
-          } else {
-            // Something happened in setting up the request that triggered an Error
-            errorMessage = `Error: ${error.message}`;
-          }
-        }
-
-        setError(errorMessage);
-        console.error("Failed to reset password", error);
-        throw error; // Re-throw the error so the component can handle it if needed
+      } catch (error: any) {
+        clearError();
+        handleError(error);
       } finally {
         setIsLoading(false);
       }
     },
-    [accessToken, refreshToken, clearError]
+    [accessToken, refreshToken, clearError, handleError]
   );
 
   return (

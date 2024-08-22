@@ -1,14 +1,18 @@
 import React, { useState } from "react";
+import ErrorMessage from "../ErrorMessage.tsx";
+
 
 interface ResetPasswordFormProps {
   onSubmit: (newPassword: string) => Promise<void>;
   error: string | null;
+  clearError: () => void;
   isLoading: boolean;
 }
 
 const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   onSubmit,
   error,
+  clearError,
 }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,6 +26,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
       return;
     }
     setIsLoading(true);
+    clearError();
     try {
       await onSubmit(newPassword);
     } finally {
@@ -116,7 +121,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
       {passwordError && (
         <p className="text-red-500 text-sm mt-2">{passwordError}</p>
       )}
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {error && <ErrorMessage error={error} />}
     </div>
   );
 };

@@ -1,27 +1,45 @@
 import React, { useState } from "react";
+import ErrorMessage from "../ErrorMessage.tsx";
 
 interface VerifyOTPFormProps {
   email: string;
   onSubmit: (otp: string) => Promise<void>;
+  onResendCode: () => Promise<void>;
+  onBackToForgetPassword: () => void;
   error: string | null;
-  isLoading: boolean;
+  clearError: () => void;
 }
 
 const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
   email,
   onSubmit,
+  onResendCode,
+  onBackToForgetPassword,
   error,
+  clearError,
 }) => {
   const [otp, setOTP] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
+    clearError();
     try {
       await onSubmit(otp);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setIsResending(true);
+    clearError();
+    try {
+      await onResendCode();
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -58,9 +76,10 @@ const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
             required
           />
         </div>
+        {error && <ErrorMessage error={error} />}
         <button
           type="submit"
-          className="bg-[#0575E6] text-white text-center w-full rounded-[30px] py-4 mb-1 hover:bg-[#35649b] transition duration-300 flex items-center justify-center"
+          className="bg-[#0575E6] text-white text-center w-full rounded-[30px] py-4 mb-4 hover:bg-[#35649b] transition duration-300 flex items-center justify-center"
           disabled={isLoading}
         >
           {isLoading ? (
@@ -83,7 +102,21 @@ const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
           {isLoading ? "Verifying..." : "Verify OTP"}
         </button>
       </form>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      <div className="flex justify-between items-center">
+        <button
+          onClick={handleResendCode}
+          className="text-[#0575E6] hover:underline"
+          disabled={isResending}
+        >
+          {isResending ? "Resending..." : "Resend Code"}
+        </button>
+        <button
+          onClick={onBackToForgetPassword}
+          className="text-[#0575E6] hover:underline"
+        >
+          Different Email?
+        </button>
+      </div>
     </div>
   );
 };

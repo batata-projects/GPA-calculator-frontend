@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ErrorMessage from "../ErrorMessage.tsx";
 
 interface RegisterFormProps {
   onSubmit: (formData: {
@@ -8,9 +9,14 @@ interface RegisterFormProps {
     password: string;
   }) => Promise<void>;
   error: string | null;
+  clearError: () => void;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({
+  onSubmit,
+  error,
+  clearError,
+}) => {
   const [first_name, setfirst_name] = useState("");
   const [last_name, setlast_name] = useState("");
   const [email, setEmail] = useState("");
@@ -52,10 +58,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
       Object.values(passwordStrength).every((status) => status === "valid")
     ) {
       setIsLoading(true);
+      clearError();
       try {
         await onSubmit({ first_name, last_name, email, password });
-      } catch (error) {
-        // Error is handled in the parent component
       } finally {
         setIsLoading(false);
       }
@@ -199,7 +204,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
           />
         </div>
 
-        <div className="flex flex-col mb-4">
+        <div className="flex flex-col">
           <div className="flex flex-row border border-gray-300 rounded-[30px] w-full py-4 pl-6 pr-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -236,7 +241,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
           )}
         </div>
 
-        <div className="my-2">
+        <div className="my-1">
           <p className="text-sm font-semibold">Password should contain:</p>
           <ul className="text-sm">
             {Object.entries(passwordStrength).map(([requirement, status]) => (
@@ -288,6 +293,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
             ))}
           </ul>
         </div>
+        {error && <ErrorMessage error={error} />}
 
         <button
           type="submit"
