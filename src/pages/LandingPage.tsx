@@ -36,6 +36,7 @@ const LandingPage = () => {
     setFormType(type);
     setIsOtpRequested(false);
     setEmail("");
+
     clearError();
   };
 
