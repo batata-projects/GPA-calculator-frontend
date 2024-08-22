@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDashboard } from "../hooks/useDashboard.ts";
+import { useDashboard } from "../../hooks/useDashboard.ts";
 
 const ResetPasswordForm: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");

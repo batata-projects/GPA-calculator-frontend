@@ -1,7 +1,7 @@
 import React from "react";
-import { useDashboard } from "../hooks/useDashboard.ts";
-import GPAKnob from "./OverallSectionComponents/GPAKnob.tsx";
-import Loader from "./Loader.tsx";
+import { useDashboard } from "../../hooks/useDashboard.ts";
+import GPAKnob from "../OverallSectionComponents/GPAKnob.tsx";
+import Loader from "../Loader.tsx";
 
 const OverallSection: React.FC = () => {
   const { user } = useDashboard();

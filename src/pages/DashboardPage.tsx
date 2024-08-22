@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import OverallSection from "../components/OverallSection.tsx";
+import OverallSection from "../components/OverallSectionComponents/OverallSection.tsx";
 import TermsSection from "../components/TermsSection.tsx";
-import QuerySection from "../components/QuerySection.tsx";
+import QuerySection from "../components/QuerySectionComponents/QuerySection.tsx";
 import Sidebar from "../components/Sidebar.tsx";
 import Loader from "../components/Loader.tsx";
 import { useDashboard } from "../hooks/useDashboard.ts";
