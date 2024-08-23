@@ -26,6 +26,8 @@ function Routes(): JSX.Element {
           return "Login - GPA Calculator";
         case "/dashboard":
           return "Dashboard - GPA Calculator";
+        case "/settings":
+          return "Settings - GPA Calculator";
         default:
           return "Not Found";
       }
