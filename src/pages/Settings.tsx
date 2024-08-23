@@ -44,14 +44,7 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div className="p-6">
-              {activeTab === "password" && (
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Reset Password
-                  </h2>
-                  <ResetPasswordForm />
-                </div>
-              )}
+              {activeTab === "password" && <ResetPasswordForm />}
               {activeTab === "profile" && (
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">
