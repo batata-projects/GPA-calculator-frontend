@@ -3,26 +3,43 @@ import ErrorMessage from "../common/ErrorMessage.tsx";
 
 interface VerifyOTPFormProps {
   email: string;
-  onSubmit: (otp: string) => Promise<void>;
+  onSubmit: (userOTP: string) => Promise<void>;
+  onResendCode: () => Promise<void>;
+  onBackToForgetPassword: () => void;
   error: string | null;
-  isLoading: boolean;
+  clearError: () => void;
 }
 
 const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
   email,
   onSubmit,
+  onResendCode,
+  onBackToForgetPassword,
   error,
+  clearError,
 }) => {
   const [otp, setOTP] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
+    clearError();
     try {
       await onSubmit(otp);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setIsResending(true);
+    clearError();
+    try {
+      await onResendCode();
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -84,7 +101,22 @@ const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
           {isLoading ? "Verifying..." : "Verify OTP"}
         </button>
       </form>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {error && <ErrorMessage error={error} />}
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={handleResendCode}
+          className="text-[#0575E6] hover:underline"
+          disabled={isResending}
+        >
+          {isResending ? "Resending..." : "Resend Code"}
+        </button>
+        <button
+          onClick={onBackToForgetPassword}
+          className="text-[#0575E6] hover:underline"
+        >
+          Back to Forget Password
+        </button>
+      </div>
     </div>
   );
 };
