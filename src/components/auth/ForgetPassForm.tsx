@@ -84,6 +84,7 @@ const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
         </button>
       </form>
       {error && <ErrorMessage error={error} />}
+      {error && <ErrorMessage error={error} />}
     </div>
   );
 };
