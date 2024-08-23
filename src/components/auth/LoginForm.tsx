@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ErrorMessage from "../ErrorMessage.tsx";
+import ErrorMessage from "../common/ErrorMessage.tsx";
 
 interface LoginFormProps {
   onSubmit: (formData: { email: string; password: string }) => Promise<void>;

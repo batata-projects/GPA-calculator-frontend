@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 import { DashboardProvider } from "./contexts/DashboardContext.tsx";
 import Routes from "./routes.tsx";
-import "./index.css";
+import "../src/styles/index.css";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement

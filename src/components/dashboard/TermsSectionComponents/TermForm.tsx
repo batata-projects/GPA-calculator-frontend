@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useDashboard } from "../../hooks/useDashboard.ts";
-import httpClient from "../../httpClient.tsx";
+import { useDashboard } from "../../../hooks/useDashboard.ts";
+import httpClient from "../../../services/httpClient.tsx";
 import axios, { AxiosError } from "axios";
 
 interface TermFormProps {

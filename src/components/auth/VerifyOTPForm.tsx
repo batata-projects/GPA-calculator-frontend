@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import ErrorMessage from "../ErrorMessage.tsx";
+import ErrorMessage from "../common/ErrorMessage.tsx";
 
 interface VerifyOTPFormProps {
   email: string;
-  onSubmit: (otp: string) => Promise<void>;
+  onSubmit: (userOTP: string) => Promise<void>;
   onResendCode: () => Promise<void>;
   onBackToForgetPassword: () => void;
   error: string | null;
@@ -76,10 +76,9 @@ const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
             required
           />
         </div>
-        {error && <ErrorMessage error={error} />}
         <button
           type="submit"
-          className="bg-[#0575E6] text-white text-center w-full rounded-[30px] py-4 mb-4 hover:bg-[#35649b] transition duration-300 flex items-center justify-center"
+          className="bg-[#0575E6] text-white text-center w-full rounded-[30px] py-4 mb-1 hover:bg-[#35649b] transition duration-300 flex items-center justify-center"
           disabled={isLoading}
         >
           {isLoading ? (
@@ -102,7 +101,8 @@ const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
           {isLoading ? "Verifying..." : "Verify OTP"}
         </button>
       </form>
-      <div className="flex justify-between items-center">
+      {error && <ErrorMessage error={error} />}
+      <div className="flex justify-between mt-4">
         <button
           onClick={handleResendCode}
           className="text-[#0575E6] hover:underline"
@@ -114,7 +114,7 @@ const VerifyOTPForm: React.FC<VerifyOTPFormProps> = ({
           onClick={onBackToForgetPassword}
           className="text-[#0575E6] hover:underline"
         >
-          Different Email?
+          Back to Forget Password
         </button>
       </div>
     </div>

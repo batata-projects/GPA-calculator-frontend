@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ResetPasswordForm from "../components/ResetPasswordForm.tsx";
+import ResetPasswordForm from "../components/auth/ResetPasswordForm.tsx";
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("password");
@@ -44,14 +44,7 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div className="p-6">
-              {activeTab === "password" && (
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Reset Password
-                  </h2>
-                  <ResetPasswordForm />
-                </div>
-              )}
+              {activeTab === "password" && <ResetPasswordForm />}
               {activeTab === "profile" && (
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">

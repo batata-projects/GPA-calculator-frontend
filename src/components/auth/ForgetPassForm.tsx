@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import ErrorMessage from "../ErrorMessage.tsx";
-
+import ErrorMessage from "../common/ErrorMessage.tsx";
 
 interface ForgetPasswordFormProps {
   onSubmit: (email: string) => Promise<void>;
@@ -84,6 +83,7 @@ const ForgetPasswordForm: React.FC<ForgetPasswordFormProps> = ({
           {isLoading ? "Sending OTP..." : "Request OTP"}
         </button>
       </form>
+      {error && <ErrorMessage error={error} />}
       {error && <ErrorMessage error={error} />}
     </div>
   );

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useDashboard } from "../../hooks/useDashboard.ts";
-import httpClient from "../../httpClient.tsx";
+import { useDashboard } from "../../../hooks/useDashboard.ts";
+import httpClient from "../../../services/httpClient.tsx";
 import { useNavigate } from "react-router-dom";
 import axios, { AxiosError } from "axios";
+import { Course } from "../../../types/index.ts";
 
 interface AddCourseFormProps {
   term: string;
@@ -10,15 +11,7 @@ interface AddCourseFormProps {
   isEdit: boolean;
   course: Course | null;
   courseId: string | null;
-}
-
-interface Course {
-  subject: string;
-  course_code: string;
-  term: number;
-  credits: number;
-  grade: number | null;
-  graded: boolean;
+  onCourseUpdated: () => void;
 }
 
 const letterGrades: { [key: number]: string } = {
@@ -59,6 +52,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
   isEdit,
   course,
   courseId,
+  onCourseUpdated,
 }) => {
   const { fetchDashboardData, accessToken, refreshToken, clearTokens, user } =
     useDashboard();
@@ -222,6 +216,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
 
         if (response.status === 200 || response.status === 201) {
           await fetchDashboardData();
+          onCourseUpdated(); // Call the onCourseUpdated callback
           onClose();
         } else {
           throw new Error("Unexpected response status: " + response.status);
@@ -251,6 +246,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({
       clearTokens,
       user,
       navigate,
+      onCourseUpdated,
     ]
   );
 
