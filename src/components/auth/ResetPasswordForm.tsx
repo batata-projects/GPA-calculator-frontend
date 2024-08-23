@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDashboard } from "../../hooks/useDashboard.ts";
 import ErrorMessage from "../common/ErrorMessage.tsx";
+import SuccessMessage from "../common/SuccessMessage.tsx";
+import PasswordInput from "../common/PasswordInput.tsx";
 
 const ResetPasswordForm: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -8,26 +10,8 @@ const ResetPasswordForm: React.FC = () => {
   const [passwordsMatch, setPasswordsMatch] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const localError = "New Password should be different from old password.";
-  const [passwordStrength, setPasswordStrength] = useState<{
-    [key: string]: "pristine" | "valid" | "invalid";
-  }>({
-    "Uppercase letter": "pristine",
-    "Lowercase letter": "pristine",
-    "8 or more characters": "pristine",
-    "1 or more number": "pristine",
-  });
 
   const { resetPassword, isLoading, clearError, error } = useDashboard();
-
-  const checkPasswordStrength = (password: string) => {
-    const newStrength: { [key: string]: "pristine" | "valid" | "invalid" } = {
-      "Uppercase letter": /[A-Z]/.test(password) ? "valid" : "invalid",
-      "Lowercase letter": /[a-z]/.test(password) ? "valid" : "invalid",
-      "8 or more characters": password.length >= 8 ? "valid" : "invalid",
-      "1 or more number": /\d/.test(password) ? "valid" : "invalid",
-    };
-    setPasswordStrength(newStrength);
-  };
 
   useEffect(() => {
     setPasswordsMatch(newPassword !== "" && newPassword === confirmPassword);
@@ -44,24 +28,13 @@ const ResetPasswordForm: React.FC = () => {
     clearError();
     setIsSuccess(false);
 
-    if (
-      passwordsMatch &&
-      Object.values(passwordStrength).every((status) => status === "valid")
-    ) {
-      // Simulate checking if the new password is different from the current one
-
+    if (passwordsMatch) {
       try {
         await resetPassword(newPassword);
         if (!error) {
           setIsSuccess(true);
           setNewPassword("");
           setConfirmPassword("");
-          setPasswordStrength({
-            "Uppercase letter": "pristine",
-            "Lowercase letter": "pristine",
-            "8 or more characters": "pristine",
-            "1 or more number": "pristine",
-          });
         }
       } catch (err) {
         console.error("Failed to reset password", err);
@@ -69,51 +42,26 @@ const ResetPasswordForm: React.FC = () => {
     }
   };
 
-  const isFormValid =
-    newPassword !== "" &&
-    passwordsMatch &&
-    Object.values(passwordStrength).every((status) => status === "valid");
+  const isFormValid = newPassword !== "" && passwordsMatch;
 
   return (
     <div className="max-w-md bg-white shadow-md rounded-lg p-6">
       <h2 className="text-2xl font-semibold mb-6">Change Password</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="new-password"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            New Password
-          </label>
-          <input
-            type="password"
-            id="new-password"
-            value={newPassword}
-            onChange={(e) => {
-              setNewPassword(e.target.value);
-              checkPasswordStrength(e.target.value);
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
+        <PasswordInput
+          value={newPassword}
+          onChange={setNewPassword}
+          id="new-password"
+          placeholder="New Password"
+        />
 
-        <div>
-          <label
-            htmlFor="confirm-password"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Confirm New Password
-          </label>
-          <input
-            type="password"
-            id="confirm-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
+        <PasswordInput
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          id="confirm-password"
+          placeholder="Confirm New Password"
+          showStrength={false}
+        />
 
         {confirmPassword !== "" && (
           <p
@@ -125,33 +73,9 @@ const ResetPasswordForm: React.FC = () => {
           </p>
         )}
 
-        <div className="bg-gray-100 p-3 rounded-md">
-          <p className="text-sm font-semibold mb-2">Password requirements:</p>
-          <ul className="text-xs space-y-1">
-            {Object.entries(passwordStrength).map(([requirement, status]) => (
-              <li
-                key={requirement}
-                className={`flex items-center ${
-                  status === "pristine"
-                    ? "text-gray-500"
-                    : status === "valid"
-                    ? "text-green-500"
-                    : "text-red-500"
-                }`}
-              >
-                {status === "valid" ? "✓" : status === "invalid" ? "×" : "·"}{" "}
-                {requirement}
-              </li>
-            ))}
-          </ul>
-        </div>
-
         {error && <ErrorMessage error={localError} />}
-
         {isSuccess && (
-          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-            Password changed successfully!
-          </div>
+          <SuccessMessage message="Password changed successfully!" />
         )}
 
         <button
