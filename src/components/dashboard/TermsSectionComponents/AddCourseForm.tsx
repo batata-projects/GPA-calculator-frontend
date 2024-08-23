@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useDashboard } from "../../hooks/useDashboard.ts";
-import httpClient from "../../httpClient.tsx";
+import { useDashboard } from "../../../hooks/useDashboard.ts";
+import httpClient from "../../../services/httpClient.tsx";
 import { useNavigate } from "react-router-dom";
 import axios, { AxiosError } from "axios";
-import { Course } from "../../types/index.ts";
+import { Course } from "../../../types/index.ts";
 
 interface AddCourseFormProps {
   term: string;

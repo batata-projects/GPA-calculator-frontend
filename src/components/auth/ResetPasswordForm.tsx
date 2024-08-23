@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDashboard } from "../../hooks/useDashboard.ts";
-import ErrorMessage from "../ErrorMessage.tsx";
+import ErrorMessage from "../common/ErrorMessage.tsx";
 
 const ResetPasswordForm: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ResetPasswordForm from "../components/SettingsComponents/ResetPasswordForm.tsx";
+import ResetPasswordForm from "../components/auth/ResetPasswordForm.tsx";
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("password");

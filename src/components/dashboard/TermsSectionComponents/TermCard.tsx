@@ -1,9 +1,9 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { useDashboard } from "../../hooks/useDashboard.ts";
+import { useDashboard } from "../../../hooks/useDashboard.ts";
 import AddCourseForm from "./AddCourseForm.tsx";
-import httpClient from "../../httpClient.tsx";
-import { Course } from "../../types/index.ts";
-import { getLetterGrade } from "../../utils/functions.ts";
+import httpClient from "../../../services/httpClient.tsx";
+import { Course } from "../../../types/index.ts";
+import { getLetterGrade } from "../../../utils/functions.ts";
 
 interface TermCardProps {
   term: string;

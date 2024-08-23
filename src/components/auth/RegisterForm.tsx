@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ErrorMessage from "../ErrorMessage.tsx";
+import ErrorMessage from "../common/ErrorMessage.tsx";
 
 interface RegisterFormProps {
   onSubmit: (formData: {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import LoginForm from "../components/landing-page/LoginForm.tsx";
-import RegisterForm from "../components/landing-page/RegisterForm.tsx";
-import ForgetPasswordForm from "../components/landing-page/ForgetPassForm.tsx";
-import VerifyOTPForm from "../components/landing-page/VerifyOTPForm.tsx";
+import LoginForm from "../components/auth/LoginForm.tsx";
+import RegisterForm from "../components/auth/RegisterForm.tsx";
+import ForgetPasswordForm from "../components/auth/ForgetPassForm.tsx";
+import VerifyOTPForm from "../components/auth/VerifyOTPForm.tsx";
 import { motion, AnimatePresence } from "framer-motion";
-import ReadMore from "../components/landing-page/ReadMore.tsx";
+import ReadMore from "../components/common/ReadMore.tsx";
 import { useDashboard } from "../hooks/useDashboard.ts";
 
 const LandingPage = () => {

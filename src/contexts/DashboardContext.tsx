@@ -5,7 +5,7 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
-import httpClient from "../httpClient.tsx";
+import httpClient from "../services/httpClient.tsx";
 import { useNavigate } from "react-router-dom";
 
 interface User {

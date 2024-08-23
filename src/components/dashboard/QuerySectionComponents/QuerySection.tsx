@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AddCourseForm from "../TermsSectionComponents/AddCourseForm.tsx";
-import { useDashboard } from "../../hooks/useDashboard.ts";
-import { useCourseFilter } from "../../hooks/useCourseFilter.ts";
-import { Course } from "../../types/index.ts";
+import { useDashboard } from "../../../hooks/useDashboard.ts";
+import { useCourseFilter } from "../../../hooks/useCourseFilter.ts";
+import { Course } from "../../../types/index.ts";
 import SearchBar from "./SearchBar.tsx";
 import FilterButtons from "./FilterButtons.tsx";
 import CourseList from "./CourseList.tsx";

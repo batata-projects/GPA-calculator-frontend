@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from "react";
-import { useDashboard } from "../../hooks/useDashboard.ts";
+import { useDashboard } from "../../../hooks/useDashboard.ts";
 import TermCard from "./TermCard.tsx";
 import TermForm from "./TermForm.tsx";
-import { Terms } from "../../types";
+import { Terms } from "../../../types/index.ts";
 
 interface TermManagementProps {
   title?: string;

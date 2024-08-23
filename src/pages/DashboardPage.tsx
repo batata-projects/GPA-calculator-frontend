@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import OverallSection from "../components/OverallSectionComponents/OverallSection.tsx";
-import TermsSection from "../components/TermsSectionComponents/TermsSection.tsx";
-import QuerySection from "../components/QuerySectionComponents/QuerySection.tsx";
-import Sidebar from "../components/Sidebar.tsx";
-import Loader from "../components/Loader.tsx";
+import OverallSection from "../components/dashboard/OverallSectionComponents/OverallSection.tsx";
+import TermsSection from "../components/dashboard/TermsSectionComponents/TermsSection.tsx";
+import QuerySection from "../components/dashboard/QuerySectionComponents/QuerySection.tsx";
+import Sidebar from "../components/common/Sidebar.tsx";
+import Loader from "../components/common/Loader.tsx";
 import { useDashboard } from "../hooks/useDashboard.ts";
-import GradingScaleButton from "../components/GradeScale.tsx";
+import GradingScaleButton from "../components/common/GradeScale.tsx";
 
 const DashboardPage: React.FC = () => {
   const { user, fetchDashboardData, accessToken, refreshToken, login } =

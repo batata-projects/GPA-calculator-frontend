@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Course, FilteredCourses } from "../../types";
+import { Course, FilteredCourses } from "../../../types/index.ts";
 import CourseCard from "./CourseCard.tsx";
 
 interface CourseListProps {

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Course } from "../../types/index.ts";
-import { formatTermName, getLetterGrade } from "../../utils/functions.ts";
+import { Course } from "../../../types/index.ts";
+import { formatTermName, getLetterGrade } from "../../../utils/functions.ts";
 
 interface CourseCardProps {
   course: Course;
