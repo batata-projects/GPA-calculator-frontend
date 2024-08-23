@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import OverallSection from "../components/OverallSectionComponents/OverallSection.tsx";
-import TermsSection from "../components/TermsSection.tsx";
+import TermsSection from "../components/TermsSectionComponents/TermsSection.tsx";
 import QuerySection from "../components/QuerySectionComponents/QuerySection.tsx";
 import Sidebar from "../components/Sidebar.tsx";
 import Loader from "../components/Loader.tsx";

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AddCourseForm from "../TermsSectionComponents/AddCourseForm.tsx";
 import { useDashboard } from "../../hooks/useDashboard.ts";
@@ -115,6 +115,13 @@ const QuerySection: React.FC = () => {
     });
   };
 
+  const handleCourseUpdated = useCallback(() => {
+    // Refetch the filtered courses
+    filterCourses(query, selectedFilters);
+    // Close the form
+    handleCloseForm();
+  }, [query, selectedFilters, filterCourses]);
+
   const handleSearch = () => {
     filterCourses(query, selectedFilters);
     setHasSubmittedQuery(true);
@@ -188,6 +195,7 @@ const QuerySection: React.FC = () => {
                         isEdit={true}
                         course={selectedCourse}
                         courseId={selectedCourseId}
+                        onCourseUpdated={handleCourseUpdated}
                       />
                     </motion.div>
                   )}

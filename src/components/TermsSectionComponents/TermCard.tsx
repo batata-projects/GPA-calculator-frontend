@@ -2,16 +2,8 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useDashboard } from "../../hooks/useDashboard.ts";
 import AddCourseForm from "./AddCourseForm.tsx";
 import httpClient from "../../httpClient.tsx";
-
-interface Course {
-  id: string;
-  subject: string;
-  course_code: string;
-  term: number;
-  credits: number;
-  grade: number | null;
-  graded: boolean;
-}
+import { Course } from "../../types/index.ts";
+import { getLetterGrade } from "../../utils/functions.ts";
 
 interface TermCardProps {
   term: string;
@@ -23,34 +15,16 @@ interface TermCardProps {
       [key: string]: Course;
     };
   };
+  onTermDeleted: () => void;
+  onTermUpdated: () => void;
 }
 
-const gradeMapping: { [key: number]: string } = {
-  4.3: "A+",
-  4.0: "A",
-  3.7: "A-",
-  3.3: "B+",
-  3.0: "B",
-  2.7: "B-",
-  2.3: "C+",
-  2.0: "C",
-  1.7: "C-",
-  1.3: "D+",
-  1.0: "D",
-  0.0: "F",
-  "-1": "W",
-};
-
-const getGradeDisplay = (grade: number | null, graded: boolean): string => {
-  if (grade === null) return "NC";
-  if (graded) return gradeMapping[grade] || "NC";
-  if (grade === 1) return "P";
-  if (grade === 0) return "F";
-  if (grade === -1) return "W";
-  return "NC";
-};
-
-const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
+const TermCard: React.FC<TermCardProps> = ({
+  termData,
+  term,
+  onTermDeleted,
+  onTermUpdated,
+}) => {
   const { fetchDashboardData, accessToken, refreshToken } = useDashboard();
   const cardRef = useRef<HTMLDivElement>(null);
   const [showForm, setShowForm] = useState(false);
@@ -90,6 +64,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
           )
         );
         await fetchDashboardData();
+        onTermDeleted(); // Call the onTermDeleted callback
       } catch (error) {
         setError("Failed to delete term. Please try again.");
         console.error("Error deleting term:", error);
@@ -101,7 +76,13 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
     accessToken,
     refreshToken,
     termData.name,
+    onTermDeleted,
   ]);
+
+  const handleCourseUpdate = useCallback(() => {
+    fetchDashboardData();
+    onTermUpdated(); // Call the onTermUpdated callback
+  }, [fetchDashboardData, onTermUpdated]);
 
   const handleAddCourse = useCallback(
     (courseId?: string, course?: Course) => {
@@ -186,7 +167,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
             <h2 className="text-3xl font-bold">{termData.name}</h2>
             <button
               onClick={toggleExpand}
-              className="lg:hidden bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full transition duration-300 ease-in-out"
+              className="lg:hidden bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full transition duration-300 ease-in-out transform hover:scale-110"
             >
               {isExpanded ? (
                 <svg
@@ -236,14 +217,14 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm">
+                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-sm transition duration-300 ease-in-out transform hover:scale-110">
                     {course.subject.slice(0, 2)}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm">
+                    <h3 className="font-semibold text-sm transition duration-300 ease-in-out hover:text-yellow-300">
                       {course.subject} {course.course_code}
                     </h3>
-                    <p className="text-xs text-blue-200">
+                    <p className="text-xs text-blue-200 transition duration-300 ease-in-out hover:text-blue-100">
                       {course.credits} credit{course.credits !== 1 ? "s" : ""}
                     </p>
                   </div>
@@ -270,26 +251,14 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
                     </svg>
                   </button>
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition duration-300 ease-in-out transform hover:scale-110 ${
                       course.grade === null
                         ? "bg-gray-400 text-gray-800"
                         : "bg-white text-blue-800"
                     }`}
-                    title={
-                      course.grade === null
-                        ? "Not Completed"
-                        : course.graded
-                        ? course.grade === -1
-                          ? "Withdrawn"
-                          : gradeMapping[course.grade]
-                        : course.grade === 1
-                        ? "Pass"
-                        : course.grade === -1
-                        ? "Withdrawn"
-                        : "Fail"
-                    }
+                    title={getLetterGrade(course.grade, course.graded)}
                   >
-                    {getGradeDisplay(course.grade, course.graded)}
+                    {getLetterGrade(course.grade, course.graded)}
                   </div>
                 </div>
               </div>
@@ -306,7 +275,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
             >
               {isFormOpen ? "Cancel" : "Add Another Course"}
             </button>
-            <p className="text-sm text-blue-200">
+            <p className="text-sm text-blue-200 transition duration-300 ease-in-out hover:text-blue-100">
               Total Credits: {getTotalCredits()}
             </p>
           </div>
@@ -314,7 +283,9 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
 
         {/* Right side: GPA */}
         <div className="w-full lg:w-1/4 mt-6 lg:mt-0 flex flex-col items-center justify-center border-t lg:border-t-0 lg:border-l border-white/30 pt-6 lg:pt-0 lg:pl-6">
-          <h3 className="text-2xl font-semibold mb-4">Term GPA</h3>
+          <h3 className="text-2xl font-semibold mb-4 transition duration-300 ease-in-out">
+            Term GPA
+          </h3>
           <div className="relative w-32 h-32 group">
             <div className="absolute inset-0 bg-white rounded-full transition-all duration-300 ease-in-out transform group-hover:scale-110 group-hover:shadow-lg"></div>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -322,7 +293,6 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
                 {(Math.floor(termData.gpa * 100) / 100).toFixed(2)}
               </span>
             </div>
-            <div className="absolute inset-0 bg-blue-500 rounded-full opacity-0 transition-all duration-300 ease-in-out transform scale-0 group-hover:scale-100"></div>
           </div>
           <button
             onClick={handleDeleteTerm}
@@ -346,7 +316,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
         </div>
       </div>
       {error && (
-        <div className="px-4 py-2 text-red-500 bg-red-100 border border-red-400 rounded-full text-sm mt-4">
+        <div className="px-4 py-2 text-red-500 bg-red-100 border border-red-400 rounded-full text-sm mt-4 transition duration-300 ease-in-out hover:bg-red-200">
           {error}
         </div>
       )}
@@ -357,6 +327,7 @@ const TermCard: React.FC<TermCardProps> = ({ termData, term }) => {
           isEdit={isEdit}
           course={selectedCourse}
           courseId={selectedCourseId}
+          onCourseUpdated={handleCourseUpdate}
         />
       )}
     </div>
