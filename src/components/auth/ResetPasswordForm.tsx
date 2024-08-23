@@ -7,6 +7,7 @@ const ResetPasswordForm: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordsMatch, setPasswordsMatch] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const localError = "New Password should be different from old password.";
   const [passwordStrength, setPasswordStrength] = useState<{
     [key: string]: "pristine" | "valid" | "invalid";
   }>({
@@ -16,7 +17,7 @@ const ResetPasswordForm: React.FC = () => {
     "1 or more number": "pristine",
   });
 
-  const { resetPassword, isLoading, error, clearError } = useDashboard();
+  const { resetPassword, isLoading, clearError, error } = useDashboard();
 
   const checkPasswordStrength = (password: string) => {
     const newStrength: { [key: string]: "pristine" | "valid" | "invalid" } = {
@@ -33,7 +34,6 @@ const ResetPasswordForm: React.FC = () => {
   }, [newPassword, confirmPassword]);
 
   useEffect(() => {
-    // Reset success message if there's an error
     if (error) {
       setIsSuccess(false);
     }
@@ -43,13 +43,15 @@ const ResetPasswordForm: React.FC = () => {
     e.preventDefault();
     clearError();
     setIsSuccess(false);
+
     if (
       passwordsMatch &&
       Object.values(passwordStrength).every((status) => status === "valid")
     ) {
+      // Simulate checking if the new password is different from the current one
+
       try {
         await resetPassword(newPassword);
-        // Only set success if there's no error after the API call
         if (!error) {
           setIsSuccess(true);
           setNewPassword("");
@@ -63,7 +65,6 @@ const ResetPasswordForm: React.FC = () => {
         }
       } catch (err) {
         console.error("Failed to reset password", err);
-        // Error will be handled by the useDashboard hook and displayed via the ErrorMessage component
       }
     }
   };
@@ -145,7 +146,8 @@ const ResetPasswordForm: React.FC = () => {
           </ul>
         </div>
 
-        {error && <ErrorMessage error={error} />}
+        {error && <ErrorMessage error={localError} />}
+
         {isSuccess && (
           <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
             Password changed successfully!
